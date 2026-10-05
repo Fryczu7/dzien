@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dzień</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dzień">
+<meta name="theme-color" content="#0f1115">
+<style>
+:root{
+  --bg:#0f1115;--card:#181b22;--card2:#1f232c;--line:#2a2f3a;--text:#e8eaef;--muted:#8b93a3;
+  --acc:#22c55e;--acc2:#16a34a;--warn:#f59e0b;--bad:#ef4444;--blue:#60a5fa;
+}
+@media (prefers-color-scheme: light){
+  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;gap:8px}
+header h1{font-size:20px;margin:0;flex:1}
+.datebtn{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 10px;font-size:15px}
+main{padding:0 16px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0}
+.grow{flex:1}
+.muted{color:var(--muted);font-size:14px}
+.big{font-size:28px;font-weight:700}
+input,textarea,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font:inherit;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#06210f;font-weight:600}
+button.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
+button.small{padding:6px 10px;font-size:14px}
+button:active{opacity:.7}
+.check{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.check:last-child{border-bottom:0}
+.box{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:16px}
+.box.on{background:var(--acc);border-color:var(--acc);color:#06210f}
+.done .lbl{color:var(--muted);text-decoration:line-through}
+.bar{height:10px;background:var(--card2);border-radius:6px;overflow:hidden;margin:6px 0 2px}
+.bar>i{display:block;height:100%;background:var(--acc);border-radius:6px}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:13px;font-weight:600;background:var(--card2)}
+.green{background:#14532d;color:#bbf7d0}.yellow{background:#713f12;color:#fde68a}.red{background:#7f1d1d;color:#fecaca}
+.rule{padding:9px 0;border-bottom:1px solid var(--line)}
+.rule:last-child{border-bottom:0}
+.rule .why{color:var(--muted);font-size:14px;display:none;margin-top:3px}
+.rule.open .why{display:block}
+.steps{display:flex;gap:4px;margin:8px 0}
+.steps i{flex:1;height:8px;border-radius:4px;background:var(--card2)}
+.steps i.on{background:var(--acc)}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.quick button{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500;padding:7px 10px;font-size:14px}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.x{background:none;color:var(--muted);padding:4px 8px;font-weight:400}
+.note{padding:10px 12px;border-radius:12px;background:var(--card2);margin:8px 0;white-space:pre-wrap}
+.note.claude{border-left:3px solid var(--acc)}
+.note small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 2px 8px;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button b{font-size:20px;line-height:1}
+nav button.on{color:var(--acc)}
+.tabs2{display:flex;gap:6px;margin-bottom:10px}
+.tabs2 button{flex:1}
+.hidden{display:none!important}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#toast.show{opacity:1}
+.login{max-width:380px;margin:60px auto;padding:0 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.score{display:flex;gap:4px;flex-wrap:wrap}
+.score button{width:36px;padding:8px 0;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
+.score button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
+</style>
+</head>
+<body>
+<div id="login" class="login hidden">
+  <h1>Dzień</h1>
+  <p class="muted">Zaloguj się adresem mfryczu@gmail.com. Pierwszy raz: wpisz hasło i kliknij „Załóż konto”, potem potwierdź maila.</p>
+  <div class="card">
+    <input id="lemail" type="email" placeholder="email" autocomplete="username" value="mfryczu@gmail.com"><div style="height:8px"></div>
+    <input id="lpass" type="password" placeholder="hasło" autocomplete="current-password"><div style="height:10px"></div>
+    <div class="row"><button class="grow" id="bLogin">Zaloguj</button><button class="ghost grow" id="bSignup">Załóż konto</button></div>
+    <p id="lmsg" class="muted"></p>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+<header>
+  <h1 id="title">Dziś</h1>
+  <button class="datebtn" id="prevDay">‹</button>
+  <button class="datebtn" id="dateLbl"></button>
+  <button class="datebtn" id="nextDay">›</button>
+</header>
+<main>
+
+<!-- DZIŚ -->
+<section id="v-dzis">
+  <div class="card" id="coachCard">
+    <h2>Coach</h2>
+    <div id="coachMorning" class="muted">Brak wiadomości na dziś. Brief wpisze ją tutaj.</div>
+  </div>
+  <div class="card">
+    <h2>Sen</h2>
+    <div class="grid2">
+      <label><span class="muted">Zasnąłem</span><input id="bed" type="time"></label>
+      <label><span class="muted">Wstałem</span><input id="wake" type="time"></label>
+    </div>
+    <div class="row" style="margin-top:10px"><span class="big" id="sleepH">–</span><span class="muted grow">godzin snu</span><span id="readiness" class="pill">–</span></div>
+  </div>
+  <div class="card">
+    <h2>Rano</h2>
+    <div id="morning"></div>
+  </div>
+  <div class="card">
+    <h2>Plan (max 3 + rehab)</h2>
+    <div id="plan"></div>
+    <div class="row" style="margin-top:8px"><input id="planNew" placeholder="Dodaj zadanie"><button id="planAdd">+</button></div>
+  </div>
+  <div class="card">
+    <h2>Ruch</h2>
+    <div class="check" data-k="rehab"><div class="box" id="rehabBox"></div><span class="lbl grow">Rehab zrobiony</span></div>
+    <input id="training" placeholder="Trening (np. klatka + nogi)" style="margin-top:8px">
+  </div>
+  <div class="card">
+    <h2>Nie robię <span class="muted" style="text-transform:none;letter-spacing:0">– dotknij, żeby zobaczyć dlaczego</span></h2>
+    <div id="rules"></div>
+  </div>
+  <div class="card">
+    <h2>Wieczór</h2>
+    <div id="evening"></div>
+    <label class="muted">Za co się dziś doceniam</label>
+    <textarea id="doceniam"></textarea>
+    <div class="muted" style="margin:10px 0 6px">Ocena dnia</div>
+    <div class="score" id="ocena"></div>
+    <label class="muted" style="display:block;margin-top:10px">Notatka z dnia</label>
+    <textarea id="evNote"></textarea>
+    <div id="coachEvening" class="note claude hidden"></div>
+  </div>
+</section>
+
+<!-- JEDZENIE -->
+<section id="v-jedzenie" class="hidden">
+  <div class="card">
+    <h2>Dziś</h2>
+    <div class="row"><span class="big" id="kcalSum">0</span><span class="muted grow">/ <span id="kcalT">3300</span> kcal</span></div>
+    <div class="bar"><i id="kcalBar" style="width:0"></i></div>
+    <div class="row" style="margin-top:8px"><span class="big" id="protSum">0</span><span class="muted grow">/ <span id="protT">150</span> g białka</span></div>
+    <div class="bar"><i id="protBar" style="width:0;background:var(--blue)"></i></div>
+    <div class="muted" id="left" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h2>Dodaj posiłek</h2>
+    <input id="mName" placeholder="Co zjadłeś"><div style="height:8px"></div>
+    <div class="grid2"><input id="mKcal" type="number" inputmode="numeric" placeholder="kcal"><input id="mProt" type="number" inputmode="numeric" placeholder="białko g"></div>
+    <div style="height:8px"></div>
+    <button id="mAdd" style="width:100%">Dodaj</button>
+    <div class="muted" style="margin-top:10px">Szybko:</div>
+    <div class="quick" id="quick"></div>
+    <div class="muted" style="margin-top:8px;font-size:13px">Nie znasz kcal? Wpisz samą nazwę – Claude policzy przy check-inie.</div>
+  </div>
+  <div class="card">
+    <h2>Zjedzone</h2>
+    <div id="meals"></div>
+  </div>
+</section>
+
+<!-- FILM -->
+<section id="v-film" class="hidden">
+  <div class="card">
+    <h2>Film w toku</h2>
+    <div class="big" id="fTitle" style="font-size:22px"></div>
+    <div class="steps" id="fSteps"></div>
+    <div class="muted" id="fStepLbl"></div>
+    <div class="row" style="margin-top:8px"><button class="ghost small" id="fPrev">− krok</button><button class="small" id="fNext">+ krok</button></div>
+  </div>
+  <div class="card">
+    <h2>Następny ruch</h2>
+    <textarea id="fNextMove"></textarea>
+    <h2 style="margin-top:12px">Blokada</h2>
+    <textarea id="fBlocker"></textarea>
+  </div>
+  <div class="card">
+    <h2>GetMed w tym tygodniu</h2>
+    <div class="row"><span class="big" id="fWeek">0/3</span><span class="grow"></span><button class="ghost small" id="fWMinus">−</button><button class="small" id="fWPlus">+ opublikowany</button></div>
+  </div>
+  <div class="card muted" style="font-size:14px">Kroki: 1 skrypt i hook → 2 materiał → 3 montaż → 4 napisy → 5 publikacja → 6 wpis i licznik. WIP = 1.</div>
+</section>
+
+<!-- ZAKUPY -->
+<section id="v-zakupy" class="hidden">
+  <div class="tabs2"><button id="tZ">Zakupy</button><button class="ghost" id="tS">Spiżarnia</button></div>
+  <div class="card">
+    <div class="row"><input id="iNew" placeholder="Dodaj produkt"><input id="iQty" placeholder="ilość" style="max-width:90px"><button id="iAdd">+</button></div>
+  </div>
+  <div class="card"><div id="items"></div></div>
+  <div class="muted" id="iHint" style="font-size:13px;padding:0 4px"></div>
+</section>
+
+<!-- CELE -->
+<section id="v-cele" class="hidden">
+  <div class="card">
+    <h2>Waga (cel 79 → 90 kg)</h2>
+    <div class="row"><span class="big" id="wNow">–</span><span class="muted grow">kg</span></div>
+    <div class="bar"><i id="wBar" style="width:0"></i></div>
+    <div class="muted" id="wInfo"></div>
+    <div class="row" style="margin-top:8px"><input id="wKg" type="number" step="0.1" inputmode="decimal" placeholder="dzisiejsza waga"><button id="wAdd">Zapisz</button></div>
+  </div>
+  <div id="goals"></div>
+</section>
+
+<!-- CLAUDE -->
+<section id="v-claude" class="hidden">
+  <div class="card">
+    <h2>Do Claude / szybka notatka</h2>
+    <textarea id="nText" placeholder="Myśl, zadanie, pytanie do coacha… Claude rozłoży to w vaulcie przy najbliższym briefie albo check-inie."></textarea>
+    <div class="row" style="margin-top:8px"><select id="nKind" class="grow"><option value="notatka">Notatka</option><option value="pytanie">Pytanie do coacha</option></select><button id="nAdd">Wyślij</button></div>
+  </div>
+  <div class="card">
+    <h2>Ostatnie</h2>
+    <div id="notes"></div>
+  </div>
+  <div class="card">
+    <button class="ghost" id="logout" style="width:100%">Wyloguj</button>
+  </div>
+</section>
+
+</main>
+<nav>
+  <button data-v="dzis" class="on"><b>☀︎</b>Dziś</button>
+  <button data-v="jedzenie"><b>🍽</b>Jedzenie</button>
+  <button data-v="film"><b>🎬</b>Film</button>
+  <button data-v="zakupy"><b>🛒</b>Zakupy</button>
+  <button data-v="cele"><b>🎯</b>Cele</button>
+  <button data-v="claude"><b>✎</b>Claude</button>
+</nav>
+</div>
+<div id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
+
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
+const toast = t => { const x = $('#toast'); x.textContent = t; x.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('show'), 1600); };
+const fail = (e) => { console.error(e); toast('Błąd: ' + (e.message || e)); };
+
+// ---------- data ----------
+const ymd = d => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); };
+let cur = ymd(new Date());
+let day = null, rules = [], film = null, items = [], goals = [], weights = [], notes = [], meals = [];
+let itemKind = 'zakupy', view = 'dzis';
+const PL_DAYS = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'];
+
+const MORNING = [['lozko', 'Łóżko pościelone'], ['modlitwa', 'Modlitwa'], ['woda', 'Woda'], ['leki', 'Leki rano (do śniadania)'], ['matma', '10 min matematyki przed pracą']];
+const EVENING = [['leki_wieczor', 'Leki wieczorne'], ['spac_na_czas', 'Idę spać przed 0:00']];
+const QUICK = [['Shake (mleko b/l + odżywka + banan)', 600, 40], ['Owsianka 60 g z odżywką', 620, 47], ['3 jajka + pieczywo', 600, 30], ['Kurczak + ryż + warzywa', 700, 55], ['Wrap z kurczakiem', 650, 45], ['Spaghetti z mielonym', 750, 45], ['Płatki ryżowe przed treningiem', 350, 8], ['Kanapki (3 kromki)', 500, 22]];
+
+async function loadDay() {
+  const { data, error } = await sb.from('days').select('*').eq('date', cur).maybeSingle();
+  if (error) return fail(error);
+  day = data || { date: cur, plan: [], morning: {}, evening: {}, rules_broken: [], kcal_target: 3300, protein_target: 150 };
+  const m = await sb.from('meals').select('*').eq('date', cur).order('created_at');
+  if (m.error) return fail(m.error);
+  meals = m.data;
+}
+async function saveDay(patch) {
+  Object.assign(day, patch);
+  const row = { date: cur, ...patch, updated_at: new Date().toISOString() };
+  const { error } = await sb.from('days').upsert(row, { onConflict: 'date' });
+  if (error) fail(error);
+}
+async function loadStatic() {
+  const [r, f, i, g, w, n] = await Promise.all([
+    sb.from('rules').select('*').order('nr'),
+    sb.from('film').select('*').eq('id', 'current').maybeSingle(),
+    sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
+    sb.from('goals').select('*').order('id'),
+    sb.from('weights').select('*').order('date'),
+    sb.from('notes').select('*').order('created_at', { ascending: false }).limit(30),
+  ]);
+  for (const x of [r, f, i, g, w, n]) if (x.error) return fail(x.error);
+  rules = r.data; film = f.data || { id: 'current', title: '', step: 1, week_done: 0, week_target: 3 }; items = i.data; goals = g.data; weights = w.data; notes = n.data;
+}
+
+// ---------- render ----------
+function hoursBetween(b, w) {
+  if (!b || !w) return null;
+  const [bh, bm] = b.split(':').map(Number), [wh, wm] = w.split(':').map(Number);
+  let mins = (wh * 60 + wm) - (bh * 60 + bm); if (mins <= 0) mins += 1440;
+  return Math.round(mins / 6) / 10;
+}
+function checkRow(on, label, onclick) {
+  const r = el('div', { class: 'check' + (on ? ' done' : ''), onclick }, el('div', { class: 'box' + (on ? ' on' : '') }, on ? '✓' : ''), el('span', { class: 'lbl grow' }, label));
+  return r;
+}
+function renderHeader() {
+  const d = new Date(cur + 'T12:00:00');
+  $('#dateLbl').textContent = (cur === ymd(new Date()) ? 'dziś' : PL_DAYS[d.getDay()]) + ' ' + d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function renderDzis() {
+  $('#coachMorning').textContent = day.coach_morning || 'Brak wiadomości na dziś. Brief wpisze ją tutaj.';
+  $('#coachMorning').className = day.coach_morning ? '' : 'muted';
+  $('#bed').value = day.bed || ''; $('#wake').value = day.wake || '';
+  const h = day.sleep_h ?? hoursBetween(day.bed, day.wake);
+  $('#sleepH').textContent = h ?? '–';
+  const rd = $('#readiness');
+  if (day.readiness) { rd.textContent = 'gotowość ' + day.readiness; rd.className = 'pill ' + (day.readiness >= 75 ? 'green' : day.readiness >= 55 ? 'yellow' : 'red'); } else { rd.textContent = '–'; rd.className = 'pill'; }
+  const mo = $('#morning'); mo.replaceChildren(...MORNING.map(([k, l]) => checkRow(!!day.morning?.[k], l, () => saveDay({ morning: { ...day.morning, [k]: !day.morning?.[k] } }).then(renderDzis))));
+  const pl = $('#plan'); const plan = day.plan || [];
+  pl.replaceChildren(...plan.map((p, idx) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
+  if (!plan.length) pl.append(el('div', { class: 'muted' }, 'Brak planu. Brief wpisze go rano albo dodaj sam.'));
+  const rb = $('#rehabBox'); rb.className = 'box' + (day.rehab ? ' on' : ''); rb.textContent = day.rehab ? '✓' : '';
+  $('#training').value = day.training || '';
+  const ru = $('#rules'); const broken = day.rules_broken || [];
+  ru.replaceChildren(...rules.map(r => {
+    const isB = broken.includes(r.nr);
+    const d = el('div', { class: 'rule' }, el('div', { class: 'row' }, el('span', { class: 'grow' }, r.nr + '. ' + r.text), el('button', { class: 'small ' + (isB ? '' : 'ghost'), style: isB ? 'background:var(--bad);color:#fff' : '', onclick: e => { e.stopPropagation(); const nb = isB ? broken.filter(x => x !== r.nr) : [...broken, r.nr]; saveDay({ rules_broken: nb }).then(renderDzis); } }, isB ? 'złamane' : 'OK')), el('div', { class: 'why' }, r.why || ''));
+    d.addEventListener('click', () => d.classList.toggle('open'));
+    return d;
+  }));
+  const ev = $('#evening');
+  const doneN = plan.filter(p => p.done).length;
+  ev.replaceChildren(el('div', { class: 'muted', style: 'margin-bottom:6px' }, 'Zrobione z planu: ' + doneN + '/' + plan.length), ...EVENING.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
+  $('#doceniam').value = day.evening?.doceniam || '';
+  $('#evNote').value = day.evening?.notatka || '';
+  const sc = $('#ocena'); sc.replaceChildren(...Array.from({ length: 10 }, (_, i) => el('button', { class: day.evening?.ocena === i + 1 ? 'on' : '', onclick: () => saveDay({ evening: { ...day.evening, ocena: i + 1 } }).then(renderDzis) }, String(i + 1))));
+  const ce = $('#coachEvening'); ce.classList.toggle('hidden', !day.coach_evening); ce.textContent = day.coach_evening || '';
+}
+function renderJedzenie() {
+  const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
+  const kt = day.kcal_target || 3300, pt = day.protein_target || 150;
+  $('#kcalSum').textContent = k; $('#protSum').textContent = p; $('#kcalT').textContent = kt; $('#protT').textContent = pt;
+  $('#kcalBar').style.width = Math.min(100, k / kt * 100) + '%'; $('#protBar').style.width = Math.min(100, p / pt * 100) + '%';
+  $('#left').textContent = k >= kt && p >= pt ? 'Cel dnia zrobiony.' : 'Zostało: ' + Math.max(0, kt - k) + ' kcal i ' + Math.max(0, pt - p) + ' g białka.';
+  const ml = $('#meals');
+  ml.replaceChildren(...meals.map(m => el('div', { class: 'item' }, el('span', { class: 'muted', style: 'width:44px' }, m.time || ''), el('span', { class: 'grow' }, m.name), el('span', { class: 'muted' }, (m.kcal ?? '?') + ' / ' + (m.protein ?? '?') + ' g'), el('button', { class: 'x', onclick: async () => { if (!confirm('Usunąć „' + m.name + '”?')) return; const { error } = await sb.from('meals').delete().eq('id', m.id); if (error) return fail(error); meals = meals.filter(x => x.id !== m.id); renderJedzenie(); } }, '×'))));
+  if (!meals.length) ml.append(el('div', { class: 'muted' }, 'Nic jeszcze nie wpisane.'));
+}
+async function addMeal(name, kcal, protein) {
+  if (!name) return toast('Wpisz, co zjadłeś');
+  const now = new Date(); const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const { data, error } = await sb.from('meals').insert({ date: cur, time, name, kcal: kcal || null, protein: protein || null }).select().single();
+  if (error) return fail(error);
+  meals.push(data); renderJedzenie(); toast('Dodane');
+}
+function renderFilm() {
+  $('#fTitle').textContent = film.title || '—';
+  const st = film.step || 1, tot = film.steps_total || 6;
+  $('#fSteps').replaceChildren(...Array.from({ length: tot }, (_, i) => el('i', { class: i < st ? 'on' : '' })));
+  const names = ['skrypt i hook', 'materiał', 'montaż', 'napisy', 'publikacja', 'wpis i licznik'];
+  $('#fStepLbl').textContent = 'Krok ' + st + '/' + tot + ': ' + (names[st - 1] || '');
+  $('#fNextMove').value = film.next_move || ''; $('#fBlocker').value = film.blocker || '';
+  $('#fWeek').textContent = (film.week_done || 0) + '/' + (film.week_target || 3);
+}
+async function saveFilm(patch) {
+  Object.assign(film, patch);
+  const { error } = await sb.from('film').upsert({ id: 'current', ...patch, updated_at: new Date().toISOString() });
+  if (error) fail(error); renderFilm();
+}
+function renderItems() {
+  $('#tZ').className = itemKind === 'zakupy' ? '' : 'ghost'; $('#tS').className = itemKind === 'spizarnia' ? '' : 'ghost';
+  const list = items.filter(i => i.kind === itemKind);
+  $('#items').replaceChildren(...list.map(i => {
+    const r = checkRow(itemKind === 'zakupy' ? i.done : false, (i.urgent ? '❗ ' : '') + i.name + (i.qty ? ' · ' + i.qty : ''), async () => {
+      if (itemKind === 'zakupy') { const done = !i.done; const { error } = await sb.from('items').update({ done }).eq('id', i.id); if (error) return fail(error); i.done = done; }
+      else { if (!confirm('Skończyło się? Przenieść „' + i.name + '” na zakupy?')) return; const { error } = await sb.from('items').update({ kind: 'zakupy', done: false }).eq('id', i.id); if (error) return fail(error); i.kind = 'zakupy'; i.done = false; toast('Na liście zakupów'); }
+      renderItems();
+    });
+    r.append(el('button', { class: 'x', onclick: async e => { e.stopPropagation(); if (!confirm('Usunąć „' + i.name + '”?')) return; const { error } = await sb.from('items').delete().eq('id', i.id); if (error) return fail(error); items = items.filter(x => x.id !== i.id); renderItems(); } }, '×'));
+    return r;
+  }));
+  if (!list.length) $('#items').append(el('div', { class: 'muted' }, 'Pusto.'));
+  const doneN = items.filter(i => i.kind === 'zakupy' && i.done).length;
+  const hint = $('#iHint'); hint.replaceChildren();
+  if (itemKind === 'zakupy' && doneN) hint.append(el('button', { class: 'ghost small', onclick: async () => { const ids = items.filter(i => i.kind === 'zakupy' && i.done).map(i => i.id); const { error } = await sb.from('items').update({ kind: 'spizarnia', done: false }).in('id', ids); if (error) return fail(error); items.forEach(i => { if (ids.includes(i.id)) { i.kind = 'spizarnia'; i.done = false; } }); renderItems(); toast('Przeniesione do spiżarni'); } }, 'Kupione (' + doneN + ') → do spiżarni'));
+  if (itemKind === 'spizarnia') hint.textContent = 'Dotknij produktu, gdy się skończy – wróci na listę zakupów.';
+}
+function renderCele() {
+  const last = weights[weights.length - 1];
+  $('#wNow').textContent = last ? last.kg : '–';
+  if (last) { const start = 75, pct = Math.max(0, Math.min(100, (last.kg - start) / (90 - start) * 100)); $('#wBar').style.width = pct + '%'; $('#wInfo').textContent = 'Ostatni pomiar ' + last.date + '. Do 79 kg: ' + Math.max(0, (79 - last.kg)).toFixed(1) + ' kg, do 90 kg: ' + Math.max(0, (90 - last.kg)).toFixed(1) + ' kg.'; }
+  $('#goals').replaceChildren(...goals.map(g => el('div', { class: 'card' },
+    el('div', { class: 'row' }, el('span', { class: 'pill' }, g.id), el('b', { class: 'grow' }, g.title)),
+    el('div', { class: 'muted', style: 'margin-top:6px' }, 'Miara: ' + (g.metric || '') + (g.deadline ? ' · do ' + g.deadline : '')),
+    el('div', { style: 'margin-top:8px' }, el('span', { class: 'muted' }, 'Gdzie jestem: '), g.where_now || '—'),
+    el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'))));
+}
+function renderNotes() {
+  $('#notes').replaceChildren(...notes.map(n => el('div', { class: 'note' + (n.author === 'claude' ? ' claude' : '') }, n.text, el('small', {}, (n.author === 'claude' ? 'Claude' : 'Ty') + ' · ' + (n.kind) + ' · ' + new Date(n.created_at).toLocaleString('pl-PL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + (n.author === 'michal' ? (n.processed ? ' · ✓ w vaulcie' : ' · czeka') : '')))));
+  if (!notes.length) $('#notes').append(el('div', { class: 'muted' }, 'Brak notatek.'));
+}
+function renderAll() { renderHeader(); renderDzis(); renderJedzenie(); renderFilm(); renderItems(); renderCele(); renderNotes(); }
+
+// ---------- events ----------
+function show(v) {
+  view = v; document.querySelectorAll('main>section').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', film: 'Film', zakupy: 'Zakupy', cele: 'Cele', claude: 'Claude' }[v];
+  const dated = v === 'dzis' || v === 'jedzenie';
+  ['#prevDay', '#dateLbl', '#nextDay'].forEach(s => $(s).classList.toggle('hidden', !dated));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
+const shift = async n => { const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n); cur = ymd(d); await loadDay(); renderAll(); };
+$('#prevDay').onclick = () => shift(-1); $('#nextDay').onclick = () => shift(1);
+$('#dateLbl').onclick = async () => { cur = ymd(new Date()); await loadDay(); renderAll(); };
+
+const onSleep = () => { const b = $('#bed').value, w = $('#wake').value; saveDay({ bed: b || null, wake: w || null, sleep_h: hoursBetween(b, w) }).then(renderDzis); };
+$('#bed').onchange = onSleep; $('#wake').onchange = onSleep;
+$('#planAdd').onclick = () => { const t = $('#planNew').value.trim(); if (!t) return; $('#planNew').value = ''; saveDay({ plan: [...(day.plan || []), { text: t, done: false }] }).then(renderDzis); };
+$('#planNew').onkeydown = e => { if (e.key === 'Enter') $('#planAdd').click(); };
+document.querySelector('[data-k="rehab"]').onclick = () => saveDay({ rehab: !day.rehab }).then(renderDzis);
+$('#training').onchange = e => saveDay({ training: e.target.value }).then(() => toast('Zapisane'));
+$('#doceniam').onchange = e => saveDay({ evening: { ...day.evening, doceniam: e.target.value } }).then(() => toast('Zapisane'));
+$('#evNote').onchange = e => saveDay({ evening: { ...day.evening, notatka: e.target.value } }).then(() => toast('Zapisane'));
+
+$('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
+$('#quick').replaceChildren(...QUICK.map(([n, k, p]) => el('button', { onclick: () => { $('#mName').value = n; $('#mKcal').value = k; $('#mProt').value = p; } }, n.split(' (')[0] + ' · ' + k)));
+
+$('#fPrev').onclick = () => saveFilm({ step: Math.max(1, (film.step || 1) - 1) });
+$('#fNext').onclick = () => saveFilm({ step: Math.min(film.steps_total || 6, (film.step || 1) + 1) });
+$('#fNextMove').onchange = e => saveFilm({ next_move: e.target.value });
+$('#fBlocker').onchange = e => saveFilm({ blocker: e.target.value });
+$('#fWPlus').onclick = () => saveFilm({ week_done: (film.week_done || 0) + 1 }).then(() => toast('Brawo – link wpisz w notatce do Claude'));
+$('#fWMinus').onclick = () => saveFilm({ week_done: Math.max(0, (film.week_done || 0) - 1) });
+
+$('#tZ').onclick = () => { itemKind = 'zakupy'; renderItems(); }; $('#tS').onclick = () => { itemKind = 'spizarnia'; renderItems(); };
+$('#iAdd').onclick = async () => { const name = $('#iNew').value.trim(); if (!name) return; const { data, error } = await sb.from('items').insert({ kind: itemKind, name, qty: $('#iQty').value.trim() || null }).select().single(); if (error) return fail(error); items.push(data); $('#iNew').value = $('#iQty').value = ''; renderItems(); };
+$('#iNew').onkeydown = e => { if (e.key === 'Enter') $('#iAdd').click(); };
+
+$('#wAdd').onclick = async () => { const kg = parseFloat(String($('#wKg').value).replace(',', '.')); if (!kg) return; const date = ymd(new Date()); const { error } = await sb.from('weights').upsert({ date, kg }); if (error) return fail(error); weights = weights.filter(w => w.date !== date).concat({ date, kg }).sort((a, b) => a.date < b.date ? -1 : 1); $('#wKg').value = ''; renderCele(); toast('Waga zapisana'); };
+
+$('#nAdd').onclick = async () => { const text = $('#nText').value.trim(); if (!text) return; const { data, error } = await sb.from('notes').insert({ text, kind: $('#nKind').value, author: 'michal' }).select().single(); if (error) return fail(error); notes.unshift(data); $('#nText').value = ''; renderNotes(); toast('Wysłane'); };
+$('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+// ---------- auth ----------
+async function start() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  await Promise.all([loadDay(), loadStatic()]);
+  renderAll(); show(view);
+}
+$('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
+$('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start(); });
+document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && !$('#app').classList.contains('hidden')) { const today = ymd(new Date()); if (view === 'dzis' || view === 'jedzenie') { await Promise.all([loadDay(), loadStatic()]); renderAll(); show(view); } } });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+start();
+</script>
+</body>
+</html>
