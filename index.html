@@ -14,10 +14,10 @@
 <style>
 :root{
   --bg:#0f1115;--card:#181b22;--card2:#1f232c;--line:#2a2f3a;--text:#e8eaef;--muted:#8b93a3;
-  --acc:#22c55e;--acc2:#16a34a;--warn:#f59e0b;--bad:#ef4444;--blue:#60a5fa;
+  --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--bad:#ef4444;--blue:#60a5fa;
 }
 @media (prefers-color-scheme: light){
-  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;}
+  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc-ink:#15803d;}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -66,7 +66,7 @@ button:active{opacity:.7}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
 nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 2px 8px;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav button b{font-size:20px;line-height:1}
-nav button.on{color:var(--acc)}
+nav button.on{color:var(--acc-ink)}
 .tabs2{display:flex;gap:6px;margin-bottom:10px}
 .tabs2 button{flex:1}
 .hidden{display:none!important}
@@ -77,9 +77,11 @@ nav button.on{color:var(--acc)}
 .score{display:flex;gap:4px;flex-wrap:wrap}
 .score button{width:36px;padding:8px 0;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
 .score button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
+#offline{background:var(--warn);color:#1a1200;text-align:center;font-size:14px;padding:6px 12px}
 </style>
 </head>
 <body>
+<div id="offline" class="hidden">Brak sieci – pokazuję ostatni stan, zmiany nie zapiszą się.</div>
 <div id="login" class="login hidden">
   <h1>Dzień</h1>
   <p class="muted">Zaloguj się adresem mfryczu@gmail.com. Pierwszy raz: wpisz hasło i kliknij „Załóż konto”, potem potwierdź maila.</p>
@@ -243,9 +245,10 @@ nav button.on{color:var(--acc)}
 </div>
 <div id="toast"></div>
 
+<script src="vendor/supabase.js"></script>
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const sb = createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume } from './lib.js';
+const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
@@ -253,7 +256,9 @@ const toast = t => { const x = $('#toast'); x.textContent = t; x.classList.add('
 const fail = (e) => { console.error(e); toast('Błąd: ' + (e.message || e)); };
 
 // ---------- data ----------
-const ymd = d => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); };
+const setOffline = on => $('#offline').classList.toggle('hidden', !on);
+window.addEventListener('online', () => setOffline(false));
+window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
 let day = null, rules = [], film = null, items = [], goals = [], weights = [], notes = [], meals = [];
 let itemKind = 'zakupy', view = 'dzis';
@@ -291,12 +296,6 @@ async function loadStatic() {
 }
 
 // ---------- render ----------
-function hoursBetween(b, w) {
-  if (!b || !w) return null;
-  const [bh, bm] = b.split(':').map(Number), [wh, wm] = w.split(':').map(Number);
-  let mins = (wh * 60 + wm) - (bh * 60 + bm); if (mins <= 0) mins += 1440;
-  return Math.round(mins / 6) / 10;
-}
 function checkRow(on, label, onclick) {
   const r = el('div', { class: 'check' + (on ? ' done' : ''), onclick }, el('div', { class: 'box' + (on ? ' on' : '') }, on ? '✓' : ''), el('span', { class: 'lbl grow' }, label));
   return r;
@@ -443,6 +442,7 @@ $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload();
 
 // ---------- auth ----------
 async function start() {
+  setOffline(!navigator.onLine);
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
