@@ -25,6 +25,7 @@ body{padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;gap:8px}
 header h1{font-size:20px;margin:0;flex:1}
 .datebtn{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 10px;font-size:15px}
+.datebtn:disabled{opacity:.35}
 main{padding:0 16px;max-width:640px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
 .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;font-weight:600}
@@ -253,13 +254,14 @@ const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.c
 const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
 const toast = t => { const x = $('#toast'); x.textContent = t; x.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('show'), 1600); };
-const fail = (e) => { console.error(e); toast('Błąd: ' + (e.message || e)); };
+const fail = (e) => { console.error(e); toast(navigator.onLine ? 'Nie zapisano: ' + (e.message || e) : 'Nie zapisano – brak sieci'); };
 
 // ---------- data ----------
 const setOffline = on => $('#offline').classList.toggle('hidden', !on);
 window.addEventListener('online', () => setOffline(false));
 window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
+let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
 let day = null, rules = [], film = null, items = [], goals = [], weights = [], notes = [], meals = [];
 let itemKind = 'zakupy', view = 'dzis';
 const PL_DAYS = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'];
@@ -276,11 +278,14 @@ async function loadDay() {
   if (m.error) return fail(m.error);
   meals = m.data;
 }
-async function saveDay(patch) {
+// Przy błędzie przyciski wracają do poprzedniego stanu; tekst (keepOnError) zostaje w polu i zapisze się przy następnej zmianie.
+async function saveDay(patch, keepOnError = false) {
+  const before = structuredClone(day);
   Object.assign(day, patch);
   const row = { date: cur, ...patch, updated_at: new Date().toISOString() };
-  const { error } = await sb.from('days').upsert(row, { onConflict: 'date' });
-  if (error) fail(error);
+  const { error } = await sb.from('days').upsert(row, { onConflict: 'user_id,date' });
+  if (error) { fail(error); if (!keepOnError) { day = before; renderDzis(); } return false; }
+  return true;
 }
 async function loadStatic() {
   const [r, f, i, g, w, n] = await Promise.all([
@@ -303,6 +308,7 @@ function checkRow(on, label, onclick) {
 function renderHeader() {
   const d = new Date(cur + 'T12:00:00');
   $('#dateLbl').textContent = (cur === ymd(new Date()) ? 'dziś' : PL_DAYS[d.getDay()]) + ' ' + d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0');
+  $('#nextDay').disabled = cur >= ymd(new Date());
 }
 function renderDzis() {
   $('#coachMorning').textContent = day.coach_morning || 'Brak wiadomości na dziś. Brief wpisze ją tutaj.';
@@ -345,7 +351,7 @@ function renderJedzenie() {
 }
 async function addMeal(name, kcal, protein) {
   if (!name) return toast('Wpisz, co zjadłeś');
-  const now = new Date(); const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const time = mealTime(cur, new Date());
   const { data, error } = await sb.from('meals').insert({ date: cur, time, name, kcal: kcal || null, protein: protein || null }).select().single();
   if (error) return fail(error);
   meals.push(data); renderJedzenie(); toast('Dodane');
@@ -359,10 +365,12 @@ function renderFilm() {
   $('#fNextMove').value = film.next_move || ''; $('#fBlocker').value = film.blocker || '';
   $('#fWeek').textContent = (film.week_done || 0) + '/' + (film.week_target || 3);
 }
-async function saveFilm(patch) {
+async function saveFilm(patch, keepOnError = false) {
+  const before = { ...film };
   Object.assign(film, patch);
-  const { error } = await sb.from('film').upsert({ id: 'current', ...patch, updated_at: new Date().toISOString() });
-  if (error) fail(error); renderFilm();
+  const { error } = await sb.from('film').upsert({ id: 'current', ...patch, updated_at: new Date().toISOString() }, { onConflict: 'user_id,id' });
+  if (error) { fail(error); if (!keepOnError) { film = before; renderFilm(); } return false; }
+  return true;
 }
 function renderItems() {
   $('#tZ').className = itemKind === 'zakupy' ? '' : 'ghost'; $('#tS').className = itemKind === 'spizarnia' ? '' : 'ghost';
@@ -399,6 +407,20 @@ function renderNotes() {
 function renderAll() { renderHeader(); renderDzis(); renderJedzenie(); renderFilm(); renderItems(); renderCele(); renderNotes(); }
 
 // ---------- events ----------
+// Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
+const pending = new Map();
+function bindText(sel, toPatch, save = saveDay) {
+  const flush = () => { const p = pending.get(sel); if (!p) return; clearTimeout(p.t); pending.delete(sel); p.run(); };
+  $(sel).addEventListener('input', e => {
+    const v = e.target.value; const old = pending.get(sel); if (old) clearTimeout(old.t);
+    const run = () => save(toPatch(v), true);
+    pending.set(sel, { run, t: setTimeout(() => { pending.delete(sel); run(); }, 800) });
+  });
+  $(sel).addEventListener('blur', flush);
+}
+function flushText() { for (const [, p] of pending) { clearTimeout(p.t); p.run(); } pending.clear(); }
+window.addEventListener('pagehide', flushText);
+
 function show(v) {
   view = v; document.querySelectorAll('main>section').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
@@ -408,28 +430,34 @@ function show(v) {
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
-const shift = async n => { const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n); cur = ymd(d); await loadDay(); renderAll(); };
+const shift = async n => {
+  const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n);
+  const next = ymd(d), today = ymd(new Date());
+  if (isFuture(next, today)) return toast('To jeszcze nie ten dzień');
+  flushText(); cur = next; followToday = cur === today;
+  await loadDay(); renderAll();
+};
 $('#prevDay').onclick = () => shift(-1); $('#nextDay').onclick = () => shift(1);
-$('#dateLbl').onclick = async () => { cur = ymd(new Date()); await loadDay(); renderAll(); };
+$('#dateLbl').onclick = async () => { flushText(); cur = ymd(new Date()); followToday = true; await loadDay(); renderAll(); };
 
 const onSleep = () => { const b = $('#bed').value, w = $('#wake').value; saveDay({ bed: b || null, wake: w || null, sleep_h: hoursBetween(b, w) }).then(renderDzis); };
 $('#bed').onchange = onSleep; $('#wake').onchange = onSleep;
 $('#planAdd').onclick = () => { const t = $('#planNew').value.trim(); if (!t) return; $('#planNew').value = ''; saveDay({ plan: [...(day.plan || []), { text: t, done: false }] }).then(renderDzis); };
 $('#planNew').onkeydown = e => { if (e.key === 'Enter') $('#planAdd').click(); };
 document.querySelector('[data-k="rehab"]').onclick = () => saveDay({ rehab: !day.rehab }).then(renderDzis);
-$('#training').onchange = e => saveDay({ training: e.target.value }).then(() => toast('Zapisane'));
-$('#doceniam').onchange = e => saveDay({ evening: { ...day.evening, doceniam: e.target.value } }).then(() => toast('Zapisane'));
-$('#evNote').onchange = e => saveDay({ evening: { ...day.evening, notatka: e.target.value } }).then(() => toast('Zapisane'));
+bindText('#training', v => ({ training: v }));
+bindText('#doceniam', v => ({ evening: { ...day.evening, doceniam: v } }));
+bindText('#evNote', v => ({ evening: { ...day.evening, notatka: v } }));
 
 $('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
 $('#quick').replaceChildren(...QUICK.map(([n, k, p]) => el('button', { onclick: () => { $('#mName').value = n; $('#mKcal').value = k; $('#mProt').value = p; } }, n.split(' (')[0] + ' · ' + k)));
 
-$('#fPrev').onclick = () => saveFilm({ step: Math.max(1, (film.step || 1) - 1) });
-$('#fNext').onclick = () => saveFilm({ step: Math.min(film.steps_total || 6, (film.step || 1) + 1) });
-$('#fNextMove').onchange = e => saveFilm({ next_move: e.target.value });
-$('#fBlocker').onchange = e => saveFilm({ blocker: e.target.value });
-$('#fWPlus').onclick = () => saveFilm({ week_done: (film.week_done || 0) + 1 }).then(() => toast('Brawo – link wpisz w notatce do Claude'));
-$('#fWMinus').onclick = () => saveFilm({ week_done: Math.max(0, (film.week_done || 0) - 1) });
+$('#fPrev').onclick = () => saveFilm({ step: Math.max(1, (film.step || 1) - 1) }).then(renderFilm);
+$('#fNext').onclick = () => saveFilm({ step: Math.min(film.steps_total || 6, (film.step || 1) + 1) }).then(renderFilm);
+bindText('#fNextMove', v => ({ next_move: v }), saveFilm);
+bindText('#fBlocker', v => ({ blocker: v }), saveFilm);
+$('#fWPlus').onclick = () => saveFilm({ week_done: (film.week_done || 0) + 1 }).then(ok => { renderFilm(); if (ok) toast('Brawo – link wpisz w notatce do Claude'); });
+$('#fWMinus').onclick = () => saveFilm({ week_done: Math.max(0, (film.week_done || 0) - 1) }).then(renderFilm);
 
 $('#tZ').onclick = () => { itemKind = 'zakupy'; renderItems(); }; $('#tS').onclick = () => { itemKind = 'spizarnia'; renderItems(); };
 $('#iAdd').onclick = async () => { const name = $('#iNew').value.trim(); if (!name) return; const { data, error } = await sb.from('items').insert({ kind: itemKind, name, qty: $('#iQty').value.trim() || null }).select().single(); if (error) return fail(error); items.push(data); $('#iNew').value = $('#iQty').value = ''; renderItems(); };
@@ -452,7 +480,12 @@ async function start() {
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
 $('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
 sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start(); });
-document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && !$('#app').classList.contains('hidden')) { const today = ymd(new Date()); if (view === 'dzis' || view === 'jedzenie') { await Promise.all([loadDay(), loadStatic()]); renderAll(); show(view); } } });
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') return flushText();
+  if ($('#app').classList.contains('hidden')) return;
+  cur = dayOnResume(cur, followToday, new Date());
+  await Promise.all([loadDay(), loadStatic()]); renderAll(); show(view);
+});
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 start();
 </script>
