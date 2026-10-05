@@ -85,11 +85,12 @@ nav button.on{color:var(--acc-ink)}
 <div id="offline" class="hidden">Brak sieci – pokazuję ostatni stan, zmiany nie zapiszą się.</div>
 <div id="login" class="login hidden">
   <h1>Dzień</h1>
-  <p class="muted">Zaloguj się adresem mfryczu@gmail.com. Pierwszy raz: wpisz hasło i kliknij „Załóż konto”, potem potwierdź maila.</p>
+  <p class="muted">Zaloguj się albo załóż konto. Po założeniu potwierdź maila.</p>
   <div class="card">
-    <input id="lemail" type="email" placeholder="email" autocomplete="username" value="mfryczu@gmail.com"><div style="height:8px"></div>
+    <input id="lemail" type="email" placeholder="email" autocomplete="username"><div style="height:8px"></div>
     <input id="lpass" type="password" placeholder="hasło" autocomplete="current-password"><div style="height:10px"></div>
     <div class="row"><button class="grow" id="bLogin">Zaloguj</button><button class="ghost grow" id="bSignup">Załóż konto</button></div>
+    <button class="ghost small" id="bReset" style="margin-top:8px">Nie pamiętam hasła</button>
     <p id="lmsg" class="muted"></p>
   </div>
 </div>
@@ -152,9 +153,9 @@ nav button.on{color:var(--acc-ink)}
 <section id="v-jedzenie" class="hidden">
   <div class="card">
     <h2>Dziś</h2>
-    <div class="row"><span class="big" id="kcalSum">0</span><span class="muted grow">/ <span id="kcalT">3300</span> kcal</span></div>
+    <div class="row"><span class="big" id="kcalSum">0</span><span class="muted grow">/ <span id="kcalT">–</span> kcal</span></div>
     <div class="bar"><i id="kcalBar" style="width:0"></i></div>
-    <div class="row" style="margin-top:8px"><span class="big" id="protSum">0</span><span class="muted grow">/ <span id="protT">150</span> g białka</span></div>
+    <div class="row" style="margin-top:8px"><span class="big" id="protSum">0</span><span class="muted grow">/ <span id="protT">–</span> g białka</span></div>
     <div class="bar"><i id="protBar" style="width:0;background:var(--blue)"></i></div>
     <div class="muted" id="left" style="margin-top:6px"></div>
   </div>
@@ -209,7 +210,7 @@ nav button.on{color:var(--acc-ink)}
 <!-- CELE -->
 <section id="v-cele" class="hidden">
   <div class="card">
-    <h2>Waga (cel 79 → 90 kg)</h2>
+    <h2 id="wTitle">Waga</h2>
     <div class="row"><span class="big" id="wNow">–</span><span class="muted grow">kg</span></div>
     <div class="bar"><i id="wBar" style="width:0"></i></div>
     <div class="muted" id="wInfo"></div>
@@ -255,6 +256,7 @@ const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
 const toast = t => { const x = $('#toast'); x.textContent = t; x.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('show'), 1600); };
 const fail = (e) => { console.error(e); toast(navigator.onLine ? 'Nie zapisano: ' + (e.message || e) : 'Nie zapisano – brak sieci'); };
+const failLoad = (e) => { console.error(e); toast(navigator.onLine ? 'Nie udało się wczytać: ' + (e.message || e) : 'Brak sieci – pokazuję ostatni stan'); };
 
 // ---------- data ----------
 const setOffline = on => $('#offline').classList.toggle('hidden', !on);
@@ -265,18 +267,18 @@ let followToday = true; // czy patrzymy na „dziś” – wtedy po północy ap
 let day = null, rules = [], film = null, items = [], goals = [], weights = [], notes = [], meals = [];
 let itemKind = 'zakupy', view = 'dzis';
 const PL_DAYS = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'];
+// Ustawienia użytkownika (tabela settings); wartości startowe tylko do pierwszego wczytania.
+let cfg = { kcal_target: 2500, protein_target: 120, morning_items: [], evening_items: [], quick_meals: [] };
 
-const MORNING = [['lozko', 'Łóżko pościelone'], ['modlitwa', 'Modlitwa'], ['woda', 'Woda'], ['leki', 'Leki rano (do śniadania)'], ['matma', '10 min matematyki przed pracą']];
-const EVENING = [['leki_wieczor', 'Leki wieczorne'], ['spac_na_czas', 'Idę spać przed 0:00']];
-const QUICK = [['Shake (mleko b/l + odżywka + banan)', 600, 40], ['Owsianka 60 g z odżywką', 620, 47], ['3 jajka + pieczywo', 600, 30], ['Kurczak + ryż + warzywa', 700, 55], ['Wrap z kurczakiem', 650, 45], ['Spaghetti z mielonym', 750, 45], ['Płatki ryżowe przed treningiem', 350, 8], ['Kanapki (3 kromki)', 500, 22]];
-
+const emptyDay = () => ({ date: cur, plan: [], morning: {}, evening: {}, rules_broken: [] });
 async function loadDay() {
-  const { data, error } = await sb.from('days').select('*').eq('date', cur).maybeSingle();
-  if (error) return fail(error);
-  day = data || { date: cur, plan: [], morning: {}, evening: {}, rules_broken: [], kcal_target: 3300, protein_target: 150 };
-  const m = await sb.from('meals').select('*').eq('date', cur).order('created_at');
-  if (m.error) return fail(m.error);
-  meals = m.data;
+  const [d, m] = await Promise.all([
+    sb.from('days').select('*').eq('date', cur).maybeSingle(),
+    sb.from('meals').select('*').eq('date', cur).order('created_at'),
+  ]);
+  if (d.error || m.error) failLoad(d.error || m.error);
+  day = d.data || (day?.date === cur ? day : emptyDay());
+  meals = m.data || (day?.date === cur ? meals : []);
 }
 // Przy błędzie przyciski wracają do poprzedniego stanu; tekst (keepOnError) zostaje w polu i zapisze się przy następnej zmianie.
 async function saveDay(patch, keepOnError = false) {
@@ -288,19 +290,25 @@ async function saveDay(patch, keepOnError = false) {
   return true;
 }
 async function loadStatic() {
-  const [r, f, i, g, w, n] = await Promise.all([
+  const [r, f, i, g, w, n, s] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
     sb.from('film').select('*').eq('id', 'current').maybeSingle(),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
     sb.from('weights').select('*').order('date'),
     sb.from('notes').select('*').order('created_at', { ascending: false }).limit(30),
+    sb.from('settings').select('*').maybeSingle(),
   ]);
-  for (const x of [r, f, i, g, w, n]) if (x.error) return fail(x.error);
-  rules = r.data; film = f.data || { id: 'current', title: '', step: 1, week_done: 0, week_target: 3 }; items = i.data; goals = g.data; weights = w.data; notes = n.data;
+  const bad = [r, f, i, g, w, n, s].find(x => x.error); if (bad) failLoad(bad.error);
+  // Przy błędzie zostaje to, co już było wczytane – ekran nie robi się pusty.
+  rules = r.data ?? rules; film = f.data || film || { id: 'current', title: '', step: 1, week_done: 0, week_target: 3 };
+  items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights; notes = n.data ?? notes;
+  if (s.data) cfg = s.data;
 }
 
 // ---------- render ----------
+// Nie nadpisuj pola, w którym jest niezapisany jeszcze tekst (zapis po 800 ms).
+const setVal = (sel, v) => { if (!pending.has(sel)) $(sel).value = v || ''; };
 function checkRow(on, label, onclick) {
   const r = el('div', { class: 'check' + (on ? ' done' : ''), onclick }, el('div', { class: 'box' + (on ? ' on' : '') }, on ? '✓' : ''), el('span', { class: 'lbl grow' }, label));
   return r;
@@ -318,36 +326,42 @@ function renderDzis() {
   $('#sleepH').textContent = h ?? '–';
   const rd = $('#readiness');
   if (day.readiness) { rd.textContent = 'gotowość ' + day.readiness; rd.className = 'pill ' + (day.readiness >= 75 ? 'green' : day.readiness >= 55 ? 'yellow' : 'red'); } else { rd.textContent = '–'; rd.className = 'pill'; }
-  const mo = $('#morning'); mo.replaceChildren(...MORNING.map(([k, l]) => checkRow(!!day.morning?.[k], l, () => saveDay({ morning: { ...day.morning, [k]: !day.morning?.[k] } }).then(renderDzis))));
+  const mo = $('#morning'); mo.replaceChildren(...cfg.morning_items.map(([k, l]) => checkRow(!!day.morning?.[k], l, () => saveDay({ morning: { ...day.morning, [k]: !day.morning?.[k] } }).then(renderDzis))));
+  if (!cfg.morning_items.length) mo.append(el('div', { class: 'muted' }, 'Brak porannych rzeczy w ustawieniach.'));
   const pl = $('#plan'); const plan = day.plan || [];
   pl.replaceChildren(...plan.map((p, idx) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
   if (!plan.length) pl.append(el('div', { class: 'muted' }, 'Brak planu. Brief wpisze go rano albo dodaj sam.'));
   const rb = $('#rehabBox'); rb.className = 'box' + (day.rehab ? ' on' : ''); rb.textContent = day.rehab ? '✓' : '';
-  $('#training').value = day.training || '';
-  const ru = $('#rules'); const broken = day.rules_broken || [];
+  setVal('#training', day.training);
+  // Zasady: „—” = jeszcze nie sprawdzone; „OK” dopiero po zatwierdzeniu „Reszta OK”.
+  const ru = $('#rules'); const broken = day.rules_broken || []; const rulesDone = !!day.evening?.rules_done;
   ru.replaceChildren(...rules.map(r => {
-    const isB = broken.includes(r.nr);
-    const d = el('div', { class: 'rule' }, el('div', { class: 'row' }, el('span', { class: 'grow' }, r.nr + '. ' + r.text), el('button', { class: 'small ' + (isB ? '' : 'ghost'), style: isB ? 'background:var(--bad);color:#fff' : '', onclick: e => { e.stopPropagation(); const nb = isB ? broken.filter(x => x !== r.nr) : [...broken, r.nr]; saveDay({ rules_broken: nb }).then(renderDzis); } }, isB ? 'złamane' : 'OK')), el('div', { class: 'why' }, r.why || ''));
+    const st = ruleState(r.nr, broken, rulesDone);
+    const d = el('div', { class: 'rule' }, el('div', { class: 'row' }, el('span', { class: 'grow' }, r.nr + '. ' + r.text),
+      el('button', { class: 'small ' + (st === 'broken' ? '' : 'ghost'), style: st === 'broken' ? 'background:var(--bad);color:#fff' : '', onclick: e => { e.stopPropagation(); const nb = st === 'broken' ? broken.filter(x => x !== r.nr) : [...broken, r.nr]; saveDay({ rules_broken: nb }).then(renderDzis); } }, { broken: 'złamane', ok: 'OK', unset: '—' }[st])),
+      el('div', { class: 'why' }, r.why || ''));
     d.addEventListener('click', () => d.classList.toggle('open'));
     return d;
   }));
+  if (rules.length) ru.append(el('button', { class: rulesDone ? 'ghost small' : 'small', style: 'margin-top:10px;width:100%', onclick: () => saveDay({ evening: { ...day.evening, rules_done: !rulesDone } }).then(renderDzis) }, rulesDone ? 'Cofnij zatwierdzenie' : 'Reszta OK – zatwierdzam'));
   const ev = $('#evening');
   const doneN = plan.filter(p => p.done).length;
-  ev.replaceChildren(el('div', { class: 'muted', style: 'margin-bottom:6px' }, 'Zrobione z planu: ' + doneN + '/' + plan.length), ...EVENING.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
-  $('#doceniam').value = day.evening?.doceniam || '';
-  $('#evNote').value = day.evening?.notatka || '';
+  ev.replaceChildren(el('div', { class: 'muted', style: 'margin-bottom:6px' }, 'Zrobione z planu: ' + doneN + '/' + plan.length), ...cfg.evening_items.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
+  setVal('#doceniam', day.evening?.doceniam);
+  setVal('#evNote', day.evening?.notatka);
   const sc = $('#ocena'); sc.replaceChildren(...Array.from({ length: 10 }, (_, i) => el('button', { class: day.evening?.ocena === i + 1 ? 'on' : '', onclick: () => saveDay({ evening: { ...day.evening, ocena: i + 1 } }).then(renderDzis) }, String(i + 1))));
   const ce = $('#coachEvening'); ce.classList.toggle('hidden', !day.coach_evening); ce.textContent = day.coach_evening || '';
 }
 function renderJedzenie() {
   const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
-  const kt = day.kcal_target || 3300, pt = day.protein_target || 150;
+  const kt = day.kcal_target || cfg.kcal_target, pt = day.protein_target || cfg.protein_target;
   $('#kcalSum').textContent = k; $('#protSum').textContent = p; $('#kcalT').textContent = kt; $('#protT').textContent = pt;
   $('#kcalBar').style.width = Math.min(100, k / kt * 100) + '%'; $('#protBar').style.width = Math.min(100, p / pt * 100) + '%';
   $('#left').textContent = k >= kt && p >= pt ? 'Cel dnia zrobiony.' : 'Zostało: ' + Math.max(0, kt - k) + ' kcal i ' + Math.max(0, pt - p) + ' g białka.';
   const ml = $('#meals');
   ml.replaceChildren(...meals.map(m => el('div', { class: 'item' }, el('span', { class: 'muted', style: 'width:44px' }, m.time || ''), el('span', { class: 'grow' }, m.name), el('span', { class: 'muted' }, (m.kcal ?? '?') + ' / ' + (m.protein ?? '?') + ' g'), el('button', { class: 'x', onclick: async () => { if (!confirm('Usunąć „' + m.name + '”?')) return; const { error } = await sb.from('meals').delete().eq('id', m.id); if (error) return fail(error); meals = meals.filter(x => x.id !== m.id); renderJedzenie(); } }, '×'))));
   if (!meals.length) ml.append(el('div', { class: 'muted' }, 'Nic jeszcze nie wpisane.'));
+  $('#quick').replaceChildren(...cfg.quick_meals.map(([n, kc, pr]) => el('button', { onclick: () => { $('#mName').value = n; $('#mKcal').value = kc; $('#mProt').value = pr; } }, n.split(' (')[0] + ' · ' + kc)));
 }
 async function addMeal(name, kcal, protein) {
   if (!name) return toast('Wpisz, co zjadłeś');
@@ -362,7 +376,7 @@ function renderFilm() {
   $('#fSteps').replaceChildren(...Array.from({ length: tot }, (_, i) => el('i', { class: i < st ? 'on' : '' })));
   const names = ['skrypt i hook', 'materiał', 'montaż', 'napisy', 'publikacja', 'wpis i licznik'];
   $('#fStepLbl').textContent = 'Krok ' + st + '/' + tot + ': ' + (names[st - 1] || '');
-  $('#fNextMove').value = film.next_move || ''; $('#fBlocker').value = film.blocker || '';
+  setVal('#fNextMove', film.next_move); setVal('#fBlocker', film.blocker);
   $('#fWeek').textContent = (film.week_done || 0) + '/' + (film.week_target || 3);
 }
 async function saveFilm(patch, keepOnError = false) {
@@ -393,7 +407,13 @@ function renderItems() {
 function renderCele() {
   const last = weights[weights.length - 1];
   $('#wNow').textContent = last ? last.kg : '–';
-  if (last) { const start = 75, pct = Math.max(0, Math.min(100, (last.kg - start) / (90 - start) * 100)); $('#wBar').style.width = pct + '%'; $('#wInfo').textContent = 'Ostatni pomiar ' + last.date + '. Do 79 kg: ' + Math.max(0, (79 - last.kg)).toFixed(1) + ' kg, do 90 kg: ' + Math.max(0, (90 - last.kg)).toFixed(1) + ' kg.'; }
+  const s0 = cfg.weight_start, mid = cfg.weight_mid, goal = cfg.weight_goal;
+  $('#wTitle').textContent = goal ? 'Waga (cel ' + (mid ? mid + ' → ' : '') + goal + ' kg)' : 'Waga';
+  $('#wBar').parentElement.classList.toggle('hidden', !(s0 && goal));
+  if (last && s0 && goal) {
+    const pct = Math.max(0, Math.min(100, (last.kg - s0) / (goal - s0) * 100)); $('#wBar').style.width = pct + '%';
+    $('#wInfo').textContent = 'Ostatni pomiar ' + last.date + '.' + (mid ? ' Do ' + mid + ' kg: ' + Math.max(0, mid - last.kg).toFixed(1) + ' kg,' : '') + ' do ' + goal + ' kg: ' + Math.max(0, goal - last.kg).toFixed(1) + ' kg.';
+  } else $('#wInfo').textContent = last ? 'Ostatni pomiar ' + last.date + '.' : '';
   $('#goals').replaceChildren(...goals.map(g => el('div', { class: 'card' },
     el('div', { class: 'row' }, el('span', { class: 'pill' }, g.id), el('b', { class: 'grow' }, g.title)),
     el('div', { class: 'muted', style: 'margin-top:6px' }, 'Miara: ' + (g.metric || '') + (g.deadline ? ' · do ' + g.deadline : '')),
@@ -450,7 +470,6 @@ bindText('#doceniam', v => ({ evening: { ...day.evening, doceniam: v } }));
 bindText('#evNote', v => ({ evening: { ...day.evening, notatka: v } }));
 
 $('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
-$('#quick').replaceChildren(...QUICK.map(([n, k, p]) => el('button', { onclick: () => { $('#mName').value = n; $('#mKcal').value = k; $('#mProt').value = p; } }, n.split(' (')[0] + ' · ' + k)));
 
 $('#fPrev').onclick = () => saveFilm({ step: Math.max(1, (film.step || 1) - 1) }).then(renderFilm);
 $('#fNext').onclick = () => saveFilm({ step: Math.min(film.steps_total || 6, (film.step || 1) + 1) }).then(renderFilm);
@@ -463,7 +482,7 @@ $('#tZ').onclick = () => { itemKind = 'zakupy'; renderItems(); }; $('#tS').oncli
 $('#iAdd').onclick = async () => { const name = $('#iNew').value.trim(); if (!name) return; const { data, error } = await sb.from('items').insert({ kind: itemKind, name, qty: $('#iQty').value.trim() || null }).select().single(); if (error) return fail(error); items.push(data); $('#iNew').value = $('#iQty').value = ''; renderItems(); };
 $('#iNew').onkeydown = e => { if (e.key === 'Enter') $('#iAdd').click(); };
 
-$('#wAdd').onclick = async () => { const kg = parseFloat(String($('#wKg').value).replace(',', '.')); if (!kg) return; const date = ymd(new Date()); const { error } = await sb.from('weights').upsert({ date, kg }); if (error) return fail(error); weights = weights.filter(w => w.date !== date).concat({ date, kg }).sort((a, b) => a.date < b.date ? -1 : 1); $('#wKg').value = ''; renderCele(); toast('Waga zapisana'); };
+$('#wAdd').onclick = async () => { const kg = parseFloat(String($('#wKg').value).replace(',', '.')); if (!kg) return; const date = ymd(new Date()); const { error } = await sb.from('weights').upsert({ date, kg }, { onConflict: 'user_id,date' }); if (error) return fail(error); weights = weights.filter(w => w.date !== date).concat({ date, kg }).sort((a, b) => a.date < b.date ? -1 : 1); $('#wKg').value = ''; renderCele(); toast('Waga zapisana'); };
 
 $('#nAdd').onclick = async () => { const text = $('#nText').value.trim(); if (!text) return; const { data, error } = await sb.from('notes').insert({ text, kind: $('#nKind').value, author: 'michal' }).select().single(); if (error) return fail(error); notes.unshift(data); $('#nText').value = ''; renderNotes(); toast('Wysłane'); };
 $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
@@ -479,7 +498,18 @@ async function start() {
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
 $('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start(); });
+$('#bReset').onclick = async () => {
+  const email = $('#lemail').value.trim(); if (!email) { $('#lmsg').textContent = 'Wpisz najpierw maila.'; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Wysłałem link do zmiany hasła. Otwórz go na tym urządzeniu.';
+};
+sb.auth.onAuthStateChange(async (ev) => {
+  if (ev === 'PASSWORD_RECOVERY') {
+    const p = prompt('Nowe hasło (min. 6 znaków):');
+    if (p) { const { error } = await sb.auth.updateUser({ password: p }); toast(error ? 'Błąd: ' + error.message : 'Hasło zmienione'); }
+  }
+  if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start();
+});
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'hidden') return flushText();
   if ($('#app').classList.contains('hidden')) return;
