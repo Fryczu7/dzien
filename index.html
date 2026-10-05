@@ -64,6 +64,8 @@ button:active{opacity:.7}
 .note{padding:10px 12px;border-radius:12px;background:var(--card2);margin:8px 0;white-space:pre-wrap}
 .note.claude{border-left:3px solid var(--acc)}
 .note small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
+.saved{font-size:13px;min-height:18px;margin:4px 0 2px;color:var(--muted)}
+.saved.ok{color:var(--acc-ink)}.saved.err{color:var(--bad)}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
 nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 2px 8px;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav button b{font-size:20px;line-height:1}
@@ -308,7 +310,7 @@ async function loadStatic() {
 
 // ---------- render ----------
 // Nie nadpisuj pola, w którym jest niezapisany jeszcze tekst (zapis po 800 ms).
-const setVal = (sel, v) => { if (!pending.has(sel)) $(sel).value = v || ''; };
+const setVal = (sel, v) => { if (pending.has(sel)) return; const f = $(sel); if (f.value !== (v || '') && f._status) f._status.textContent = ''; f.value = v || ''; };
 function checkRow(on, label, onclick) {
   const r = el('div', { class: 'check' + (on ? ' done' : ''), onclick }, el('div', { class: 'box' + (on ? ' on' : '') }, on ? '✓' : ''), el('span', { class: 'lbl grow' }, label));
   return r;
@@ -429,14 +431,21 @@ function renderAll() { renderHeader(); renderDzis(); renderJedzenie(); renderFil
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
 const pending = new Map();
+// Pod polem widać stan zapisu – nie ma przycisku „wyślij”, więc to jedyne potwierdzenie.
 function bindText(sel, toPatch, save = saveDay) {
+  const field = $(sel), status = el('div', { class: 'saved' });
+  field.after(status); field._status = status;
   const flush = () => { const p = pending.get(sel); if (!p) return; clearTimeout(p.t); pending.delete(sel); p.run(); };
-  $(sel).addEventListener('input', e => {
+  field.addEventListener('input', e => {
     const v = e.target.value; const old = pending.get(sel); if (old) clearTimeout(old.t);
-    const run = () => save(toPatch(v), true);
+    status.textContent = 'Zapisuję…'; status.className = 'saved';
+    const run = () => save(toPatch(v), true).then(ok => {
+      status.textContent = ok ? 'Zapisane ✓' : 'Nie zapisano – zapiszę przy następnej zmianie';
+      status.className = 'saved' + (ok ? ' ok' : ' err');
+    });
     pending.set(sel, { run, t: setTimeout(() => { pending.delete(sel); run(); }, 800) });
   });
-  $(sel).addEventListener('blur', flush);
+  field.addEventListener('blur', flush);
 }
 function flushText() { for (const [, p] of pending) { clearTimeout(p.t); p.run(); } pending.clear(); }
 window.addEventListener('pagehide', flushText);
