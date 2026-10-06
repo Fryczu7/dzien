@@ -1,6 +1,8 @@
 -- Zapis coacha nocnego przez funkcje. Powód: konektor Supabase prosi o potwierdzenie każdego UPDATE,
--- a w nocy nie ma kto kliknąć. Wywołanie „select public.coach_…(…)” nie wymaga potwierdzenia
--- i ogranicza coacha do dokładnie tych zmian. Właściciel: konto mfryczu@gmail.com.
+-- a w nocy nie ma kto kliknąć. Wywołanie „select public.coach_…(…)” nie wymaga potwierdzenia.
+-- UWAGA: to NIE jest twarde ograniczenie – konektor działa jako postgres i zwykły INSERT do dowolnej
+-- tabeli też przejdzie bez potwierdzenia. Granice zapisu trzyma prompt (rutyny/coach-nocny.md).
+-- Właściciel: konto mfryczu@gmail.com.
 -- Funkcje dostępne tylko dla roli serwisowej (konektor), nie dla anon/authenticated z apki.
 
 create or replace function public.coach_owner() returns uuid
