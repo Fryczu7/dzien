@@ -62,7 +62,10 @@ button:active{opacity:.7}
 .item:last-child{border-bottom:0}
 .x{background:none;color:var(--muted);padding:4px 8px;font-weight:400}
 .note{padding:10px 12px;border-radius:12px;background:var(--card2);margin:8px 0;white-space:pre-wrap}
-.note.claude{border-left:3px solid var(--acc)}
+.note.claude{background:color-mix(in srgb,var(--acc) 12%,var(--card2))}
+.talk{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:12px;background:var(--acc);color:#06210f;font-weight:600;text-decoration:none}
+.talk:active{opacity:.7}
+.talk:focus-visible,button:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px}
 .note small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
 .saved{font-size:13px;min-height:18px;margin:4px 0 2px;color:var(--muted)}
 .saved.ok{color:var(--acc-ink)}.saved.err{color:var(--bad)}
@@ -162,14 +165,18 @@ nav button.on{color:var(--acc-ink)}
     <div class="muted" id="left" style="margin-top:6px"></div>
   </div>
   <div class="card">
-    <h2>Dodaj posiłek</h2>
+    <a class="talk" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zjadłeś</a>
+    <p class="muted" style="margin:8px 0 0">Claude policzy kalorie i białko i od razu zapisze tutaj.</p>
+  </div>
+  <div class="card">
+    <h2>Dodaj ręcznie</h2>
     <input id="mName" placeholder="Co zjadłeś"><div style="height:8px"></div>
     <div class="grid2"><input id="mKcal" type="number" inputmode="numeric" placeholder="kcal"><input id="mProt" type="number" inputmode="numeric" placeholder="białko g"></div>
     <div style="height:8px"></div>
-    <button id="mAdd" style="width:100%">Dodaj</button>
+    <button id="mAdd" class="ghost" style="width:100%">Dodaj</button>
     <div class="muted" style="margin-top:10px">Szybko:</div>
     <div class="quick" id="quick"></div>
-    <div class="muted" style="margin-top:8px;font-size:13px">Nie znasz kcal? Wpisz samą nazwę – Claude policzy przy check-inie.</div>
+    <div class="muted" style="margin-top:8px;font-size:13px">Tu kalorie wpisujesz sam albo wybierasz szybki posiłek. Bez liczb – zapytaj Claude.</div>
   </div>
   <div class="card">
     <h2>Zjedzone</h2>
@@ -224,8 +231,12 @@ nav button.on{color:var(--acc-ink)}
 <!-- CLAUDE -->
 <section id="v-claude" class="hidden">
   <div class="card">
-    <h2>Do Claude / szybka notatka</h2>
-    <textarea id="nText" placeholder="Myśl, zadanie, pytanie do coacha… Claude rozłoży to w vaulcie przy najbliższym briefie albo check-inie."></textarea>
+    <a class="talk" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z Claude</a>
+    <p class="muted" style="margin:8px 0 0">Jedzenie, sen, rehab, trening, wieczór – powiedz normalnie, Claude zapisze to w apce.</p>
+  </div>
+  <div class="card">
+    <h2>Szybka notatka</h2>
+    <textarea id="nText" placeholder="Myśl, zadanie, pytanie… Claude przeczyta, gdy zapytasz go o dzień."></textarea>
     <div class="row" style="margin-top:8px"><select id="nKind" class="grow"><option value="notatka">Notatka</option><option value="pytanie">Pytanie do coacha</option></select><button id="nAdd">Wyślij</button></div>
   </div>
   <div class="card">
@@ -423,10 +434,10 @@ function renderCele() {
     el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'))));
 }
 function renderNotes() {
-  $('#notes').replaceChildren(...notes.map(n => el('div', { class: 'note' + (n.author === 'claude' ? ' claude' : '') }, n.text, el('small', {}, (n.author === 'claude' ? 'Claude' : 'Ty') + ' · ' + (n.kind) + ' · ' + new Date(n.created_at).toLocaleString('pl-PL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + (n.author === 'michal' ? (n.processed ? ' · ✓ w vaulcie' : ' · czeka') : '')))));
+  $('#notes').replaceChildren(...notes.map(n => el('div', { class: 'note' + (n.author === 'claude' ? ' claude' : '') }, n.text, el('small', {}, (n.author === 'claude' ? 'Claude' : 'Ty') + ' · ' + (n.kind) + ' · ' + new Date(n.created_at).toLocaleString('pl-PL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + (n.author === 'michal' ? (n.processed ? ' · ✓ Claude przeczytał' : ' · czeka na Claude') : '')))));
   if (!notes.length) $('#notes').append(el('div', { class: 'muted' }, 'Brak notatek.'));
 }
-function renderAll() { renderHeader(); renderDzis(); renderJedzenie(); renderFilm(); renderItems(); renderCele(); renderNotes(); }
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderFilm(); renderItems(); renderCele(); renderNotes(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
