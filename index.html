@@ -14,17 +14,17 @@
 <style>
 :root{
   --bg:#0f1115;--card:#181b22;--card2:#1f232c;--line:#2a2f3a;--text:#e8eaef;--muted:#8b93a3;
-  --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--bad:#ef4444;--blue:#60a5fa;
+  --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--bad:#dc2626;--bad-ink:#f87171;--blue:#60a5fa;
 }
 @media (prefers-color-scheme: light){
-  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc-ink:#15803d;}
+  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc-ink:#15803d;--bad-ink:#b91c1c;}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))}
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px;display:flex;align-items:center;gap:8px}
 header h1{font-size:20px;margin:0;flex:1}
-.datebtn{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 10px;font-size:15px}
+.datebtn{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 12px;font-size:15px;min-width:44px;min-height:44px}
 .datebtn:disabled{opacity:.35}
 main{padding:0 16px;max-width:640px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
@@ -38,7 +38,7 @@ input,textarea,select{width:100%;background:var(--card2);border:1px solid var(--
 textarea{min-height:70px;resize:vertical}
 button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#06210f;font-weight:600}
 button.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
-button.small{padding:6px 10px;font-size:14px}
+button.small{padding:6px 12px;font-size:14px;min-height:44px}
 button:active{opacity:.7}
 .check{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
 .check:last-child{border-bottom:0}
@@ -48,7 +48,6 @@ button:active{opacity:.7}
 .bar{height:10px;background:var(--card2);border-radius:6px;overflow:hidden;margin:6px 0 2px}
 .bar>i{display:block;height:100%;background:var(--acc);border-radius:6px}
 .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:13px;font-weight:600;background:var(--card2)}
-.green{background:#14532d;color:#bbf7d0}.yellow{background:#713f12;color:#fde68a}.red{background:#7f1d1d;color:#fecaca}
 .rule{padding:9px 0;border-bottom:1px solid var(--line)}
 .rule:last-child{border-bottom:0}
 .rule .why{color:var(--muted);font-size:14px;display:none;margin-top:3px}
@@ -60,7 +59,7 @@ button:active{opacity:.7}
 .quick button{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500;padding:7px 10px;font-size:14px}
 .item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
 .item:last-child{border-bottom:0}
-.x{background:none;color:var(--muted);padding:4px 8px;font-weight:400}
+.x{background:none;color:var(--muted);padding:4px 8px;font-weight:400;min-width:44px;min-height:44px}
 .note{padding:10px 12px;border-radius:12px;background:var(--card2);margin:8px 0;white-space:pre-wrap}
 .note.claude{background:color-mix(in srgb,var(--acc) 12%,var(--card2))}
 .talk{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:12px;background:var(--acc);color:#06210f;font-weight:600;text-decoration:none}
@@ -68,7 +67,7 @@ button:active{opacity:.7}
 .talk:focus-visible,button:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px}
 .note small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
 .saved{font-size:13px;min-height:18px;margin:4px 0 2px;color:var(--muted)}
-.saved.ok{color:var(--acc-ink)}.saved.err{color:var(--bad)}
+.saved.ok{color:var(--acc-ink)}.saved.err{color:var(--bad-ink)}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
 nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 2px 8px;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav button b{font-size:20px;line-height:1}
@@ -78,11 +77,44 @@ nav button.on{color:var(--acc-ink)}
 .hidden{display:none!important}
 #toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 #toast.show{opacity:1}
+#toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:4px 4px 4px 14px}
+.toast-act{background:transparent;color:var(--bg);text-decoration:underline;text-underline-offset:3px;min-height:44px;padding:0 12px}
+.bezkcal{color:var(--bad-ink);font-size:14px}
 .login{max-width:380px;margin:60px auto;padding:0 16px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.score{display:flex;gap:4px;flex-wrap:wrap}
-.score button{width:36px;padding:8px 0;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
-.score button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
+/* Ekran „Dziś” do patrzenia */
+.talk-main{min-height:56px;font-size:18px;margin-top:4px}
+.talk-hint{margin:8px 2px 12px}
+.brakuje{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:15px}
+.brakuje b{font-weight:600}
+.brakuje.ok{color:var(--acc-ink)}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.toggle{display:flex;align-items:center;gap:10px;min-height:48px;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500;text-align:left}
+.toggle .box{width:22px;height:22px;border-radius:7px}
+.toggle.on .box{background:var(--acc);border-color:var(--acc)}
+.toggle.on .box::after{content:"✓";color:#06210f;font-size:14px}
+.toggle.on{border-color:var(--acc)}
+.kcalline{margin-top:14px;font-size:15px;cursor:pointer}
+.kcalline .muted{font-size:15px}
+.week{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.week b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.week span{color:var(--muted);font-size:14px}
+.ask{color:var(--muted);font-size:14px;margin:14px 0 6px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{min-height:44px}
+.seg button.on,.chips button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-width:44px;min-height:44px;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
+details>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+details[open]>summary::after{transform:rotate(-135deg)}
+#docDet{margin-top:8px}
+#catchupForm{margin-top:8px}
+#docDet textarea{margin-top:6px}
+.wide{width:100%;margin-top:14px;min-height:48px}
+.summary{margin:0;font-size:15px}
+::selection{background:color-mix(in srgb,var(--acc) 35%,transparent)}
 #offline{background:var(--warn);color:#1a1200;text-align:center;font-size:14px;padding:6px 12px}
 </style>
 </head>
@@ -111,46 +143,73 @@ nav button.on{color:var(--acc-ink)}
 
 <!-- DZIŚ -->
 <section id="v-dzis">
-  <div class="card" id="coachCard">
-    <h2>Coach</h2>
-    <div id="coachMorning" class="muted">Brak wiadomości na dziś. Brief wpisze ją tutaj.</div>
+  <!-- Ekran do patrzenia: wpisy idą przez rozmowę z Claude, tu tylko stan dnia i kilka dotknięć. -->
+  <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
+  <p class="muted talk-hint">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
+  <p id="brakuje" class="brakuje"></p>
+  <div id="coachMorning" class="note claude hidden"></div>
+
+  <!-- Rano: do odhaczenia porannych rzeczy albo 14:00 -->
+  <div class="card hidden" id="cardRano">
+    <div class="row"><h2 class="grow">Rano</h2><button class="ghost small" id="ranoAll">Wszystko ✓</button></div>
+    <div id="morning"></div>
   </div>
+
+  <!-- Wieczór: od 20:00 i dla minionych dni -->
+  <div class="card hidden" id="cardWieczor">
+    <h2>Zamknij dzień</h2>
+    <div id="evening"></div>
+    <div class="ask">Zasady dziś</div>
+    <div class="seg" id="rulesSeg"><button class="ghost" id="rulesOk">Wszystko OK</button><button class="ghost" id="rulesBad">Coś złamałem</button></div>
+    <div id="rules" class="hidden"></div>
+    <details id="docDet"><summary>Za co się dziś doceniam <span class="muted">(opcjonalnie)</span></summary><textarea id="doceniam"></textarea></details>
+    <button id="closeDay" class="wide">Zamknij dzień</button>
+  </div>
+  <div class="card hidden" id="cardZamkniety">
+    <div class="row"><h2 class="grow">Dzień zamknięty</h2><button class="ghost small" id="reopenDay">Otwórz</button></div>
+    <p id="closedSummary" class="summary"></p>
+    <div id="coachEvening" class="note claude hidden"></div>
+  </div>
+
   <div class="card">
-    <h2>Sen</h2>
-    <div class="grid2">
+    <h2>Dziś</h2>
+    <div id="plan"></div>
+    <div class="toggles">
+      <button class="toggle" id="tRehab"><span class="box"></span>Rehab</button>
+      <button class="toggle" id="tLeki"><span class="box"></span>Leki rano</button>
+    </div>
+    <div class="kcalline" id="dKcal" role="button" tabindex="0"></div>
+    <div class="bar"><i id="dKcalBar" style="width:0"></i></div>
+  </div>
+
+  <div class="card">
+    <h2>Ten tydzień</h2>
+    <div class="week" id="week"></div>
+  </div>
+
+  <details class="card" id="allDay">
+    <summary>Cały dzień: sen, trening, plan</summary>
+    <div class="grid2" style="margin-top:12px">
       <label><span class="muted">Zasnąłem</span><input id="bed" type="time"></label>
       <label><span class="muted">Wstałem</span><input id="wake" type="time"></label>
     </div>
-    <div class="row" style="margin-top:10px"><span class="big" id="sleepH">–</span><span class="muted grow">godzin snu</span><span id="readiness" class="pill">–</span></div>
-  </div>
-  <div class="card">
-    <h2>Rano</h2>
-    <div id="morning"></div>
-  </div>
-  <div class="card">
-    <h2>Plan (max 3 + rehab)</h2>
-    <div id="plan"></div>
-    <div class="row" style="margin-top:8px"><input id="planNew" placeholder="Dodaj zadanie"><button id="planAdd">+</button></div>
-  </div>
-  <div class="card">
-    <h2>Ruch</h2>
-    <div class="check" data-k="rehab"><div class="box" id="rehabBox"></div><span class="lbl grow">Rehab zrobiony</span></div>
-    <input id="training" placeholder="Trening (np. klatka + nogi)" style="margin-top:8px">
-  </div>
-  <div class="card">
-    <h2>Nie robię <span class="muted" style="text-transform:none;letter-spacing:0">– dotknij, żeby zobaczyć dlaczego</span></h2>
-    <div id="rules"></div>
-  </div>
-  <div class="card">
-    <h2>Wieczór</h2>
-    <div id="evening"></div>
-    <label class="muted">Za co się dziś doceniam</label>
-    <textarea id="doceniam"></textarea>
-    <div class="muted" style="margin:10px 0 6px">Ocena dnia</div>
-    <div class="score" id="ocena"></div>
-    <label class="muted" style="display:block;margin-top:10px">Notatka z dnia</label>
-    <textarea id="evNote"></textarea>
-    <div id="coachEvening" class="note claude hidden"></div>
+    <p class="muted" id="sleepH" style="margin:6px 0 12px"></p>
+    <input id="training" placeholder="Trening (np. klatka + nogi)">
+    <div class="row" style="margin-top:12px"><input id="planNew" placeholder="Dodaj rzecz na dziś (max 3)"><button id="planAdd" aria-label="Dodaj">+</button></div>
+  </details>
+
+  <!-- Nadrabianie: jedno podsumowanie za kilka dni bez wpisów -->
+  <div id="catchup" class="hidden">
+    <button class="ghost wide" id="catchupOpen"></button>
+    <div class="card hidden" id="catchupForm">
+      <h2 id="catchupTitle"></h2>
+      <div class="ask">Rehab – ile razy?</div><div class="chips" data-k="rehab_count"></div>
+      <div class="ask">Trening – ile razy?</div><div class="chips" data-k="training_count"></div>
+      <div class="ask">Leki – w ile dni?</div><div class="chips" data-k="meds_days"></div>
+      <div class="ask">Kalorie zrobione?</div><div class="chips" data-k="kcal_ok"></div>
+      <div class="ask">Sen średnio (godziny, jeśli pamiętasz)</div><input id="cuSleep" type="text" inputmode="decimal" placeholder="np. 7,5">
+      <div class="row" style="margin-top:12px"><button class="ghost grow" id="catchupSkip">Pomiń</button><button class="grow" id="catchupSave">Zapisz</button></div>
+    </div>
   </div>
 </section>
 
@@ -223,7 +282,7 @@ nav button.on{color:var(--acc-ink)}
     <div class="row"><span class="big" id="wNow">–</span><span class="muted grow">kg</span></div>
     <div class="bar"><i id="wBar" style="width:0"></i></div>
     <div class="muted" id="wInfo"></div>
-    <div class="row" style="margin-top:8px"><input id="wKg" type="number" step="0.1" inputmode="decimal" placeholder="dzisiejsza waga"><button id="wAdd">Zapisz</button></div>
+    <p class="muted" style="margin:8px 0 0">Wagę podaj Claude, np. „ważę 76”.</p>
   </div>
   <div id="goals"></div>
 </section>
@@ -262,12 +321,17 @@ nav button.on{color:var(--acc-ink)}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
 const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } for (const k of kids) e.append(k); return e; };
-const toast = t => { const x = $('#toast'); x.textContent = t; x.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('show'), 1600); };
+const toast = (t, action) => {
+  const x = $('#toast'); x.replaceChildren(t);
+  if (action) x.append(el('button', { class: 'toast-act', onclick: () => { x.classList.remove('show'); action[1](); } }, action[0]));
+  x.classList.toggle('act', !!action); x.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('show'), action ? 5000 : 1600);
+};
 const fail = (e) => { console.error(e); toast(navigator.onLine ? 'Nie zapisano: ' + (e.message || e) : 'Nie zapisano – brak sieci'); };
 const failLoad = (e) => { console.error(e); toast(navigator.onLine ? 'Nie udało się wczytać: ' + (e.message || e) : 'Brak sieci – pokazuję ostatni stan'); };
 
@@ -278,6 +342,9 @@ window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
 let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
 let day = null, rules = [], film = null, items = [], goals = [], weights = [], notes = [], meals = [];
+// Historia do zestawienia tygodnia i wykrywania luki: dni z ostatnich 14 dni, daty posiłków, nadrobienia.
+let hist = [], mealDates = new Set(), catchups = [], gap = null, cuAnswers = {};
+let rulesOpen = false; // „Coś złamałem” rozwija listę zasad
 let itemKind = 'zakupy', view = 'dzis';
 const PL_DAYS = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'];
 // Ustawienia użytkownika (tabela settings); wartości startowe tylko do pierwszego wczytania.
@@ -301,6 +368,17 @@ async function saveDay(patch, keepOnError = false) {
   const { error } = await sb.from('days').upsert(row, { onConflict: 'user_id,date' });
   if (error) { fail(error); if (!keepOnError) { day = before; renderDzis(); } return false; }
   return true;
+}
+async function loadHistory() {
+  const today = ymd(new Date()), from = addDays(today, -14);
+  const [d, m, c] = await Promise.all([
+    sb.from('days').select('date,rehab,training,morning,sleep_h').gte('date', from).lte('date', today),
+    sb.from('meals').select('date').gte('date', from).lte('date', today),
+    sb.from('catchups').select('*').gte('to_date', addDays(today, -30)),
+  ]);
+  const bad = [d, m, c].find(x => x.error); if (bad) failLoad(bad.error);
+  hist = d.data ?? hist; catchups = c.data ?? catchups;
+  if (m.data) mealDates = new Set(m.data.map(x => x.date));
 }
 async function loadStatic() {
   const [r, f, i, g, w, n, s] = await Promise.all([
@@ -331,57 +409,120 @@ function renderHeader() {
   $('#dateLbl').textContent = (cur === ymd(new Date()) ? 'dziś' : PL_DAYS[d.getDay()]) + ' ' + d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0');
   $('#nextDay').disabled = cur >= ymd(new Date());
 }
+// Dzień w historii zawsze w aktualnej wersji (to, co właśnie odhaczono, od razu liczy się do tygodnia).
+function histWithDay() { return hist.filter(h => h.date !== day.date).concat(day); }
 function renderDzis() {
-  $('#coachMorning').textContent = day.coach_morning || 'Brak wiadomości na dziś. Brief wpisze ją tutaj.';
-  $('#coachMorning').className = day.coach_morning ? '' : 'muted';
-  $('#bed').value = day.bed || ''; $('#wake').value = day.wake || '';
-  const h = day.sleep_h ?? hoursBetween(day.bed, day.wake);
-  $('#sleepH').textContent = h ?? '–';
-  const rd = $('#readiness');
-  if (day.readiness) { rd.textContent = 'gotowość ' + day.readiness; rd.className = 'pill ' + (day.readiness >= 75 ? 'green' : day.readiness >= 55 ? 'yellow' : 'red'); } else { rd.textContent = '–'; rd.className = 'pill'; }
-  const mo = $('#morning'); mo.replaceChildren(...cfg.morning_items.map(([k, l]) => checkRow(!!day.morning?.[k], l, () => saveDay({ morning: { ...day.morning, [k]: !day.morning?.[k] } }).then(renderDzis))));
-  if (!cfg.morning_items.length) mo.append(el('div', { class: 'muted' }, 'Brak porannych rzeczy w ustawieniach.'));
-  const pl = $('#plan'); const plan = day.plan || [];
-  pl.replaceChildren(...plan.map((p, idx) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
-  if (!plan.length) pl.append(el('div', { class: 'muted' }, 'Brak planu. Brief wpisze go rano albo dodaj sam.'));
-  const rb = $('#rehabBox'); rb.className = 'box' + (day.rehab ? ' on' : ''); rb.textContent = day.rehab ? '✓' : '';
-  setVal('#training', day.training);
-  // Zasady: „—” = jeszcze nie sprawdzone; „OK” dopiero po zatwierdzeniu „Reszta OK”.
-  const ru = $('#rules'); const broken = day.rules_broken || []; const rulesDone = !!day.evening?.rules_done;
+  const today = ymd(new Date()), isToday = cur === today, hour = new Date().getHours();
+  const items = cfg.morning_items, plan = day.plan || [];
+  const morningDone = !!day.morning?.done || (items.length > 0 && items.every(([k]) => day.morning?.[k]));
+  const part = isToday ? partOfDay(hour, morningDone) : 'wieczor';
+
+  // Brakuje: tylko dla dzisiaj, jedna linia zamiast pustych kart.
+  const br = $('#brakuje'); br.classList.toggle('hidden', !isToday || day.closed);
+  if (isToday) {
+    const miss = missingToday(day, meals, cfg, hour);
+    br.className = 'brakuje' + (miss.length ? '' : ' ok');
+    br.replaceChildren(...(miss.length ? [el('b', {}, 'Brakuje: '), miss.join(' · ')] : ['Na dziś wszystko jest.']));
+  }
+  const cm = $('#coachMorning'); cm.classList.toggle('hidden', !day.coach_morning || day.closed); cm.textContent = day.coach_morning || '';
+
+  // Rano
+  $('#cardRano').classList.toggle('hidden', part !== 'rano');
+  $('#morning').replaceChildren(...items.map(([k, l]) => checkRow(!!day.morning?.[k], l, () => saveDay({ morning: { ...day.morning, [k]: !day.morning?.[k] } }).then(renderDzis))));
+  if (!items.length) $('#morning').append(el('div', { class: 'muted' }, 'Brak porannych rzeczy w ustawieniach.'));
+  const anyOn = items.some(([k]) => day.morning?.[k]);
+  $('#ranoAll').textContent = anyOn ? 'Gotowe' : 'Wszystko ✓';
+
+  // Wieczór / zamknięty
+  $('#cardWieczor').classList.toggle('hidden', part !== 'wieczor' || !!day.closed);
+  $('#cardZamkniety').classList.toggle('hidden', !day.closed);
+  $('#evening').replaceChildren(...cfg.evening_items.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
+  const broken = day.rules_broken || [], rulesDone = !!day.evening?.rules_done;
+  $('#rulesOk').className = rulesDone && !broken.length ? 'on' : 'ghost';
+  $('#rulesBad').className = broken.length || rulesOpen ? 'on' : 'ghost';
+  const ru = $('#rules'); ru.classList.toggle('hidden', !(broken.length || rulesOpen));
   ru.replaceChildren(...rules.map(r => {
-    const st = ruleState(r.nr, broken, rulesDone);
+    const st = ruleState(r.nr, broken, true);
     const d = el('div', { class: 'rule' }, el('div', { class: 'row' }, el('span', { class: 'grow' }, r.nr + '. ' + r.text),
-      el('button', { class: 'small ' + (st === 'broken' ? '' : 'ghost'), style: st === 'broken' ? 'background:var(--bad);color:#fff' : '', onclick: e => { e.stopPropagation(); const nb = st === 'broken' ? broken.filter(x => x !== r.nr) : [...broken, r.nr]; saveDay({ rules_broken: nb }).then(renderDzis); } }, { broken: 'złamane', ok: 'OK', unset: '—' }[st])),
+      el('button', { class: 'small ' + (st === 'broken' ? '' : 'ghost'), style: st === 'broken' ? 'background:var(--bad);color:#fff' : '', onclick: e => { e.stopPropagation(); const nb = st === 'broken' ? broken.filter(x => x !== r.nr) : [...broken, r.nr]; saveDay({ rules_broken: nb, evening: { ...day.evening, rules_done: true } }).then(renderDzis); } }, st === 'broken' ? 'złamane' : 'OK')),
       el('div', { class: 'why' }, r.why || ''));
     d.addEventListener('click', () => d.classList.toggle('open'));
     return d;
   }));
-  if (rules.length) ru.append(el('button', { class: rulesDone ? 'ghost small' : 'small', style: 'margin-top:10px;width:100%', onclick: () => saveDay({ evening: { ...day.evening, rules_done: !rulesDone } }).then(renderDzis) }, rulesDone ? 'Cofnij zatwierdzenie' : 'Reszta OK – zatwierdzam'));
-  const ev = $('#evening');
-  const doneN = plan.filter(p => p.done).length;
-  ev.replaceChildren(el('div', { class: 'muted', style: 'margin-bottom:6px' }, 'Zrobione z planu: ' + doneN + '/' + plan.length), ...cfg.evening_items.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
   setVal('#doceniam', day.evening?.doceniam);
-  setVal('#evNote', day.evening?.notatka);
-  const sc = $('#ocena'); sc.replaceChildren(...Array.from({ length: 10 }, (_, i) => el('button', { class: day.evening?.ocena === i + 1 ? 'on' : '', onclick: () => saveDay({ evening: { ...day.evening, ocena: i + 1 } }).then(renderDzis) }, String(i + 1))));
+  if (day.evening?.doceniam) $('#docDet').open = true;
+  const ws = weekStats(histWithDay(), catchups, today);
+  if (day.closed) {
+    const kcal = meals.reduce((a, m) => a + (m.kcal || 0), 0), kt = day.kcal_target || cfg.kcal_target;
+    $('#closedSummary').textContent = 'Rehab ' + ws.rehab + '/5 w tym tygodniu · ' + kcal + '/' + kt + ' kcal' + (plan.length ? ' · ' + plan.filter(p => p.done).length + '/' + plan.length + ' z planu' : '') + (broken.length ? ' · złamane zasady: ' + broken.length : '');
+  }
   const ce = $('#coachEvening'); ce.classList.toggle('hidden', !day.coach_evening); ce.textContent = day.coach_evening || '';
+
+  // Plan dnia
+  const pl = $('#plan');
+  pl.replaceChildren(...plan.map((p, idx) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', 'aria-label': 'Usuń', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
+  if (!plan.length) pl.append(el('div', { class: 'muted' }, 'Brak planu na dziś. Powiedz Claude, co jest najważniejsze.'));
+  $('#tRehab').classList.toggle('on', !!day.rehab);
+  $('#tLeki').classList.toggle('on', !!day.morning?.leki);
+  const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
+  const kt = day.kcal_target || cfg.kcal_target, pt = day.protein_target || cfg.protein_target;
+  $('#dKcal').replaceChildren(el('b', {}, k + ' / ' + kt + ' kcal'), el('span', { class: 'muted' }, ' · ' + p + ' / ' + pt + ' g białka'));
+  $('#dKcalBar').style.width = Math.min(100, k / kt * 100) + '%';
+
+  // Tydzień
+  const sleepTxt = ws.sleepAvg != null ? String(ws.sleepAvg).replace('.', ',') + ' h' : '–';
+  $('#week').replaceChildren(
+    el('div', {}, el('b', {}, ws.rehab + '/5'), el('span', {}, 'rehab')),
+    el('div', {}, el('b', {}, String(ws.training)), el('span', {}, 'treningi')),
+    el('div', {}, el('b', {}, ws.meds + '/' + ws.daysSoFar), el('span', {}, 'dni z lekami')),
+    el('div', {}, el('b', {}, sleepTxt), el('span', {}, 'sen średnio')));
+
+  // Cały dzień
+  setVal('#training', day.training);
+  $('#bed').value = day.bed || ''; $('#wake').value = day.wake || '';
+  const h = day.sleep_h ?? hoursBetween(day.bed, day.wake);
+  $('#sleepH').textContent = h ? 'Sen: ' + String(h).replace('.', ',') + ' h' : '';
+
+  // Nadrabianie luki (tylko na dzisiejszym ekranie)
+  const active = new Set([...hist.map(x => x.date), ...mealDates]);
+  gap = isToday ? findGap(active, catchups, today) : null;
+  $('#catchup').classList.toggle('hidden', !gap);
+  if (gap) {
+    const fmt = s => { const [, m, d] = s.split('-'); return +d + '.' + m; };
+    const span = gap.days === 1 ? fmt(gap.from) : fmt(gap.from) + '–' + fmt(gap.to);
+    $('#catchupOpen').textContent = 'Brak wpisów: ' + span + '. Nadrobić w skrócie?';
+    $('#catchupTitle').textContent = 'Nadrabiam ' + span + ' (' + gap.days + ' ' + (gap.days === 1 ? 'dzień' : 'dni') + ')';
+    document.querySelectorAll('#catchupForm .chips').forEach(c => {
+      const key = c.dataset.k;
+      const opts = key === 'kcal_ok' ? [['tak', 'Tak'], ['czesciowo', 'Częściowo'], ['nie', 'Nie']] : Array.from({ length: gap.days + 1 }, (_, i) => [i, String(i)]);
+      c.replaceChildren(...opts.map(([v, l]) => el('button', { class: cuAnswers[key] === v ? 'on' : '', onclick: () => { cuAnswers[key] = cuAnswers[key] === v ? undefined : v; renderDzis(); } }, l)));
+    });
+  }
 }
 function renderJedzenie() {
   const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
   const kt = day.kcal_target || cfg.kcal_target, pt = day.protein_target || cfg.protein_target;
   $('#kcalSum').textContent = k; $('#protSum').textContent = p; $('#kcalT').textContent = kt; $('#protT').textContent = pt;
   $('#kcalBar').style.width = Math.min(100, k / kt * 100) + '%'; $('#protBar').style.width = Math.min(100, p / pt * 100) + '%';
-  $('#left').textContent = k >= kt && p >= pt ? 'Cel dnia zrobiony.' : 'Zostało: ' + Math.max(0, kt - k) + ' kcal i ' + Math.max(0, pt - p) + ' g białka.';
+  const bez = meals.filter(m => m.kcal == null).length;
+  $('#left').textContent = (k >= kt && p >= pt ? 'Cel dnia zrobiony.' : 'Zostało: ' + Math.max(0, kt - k) + ' kcal i ' + Math.max(0, pt - p) + ' g białka.')
+    + (bez ? ' Bez kalorii: ' + bez + ' – powiedz Claude, policzy.' : '');
   const ml = $('#meals');
-  ml.replaceChildren(...meals.map(m => el('div', { class: 'item' }, el('span', { class: 'muted', style: 'width:44px' }, m.time || ''), el('span', { class: 'grow' }, m.name), el('span', { class: 'muted' }, (m.kcal ?? '?') + ' / ' + (m.protein ?? '?') + ' g'), el('button', { class: 'x', onclick: async () => { if (!confirm('Usunąć „' + m.name + '”?')) return; const { error } = await sb.from('meals').delete().eq('id', m.id); if (error) return fail(error); meals = meals.filter(x => x.id !== m.id); renderJedzenie(); } }, '×'))));
+  ml.replaceChildren(...meals.map(m => el('div', { class: 'item' }, el('span', { class: 'muted', style: 'width:44px' }, m.time || ''), el('span', { class: 'grow' }, m.name), m.kcal == null ? el('span', { class: 'bezkcal' }, 'do policzenia') : el('span', { class: 'muted' }, m.kcal + ' / ' + (m.protein ?? '?') + ' g'), el('button', { class: 'x', 'aria-label': 'Usuń', onclick: async () => { if (!confirm('Usunąć „' + m.name + '”?')) return; const { error } = await sb.from('meals').delete().eq('id', m.id); if (error) return fail(error); meals = meals.filter(x => x.id !== m.id); renderJedzenie(); } }, '×'))));
   if (!meals.length) ml.append(el('div', { class: 'muted' }, 'Nic jeszcze nie wpisane.'));
-  $('#quick').replaceChildren(...cfg.quick_meals.map(([n, kc, pr]) => el('button', { onclick: () => { $('#mName').value = n; $('#mKcal').value = kc; $('#mProt').value = pr; } }, n.split(' (')[0] + ' · ' + kc)));
+  // Szybki posiłek dodaje się od razu (z „Cofnij”), bez przepisywania do pól.
+  $('#quick').replaceChildren(...cfg.quick_meals.map(([n, kc, pr]) => el('button', { onclick: () => addMeal(n, kc, pr) }, n.split(' (')[0] + ' · ' + kc)));
 }
 async function addMeal(name, kcal, protein) {
   if (!name) return toast('Wpisz, co zjadłeś');
   const time = mealTime(cur, new Date());
   const { data, error } = await sb.from('meals').insert({ date: cur, time, name, kcal: kcal || null, protein: protein || null }).select().single();
   if (error) return fail(error);
-  meals.push(data); renderJedzenie(); toast('Dodane');
+  meals.push(data); mealDates.add(cur); renderJedzenie(); renderDzis();
+  toast(kcal ? 'Dodane: ' + name.split(' (')[0] : 'Dodane bez kalorii – powiedz Claude, policzy', ['Cofnij', async () => {
+    const { error: e } = await sb.from('meals').delete().eq('id', data.id); if (e) return fail(e);
+    meals = meals.filter(x => x.id !== data.id); renderJedzenie(); renderDzis(); toast('Cofnięte');
+  }]);
 }
 function renderFilm() {
   $('#fTitle').textContent = film.title || '—';
@@ -470,7 +611,7 @@ function show(v) {
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
-const shift = async n => {
+const shift = async n => { rulesOpen = false;
   const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n);
   const next = ymd(d), today = ymd(new Date());
   if (isFuture(next, today)) return toast('To jeszcze nie ten dzień');
@@ -482,12 +623,43 @@ $('#dateLbl').onclick = async () => { flushText(); cur = ymd(new Date()); follow
 
 const onSleep = () => { const b = $('#bed').value, w = $('#wake').value; saveDay({ bed: b || null, wake: w || null, sleep_h: hoursBetween(b, w) }).then(renderDzis); };
 $('#bed').onchange = onSleep; $('#wake').onchange = onSleep;
-$('#planAdd').onclick = () => { const t = $('#planNew').value.trim(); if (!t) return; $('#planNew').value = ''; saveDay({ plan: [...(day.plan || []), { text: t, done: false }] }).then(renderDzis); };
+$('#planAdd').onclick = () => {
+  const t = $('#planNew').value.trim(); if (!t) return;
+  if ((day.plan || []).filter(p => !p.done).length >= 3) return toast('Max 3 rzeczy – najpierw coś odhacz albo usuń');
+  $('#planNew').value = ''; saveDay({ plan: [...(day.plan || []), { text: t, done: false }] }).then(renderDzis);
+};
 $('#planNew').onkeydown = e => { if (e.key === 'Enter') $('#planAdd').click(); };
-document.querySelector('[data-k="rehab"]').onclick = () => saveDay({ rehab: !day.rehab }).then(renderDzis);
+$('#tRehab').onclick = () => saveDay({ rehab: !day.rehab }).then(renderDzis);
+$('#tLeki').onclick = () => saveDay({ morning: { ...day.morning, leki: !day.morning?.leki } }).then(renderDzis);
+$('#dKcal').onclick = () => show('jedzenie');
+$('#ranoAll').onclick = () => {
+  const anyOn = cfg.morning_items.some(([k]) => day.morning?.[k]);
+  const all = anyOn ? {} : Object.fromEntries(cfg.morning_items.map(([k]) => [k, true]));
+  saveDay({ morning: { ...day.morning, ...all, done: true } }).then(renderDzis);
+};
+$('#rulesOk').onclick = () => { rulesOpen = false; saveDay({ rules_broken: [], evening: { ...day.evening, rules_done: true } }).then(renderDzis); };
+$('#rulesBad').onclick = () => { rulesOpen = !rulesOpen || !!(day.rules_broken || []).length; renderDzis(); };
+$('#closeDay').onclick = () => { flushText(); saveDay({ closed: true }).then(ok => { renderDzis(); if (ok) window.scrollTo({ top: 0, behavior: 'smooth' }); }); };
+$('#reopenDay').onclick = () => saveDay({ closed: false }).then(renderDzis);
 bindText('#training', v => ({ training: v }));
 bindText('#doceniam', v => ({ evening: { ...day.evening, doceniam: v } }));
-bindText('#evNote', v => ({ evening: { ...day.evening, notatka: v } }));
+
+// Nadrabianie: jedno podsumowanie za lukę; „Pomiń” też zapisuje, żeby nie pytać drugi raz.
+$('#catchupOpen').onclick = () => $('#catchupForm').classList.toggle('hidden');
+async function saveCatchup(skip) {
+  if (!gap) return;
+  const sleep = parseFloat(String($('#cuSleep').value).replace(',', '.'));
+  const row = skip ? { from_date: gap.from, to_date: gap.to } : {
+    from_date: gap.from, to_date: gap.to, rehab_count: cuAnswers.rehab_count ?? null, training_count: cuAnswers.training_count ?? null,
+    meds_days: cuAnswers.meds_days ?? null, kcal_ok: cuAnswers.kcal_ok ?? null, sleep_h: sleep || null,
+  };
+  const { data, error } = await sb.from('catchups').insert(row).select().single();
+  if (error) return fail(error);
+  catchups.push(data); cuAnswers = {}; $('#cuSleep').value = ''; $('#catchupForm').classList.add('hidden');
+  renderDzis(); toast(skip ? 'Pominięte' : 'Nadrobione – wchodzi do tygodnia');
+}
+$('#catchupSave').onclick = () => saveCatchup(false);
+$('#catchupSkip').onclick = () => saveCatchup(true);
 
 $('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
 
@@ -502,7 +674,6 @@ $('#tZ').onclick = () => { itemKind = 'zakupy'; renderItems(); }; $('#tS').oncli
 $('#iAdd').onclick = async () => { const name = $('#iNew').value.trim(); if (!name) return; const { data, error } = await sb.from('items').insert({ kind: itemKind, name, qty: $('#iQty').value.trim() || null }).select().single(); if (error) return fail(error); items.push(data); $('#iNew').value = $('#iQty').value = ''; renderItems(); };
 $('#iNew').onkeydown = e => { if (e.key === 'Enter') $('#iAdd').click(); };
 
-$('#wAdd').onclick = async () => { const kg = parseFloat(String($('#wKg').value).replace(',', '.')); if (!kg) return; const date = ymd(new Date()); const { error } = await sb.from('weights').upsert({ date, kg }, { onConflict: 'user_id,date' }); if (error) return fail(error); weights = weights.filter(w => w.date !== date).concat({ date, kg }).sort((a, b) => a.date < b.date ? -1 : 1); $('#wKg').value = ''; renderCele(); toast('Waga zapisana'); };
 
 $('#nAdd').onclick = async () => { const text = $('#nText').value.trim(); if (!text) return; const { data, error } = await sb.from('notes').insert({ text, kind: $('#nKind').value, author: 'michal' }).select().single(); if (error) return fail(error); notes.unshift(data); $('#nText').value = ''; renderNotes(); toast('Wysłane'); };
 $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
@@ -513,7 +684,7 @@ async function start() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  await Promise.all([loadDay(), loadStatic()]);
+  await Promise.all([loadDay(), loadStatic(), loadHistory()]);
   renderAll(); show(view);
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
@@ -534,7 +705,7 @@ document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'hidden') return flushText();
   if ($('#app').classList.contains('hidden')) return;
   cur = dayOnResume(cur, followToday, new Date());
-  await Promise.all([loadDay(), loadStatic()]); renderAll(); show(view);
+  await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); show(view);
 });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 start();
