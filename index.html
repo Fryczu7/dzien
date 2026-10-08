@@ -110,9 +110,7 @@ details>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;f
 details>summary::-webkit-details-marker{display:none}
 details>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
 details[open]>summary::after{transform:rotate(-135deg)}
-#docDet{margin-top:8px}
 #catchupForm{margin-top:8px}
-#docDet textarea{margin-top:6px}
 .wide{width:100%;margin-top:14px;min-height:48px}
 .summary{margin:0;font-size:15px}
 ::selection{background:color-mix(in srgb,var(--acc) 35%,transparent)}
@@ -183,9 +181,44 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .wk-row>summary::after{margin-left:0}
 .wk-row .wk-body{padding-bottom:10px}
 .wk-tag{font-size:12px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--card2);color:var(--muted)}
-#wHist>summary .muted{font-weight:400;margin-left:6px}
+#wHist>summary .muted,#coHist>summary .muted{font-weight:400;margin-left:6px}
 #wList{margin-top:6px}
 .obs .row{margin-top:10px}
+/* Liczniki tygodnia: liczba, podpis, seria pod spodem */
+.week small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.week small.on{color:var(--acc-ink);font-weight:600}
+/* Asystent: propozycje z decyzją Biorę / Zmień / Nie */
+.props{margin:0;padding:0;list-style:none}
+.prop{padding:12px 0;border-top:1px solid var(--line)}
+.prop:first-child{border-top:0;padding-top:2px}
+.prop-head{display:flex;gap:8px;align-items:flex-start;cursor:pointer;min-height:44px;padding:4px 0}
+.prop-head .t{flex:1;min-width:0;font-weight:600}
+.prop-head .why1{display:block;font-weight:400;color:var(--muted);font-size:14px;margin-top:2px}
+.prop-head::after{content:"";flex:none;margin:8px 4px 0 0;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+.prop.open .prop-head::after{transform:rotate(-135deg)}
+.prop-head.nomore{cursor:default}.prop-head.nomore::after{display:none}
+.prop-more{display:none;font-size:14px;margin:4px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.prop.open .prop-more{display:block}
+.prop-act{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-top:6px}
+.prop-form{margin-top:8px}
+.prop-form .row{margin-top:8px}
+.prop-done{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.prop-done:first-child{border-top:0}
+.prop-done .t{flex:1;min-width:0}
+.prop-done .t i{font-style:normal;color:var(--muted)}
+.st{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card2);color:var(--muted);white-space:nowrap}
+.st.ok{background:color-mix(in srgb,var(--acc) 16%,var(--card2));color:var(--acc-ink)}
+.go{width:100%;margin-top:10px;min-height:44px;text-align:left;display:flex;align-items:center;gap:6px}
+.go b{color:var(--acc-ink);font-weight:700;font-variant-numeric:tabular-nums}
+/* Coach od mentalu: check-in wieczorny */
+.mood{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.mood button{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500;padding:6px 2px;min-height:56px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px}
+.mood button b{font-size:18px;font-variant-numeric:tabular-nums}
+.mood button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
+#cardCheckin label.ask{display:block}
+.ci-sum{margin:0;font-size:15px}
+.ci-sum span{color:var(--muted)}
+.hist-ci .report{margin-top:4px}
 /* Telefon: elementy tylko dla komputera schowane. */
 .wideonly{display:none}
 /* Komputer (od 1000 px): jedna zakładka na cały ekran, zakładki u góry, karty w dwóch kolumnach (wiersz po wierszu). */
@@ -201,13 +234,17 @@ details[open]>summary::after{transform:rotate(-135deg)}
   nav button.on{border-bottom-color:var(--acc-ink)}
   main{order:2;width:100%;max-width:1200px;padding:24px 24px 48px}
   .narrowonly{display:none!important}
-  #v-dzis,#v-jedzenie,#v-trening,#v-coach,#wPlans,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
+  #v-dzis,#v-jedzenie,#v-trening,#v-asystent,#wPlans,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
   main section.hidden{display:none!important}
   main .card,.brakuje{margin:0}
-  .brakuje,#catchup,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cDay,#cReport,#logout{grid-column:1/-1}
+  .brakuje,#catchup,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cReport,#logout,#coHist{grid-column:1/-1}
+  #aDay{grid-row:span 2}
+  .week{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sect{margin:12px 2px 0}
   #logout{max-width:280px;margin-top:8px}
-  #v-zakupy{max-width:760px}
+  #v-zakupy,#v-coach{max-width:760px}
+  #v-coach:not(.hidden){display:flex;flex-direction:column;gap:16px}
+  #v-coach .talk-hint{margin:-8px 2px 0}
   #toast{bottom:28px}
 }
 </style>
@@ -252,6 +289,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <div id="coachMorning" class="card coach hidden">
     <h2>Propozycja na dziś</h2>
     <ol id="coachItems" class="coach-items"></ol>
+    <button class="ghost go hidden" id="coachProps"></button>
     <button class="ghost wide-sm hidden" id="coachNight"></button>
   </div>
 
@@ -262,20 +300,39 @@ details[open]>summary::after{transform:rotate(-135deg)}
     <p id="morningOpt" class="muted hidden" style="margin:8px 0 0"></p>
   </div>
 
-  <!-- Wieczór: od 20:00 i dla minionych dni -->
+  <!-- Wieczór (od 20:00 i dla minionych dni): leki wieczorne, witamina C do kolacji, zasady – zamiast przypomnień w kalendarzu -->
   <div class="card hidden" id="cardWieczor">
-    <h2>Zamknij dzień</h2>
+    <h2>Wieczór</h2>
     <div id="evening"></div>
     <div class="ask">Zasady dziś</div>
     <div class="seg" id="rulesSeg"><button class="ghost" id="rulesOk">Wszystko OK</button><button class="ghost" id="rulesBad">Coś złamałem</button></div>
     <div id="rules" class="hidden"></div>
-    <details id="docDet"><summary>Za co się dziś doceniam <span class="muted">(opcjonalnie)</span></summary><textarea id="doceniam"></textarea></details>
     <button id="closeDay" class="wide">Zamknij dzień</button>
   </div>
   <div class="card hidden" id="cardZamkniety">
     <div class="row"><h2 class="grow">Dzień zamknięty</h2><button class="ghost small" id="reopenDay">Otwórz</button></div>
     <p id="closedSummary" class="summary"></p>
-    <div id="coachEvening" class="note claude hidden"></div>
+  </div>
+  <!-- Check-in z coachem: od 20:00 tutaj, o każdej porze w zakładce Coach (ta sama karta, przenoszona) -->
+  <div id="ciSlotDzis">
+    <div class="card hidden" id="cardCheckin">
+      <h2 id="ciTitle">Check-in</h2>
+      <div id="ciForm">
+        <div class="ask" id="ciMoodLbl" style="margin-top:0">Jak się dziś czujesz?</div>
+        <div class="mood" id="ciMood" role="group" aria-labelledby="ciMoodLbl"></div>
+        <label class="ask" for="ciBlok">Co dziś blokowało?</label>
+        <textarea id="ciBlok" placeholder="np. telefon po obiedzie, zmęczenie, nic"></textarea>
+        <label class="ask" for="doceniam">Za co się dziś doceniasz?</label>
+        <textarea id="doceniam"></textarea>
+        <button id="ciSend" class="wide">Wyślij coachowi</button>
+      </div>
+      <div id="ciDone" class="hidden">
+        <p id="ciSum" class="ci-sum"></p>
+        <button class="ghost small" id="ciEdit" style="margin-top:8px">Zmień check-in</button>
+      </div>
+      <div id="ciReply" class="note claude hidden"></div>
+      <p id="ciWait" class="muted hidden" style="margin:10px 0 0">Coach odpowie ok. 21:30 – odpowiedź pojawi się tutaj.</p>
+    </div>
   </div>
 
   <div class="card">
@@ -377,19 +434,37 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <details class="card" id="wHist"><summary>Historia treningów <span class="muted" id="wHistN"></span></summary><div id="wList"></div></details>
 </section>
 
-<!-- COACH: karta na dziś, nocna praca, podsumowania, cele -->
-<section id="v-coach" class="hidden">
-  <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
+<!-- ASYSTENT: propozycje na dziś (Biorę / Zmień / Nie), liczniki, praca z nocy, pomysły, podsumowania, cele -->
+<section id="v-asystent" class="hidden">
+  <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz asystentowi</a>
   <p class="muted talk-hint narrowonly">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
-  <div class="card coach" id="cDay">
-    <h2 id="cDayTitle">Propozycja na dziś</h2>
-    <ol id="cItems" class="coach-items"></ol>
+  <div class="card coach" id="aDay">
+    <h2 id="aDayTitle">Propozycje na dziś</h2>
+    <ul id="aOpen" class="props"></ul>
+    <details id="aDone" class="hidden"><summary id="aDoneSum"></summary><div id="aDoneList"></div></details>
+  </div>
+  <div class="card" id="aWeekCard">
+    <h2>Ten tydzień</h2>
+    <div class="week" id="aWeek"></div>
+  </div>
+  <div class="card" id="aIdeas">
+    <h2>Pomysły asystenta</h2>
+    <ul id="aIdeasList" class="props"></ul>
+    <details id="aIdeasDone" class="hidden"><summary id="aIdeasDoneSum"></summary><div id="aIdeasDoneList"></div></details>
   </div>
   <div id="cWork"></div>
   <div id="cSummary"></div>
   <h3 class="sect">Cele</h3>
   <div id="goals"></div>
   <details class="card" id="cReport"><summary>Pełny raport z nocy</summary><div id="cReportTxt" class="report"></div></details>
+</section>
+
+<!-- COACH od mentalu: check-in, odpowiedź, rozmowa, ostatnie wieczory -->
+<section id="v-coach" class="hidden">
+  <a class="talk talk-main" id="coTalk" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
+  <p class="muted talk-hint">Wieczorem krótki check-in, coach odpowiada ok. 21:30. Rozmowa – kiedy chcesz.</p>
+  <div id="ciSlotCoach"></div>
+  <details class="card" id="coHist"><summary>Ostatnie wieczory <span class="muted" id="coHistN"></span></summary><div id="coHistList"></div></details>
   <button class="ghost wide" id="logout">Wyloguj</button>
 </section>
 
@@ -399,14 +474,15 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <button data-v="jedzenie"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>Jedzenie</button>
   <button data-v="zakupy"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11h10.3l2-8H6.6"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="16.5" cy="19.5" r="1.3"/></svg>Zakupy</button>
   <button data-v="trening"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Trening</button>
-  <button data-v="coach"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Coach</button>
+  <button data-v="asystent"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Asystent</button>
+  <button data-v="coach"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h15v10h-8l-4.5 3.5v-3.5h-2.5z"/><path d="M9 10.5h6"/></svg>Coach</button>
 </nav>
 </div>
 <div id="toast"></div>
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -428,9 +504,9 @@ let cur = ymd(new Date());
 let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
 let day = null, rules = [], items = [], goals = [], weights = [], meals = [];
 let workouts = [], plans = []; // treningi z seriami i plany (tylko odczyt)
-let coachRows = [], mealHist = [], qQuery = ''; // historia coacha, wszystkie posiłki (do „Szybko”), szukana fraza
+let coachRows = [], mealHist = [], qQuery = '', props = []; // props = propozycje asystenta (dziś + pomysły) // historia coacha, wszystkie posiłki (do „Szybko”), szukana fraza
 // Historia do zestawienia tygodnia i wykrywania luki: dni z ostatnich 14 dni, daty posiłków, nadrobienia.
-let hist = [], mealDates = new Set(), catchups = [], gap = null, cuAnswers = {};
+let hist = [], histMeals = [], mealDates = new Set(), catchups = [], gap = null, cuAnswers = {};
 let rulesOpen = false; // „Coś złamałem” rozwija listę zasad
 let itemKind = 'zakupy', view = 'dzis';
 const PL_DAYS = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'];
@@ -459,16 +535,17 @@ async function saveDay(patch, keepOnError = false) {
 async function loadHistory() {
   const today = ymd(new Date()), from = addDays(today, -28); // 4 tygodnie – regularność treningów
   const [d, m, c] = await Promise.all([
-    sb.from('days').select('date,rehab,training,morning,sleep_h').gte('date', from).lte('date', today),
-    sb.from('meals').select('date').gte('date', from).lte('date', today),
+    sb.from('days').select('date,rehab,training,morning,sleep_h,kcal_target,evening,coach_evening').gte('date', from).lte('date', today),
+    sb.from('meals').select('date,kcal').gte('date', from).lte('date', today),
     sb.from('catchups').select('*').gte('to_date', addDays(today, -30)),
   ]);
   const bad = [d, m, c].find(x => x.error); if (bad) failLoad(bad.error);
   hist = d.data ?? hist; catchups = c.data ?? catchups;
-  if (m.data) mealDates = new Set(m.data.map(x => x.date));
+  if (m.data) { histMeals = m.data; mealDates = new Set(m.data.map(x => x.date)); }
 }
 async function loadStatic() {
-  const [r, i, g, w, s, c, mh, wk, wp] = await Promise.all([
+  const today = ymd(new Date());
+  const [r, i, g, w, s, c, mh, wk, wp, pd, pp] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
@@ -478,8 +555,11 @@ async function loadStatic() {
     sb.from('meals').select('name,kcal,protein').not('kcal', 'is', null).order('created_at', { ascending: false }).limit(2000),
     sb.from('workouts').select('*, workout_sets(*)').order('date', { ascending: false, nullsFirst: false }).limit(200),
     sb.from('workout_plans').select('*').order('name'),
+    sb.from('propozycje').select('*').eq('kind', 'dzien').eq('date', today).order('created_at'),
+    sb.from('propozycje').select('*').eq('kind', 'pomysl').order('created_at', { ascending: false }).limit(100),
   ]);
-  const bad = [r, i, g, w, s, c, mh, wk, wp].find(x => x.error); if (bad) failLoad(bad.error);
+  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp].find(x => x.error); if (bad) failLoad(bad.error);
+  if (pd.data && pp.data) props = [...pd.data, ...pp.data];
   workouts = wk.data ?? workouts; plans = wp.data ?? plans;
   // Przy błędzie zostaje to, co już było wczytane – ekran nie robi się pusty.
   rules = r.data ?? rules; items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights;
@@ -517,9 +597,12 @@ function renderDzis() {
     br.className = 'brakuje' + (miss.length ? '' : ' ok');
     br.replaceChildren(...(miss.length ? [el('b', {}, 'Brakuje: '), miss.join(' · ')] : ['Na dziś wszystko jest.']));
   }
-  const cm = $('#coachMorning'), cp = parseCoach(day.coach_morning);
-  cm.classList.toggle('hidden', !cp.items.length || !!day.closed);
+  // Skrót asystenta z days.coach_morning + ile propozycji czeka na decyzję (pełne w zakładce Asystent). Wieczorem chowamy.
+  const cm = $('#coachMorning'), cp = parseCoach(day.coach_morning), nOpen = isToday ? splitPropozycje(props, today).open.length : 0;
+  cm.classList.toggle('hidden', !(cp.items.length || nOpen) || !!day.closed || (isToday && part === 'wieczor'));
   $('#coachItems').replaceChildren(...coachList(cp.items));
+  $('#coachProps').classList.toggle('hidden', !nOpen);
+  $('#coachProps').replaceChildren(el('b', {}, String(nOpen)), (nOpen === 1 ? 'propozycja czeka' : 'propozycje czekają') + ' na Twoją decyzję →');
   $('#coachNight').classList.toggle('hidden', !cp.night);
   $('#coachNight').textContent = 'W nocy zrobiłem: ' + (cp.night || '') + ' →';
 
@@ -548,14 +631,11 @@ function renderDzis() {
     d.addEventListener('click', () => { d.classList.toggle('open'); if (r.why) d.setAttribute('aria-expanded', String(d.classList.contains('open'))); });
     return d;
   }));
-  setVal('#doceniam', day.evening?.doceniam);
-  if (day.evening?.doceniam) $('#docDet').open = true;
   const ws = weekStats(histWithDay(), catchups, today);
   if (day.closed) {
     const kcal = meals.reduce((a, m) => a + (m.kcal || 0), 0), kt = day.kcal_target || cfg.kcal_target;
     $('#closedSummary').textContent = 'Rehab ' + ws.rehab + '/5 w tym tygodniu · ' + kcal + '/' + kt + ' kcal' + (plan.length ? ' · ' + plan.filter(p => p.done).length + '/' + plan.length + ' z planu' : '') + (broken.length ? ' · złamane zasady: ' + broken.length : '');
   }
-  const ce = $('#coachEvening'); ce.classList.toggle('hidden', !day.coach_evening); ce.textContent = day.coach_evening || '';
 
   // Plan dnia
   const pl = $('#plan'), shown = planWithoutToggles(plan);
@@ -569,13 +649,9 @@ function renderDzis() {
   $('#dKcal').replaceChildren(el('b', {}, k + ' / ' + kt + ' kcal'), el('span', { class: 'muted' }, ' · ' + p + ' / ' + pt + ' g białka'));
   $('#dKcalBar').style.width = Math.min(100, k / kt * 100) + '%';
 
-  // Tydzień
-  const sleepTxt = ws.sleepAvg != null ? String(ws.sleepAvg).replace('.', ',') + ' h' : '–';
-  $('#week').replaceChildren(
-    el('div', {}, el('b', {}, ws.rehab + '/5'), el('span', {}, 'rehab')),
-    el('div', {}, el('b', {}, ws.training + '/' + (cfg.training_min ?? 3)), el('span', {}, 'treningi (min. ' + (cfg.training_min ?? 3) + ')')),
-    el('div', {}, el('b', {}, ws.meds + '/' + ws.daysSoFar), el('span', {}, 'dni z lekami')),
-    el('div', {}, el('b', {}, sleepTxt), el('span', {}, 'sen średnio')));
+  // Tydzień: liczniki i serie (te same na Dziś i w zakładce Asystent)
+  $('#week').replaceChildren(...weekCells());
+  renderCheckin();
 
   // Cały dzień
   setVal('#training', day.training);
@@ -598,6 +674,45 @@ function renderDzis() {
       c.replaceChildren(...opts.map(([v, l]) => el('button', { class: cuAnswers[key] === v ? 'on' : '', onclick: () => { cuAnswers[key] = cuAnswers[key] === v ? undefined : v; renderDzis(); } }, l)));
     });
   }
+}
+// Liczniki: rehab x/5 i seria, dni z kaloriami ≥ celu i seria, treningi wobec minimum, leki, sen.
+const dniTxt = n => n + ' ' + (n === 1 ? 'dzień' : 'dni');
+function weekCells() {
+  const today = ymd(new Date()), days = histWithDay(), ws = weekStats(days, catchups, today);
+  const dm = cur === today ? histMeals.filter(m => m.date !== today).concat(meals) : histMeals;
+  const c = counters({ days, meals: dm, catchups, workouts, today, kcalTarget: cfg.kcal_target });
+  const min = cfg.training_min ?? 3, sleepTxt = ws.sleepAvg != null ? String(ws.sleepAvg).replace('.', ',') + ' h' : '–';
+  const streak = n => el('small', { class: n >= 2 ? 'on' : '' }, n ? 'seria ' + dniTxt(n) : 'zacznij serię dziś');
+  return [
+    el('div', {}, el('b', {}, c.rehabWeek + '/5'), el('span', {}, 'rehab'), streak(c.rehabStreak)),
+    el('div', {}, el('b', {}, c.kcalWeek + '/' + c.daysSoFar), el('span', {}, 'dni z kaloriami'), streak(c.kcalStreak)),
+    el('div', {}, el('b', {}, c.trainingWeek + '/' + min), el('span', {}, 'treningi'), el('small', { class: c.trainingWeek >= min ? 'on' : '' }, c.trainingWeek >= min ? 'minimum zrobione' : 'brakuje ' + (min - c.trainingWeek))),
+    el('div', {}, el('b', {}, ws.meds + '/' + ws.daysSoFar), el('span', {}, 'dni z lekami')),
+    el('div', {}, el('b', {}, sleepTxt), el('span', {}, 'sen średnio')),
+  ];
+}
+// ---------- Check-in (coach od mentalu) ----------
+// Jedna karta: na „Dziś” od 20:00, w zakładce Coach zawsze. Tekst zapisuje się sam, „Wyślij coachowi” stawia checkin_at.
+const MOODS = [[1, 'fatalnie'], [2, 'słabo'], [3, 'OK'], [4, 'dobrze'], [5, 'świetnie']];
+let ciEditing = false;
+function renderCheckin() {
+  if (!day) return; // zakładka kliknięta, zanim wczytał się dzień
+  const today = ymd(new Date()), hour = new Date().getHours(), ev = day.evening || {};
+  const evening = cur !== today || hour >= 20 || hour < 4;
+  const card = $('#cardCheckin'), slot = view === 'coach' ? $('#ciSlotCoach') : $('#ciSlotDzis');
+  if (card.parentElement !== slot) slot.append(card);
+  card.classList.toggle('hidden', view !== 'coach' && !evening);
+  $('#ciTitle').textContent = 'Check-in' + (cur === today ? '' : ' · ' + PL_DAYS[new Date(cur + 'T12:00:00').getDay()] + ' ' + dShort(cur));
+  const sent = !!ev.checkin_at && !ciEditing;
+  $('#ciForm').classList.toggle('hidden', sent); $('#ciDone').classList.toggle('hidden', !sent);
+  $('#ciMood').replaceChildren(...MOODS.map(([n, l]) => el('button', { class: ev.nastroj === n ? 'on' : '', 'aria-pressed': String(ev.nastroj === n), 'aria-label': n + ' – ' + l,
+    onclick: () => saveDay({ evening: { ...day.evening, nastroj: n } }).then(renderCheckin) }, el('b', {}, String(n)), l)));
+  setVal('#ciBlok', ev.blokada); setVal('#doceniam', ev.doceniam);
+  const mood = MOODS.find(([n]) => n === ev.nastroj);
+  $('#ciSum').replaceChildren(el('b', {}, 'Nastrój ' + (mood ? mood[0] + '/5 – ' + mood[1] : '–')),
+    ev.blokada ? el('div', {}, el('span', {}, 'Blokowało: '), ev.blokada) : '', ev.doceniam ? el('div', {}, el('span', {}, 'Doceniam: '), ev.doceniam) : '');
+  $('#ciReply').classList.toggle('hidden', !day.coach_evening); $('#ciReply').textContent = day.coach_evening || '';
+  $('#ciWait').classList.toggle('hidden', !sent || !!day.coach_evening || cur !== today);
 }
 function renderJedzenie() {
   const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
@@ -658,16 +773,101 @@ function renderItems() {
   const doneIds = list.filter(i => i.done).map(i => i.id), hint = $('#iHint'); hint.replaceChildren();
   if (doneIds.length) hint.append(el('button', { class: 'ghost small', onclick: async () => { const { error } = await sb.from('items').delete().in('id', doneIds); if (error) return fail(error); items = items.filter(i => !doneIds.includes(i.id)); renderItems(); toast('Kupione usunięte z listy'); } }, 'Kupione (' + doneIds.length + ') – usuń z listy'));
 }
-// Coach: karta na dziś, praca z nocy, podsumowania, cele (waga raz, w celu C5).
-function renderCoach() {
-  const today = ymd(new Date()), noc = coachRows.find(c => c.kind === 'noc');
-  const cp = parseCoach(noc?.morning);
+// ---------- Asystent ----------
+// Propozycje: tytuł, „dlaczego” od razu pod spodem, szczegóły po dotknięciu; decyzja Biorę / Zmień / Nie.
+// Stan rozwinięcia i wpisanego tekstu trzymamy poza DOM – odświeżenie co minutę go nie kasuje.
+const propUI = new Map(); // id → { open, mode: 'zmien'|'nie', text }
+const ui = id => { if (!propUI.has(id)) propUI.set(id, { open: false, mode: null, text: '' }); return propUI.get(id); };
+function propItem(p) {
+  const u = ui(p.id), more = !!p.detail;
+  const head = el('div', { class: 'prop-head' + (more ? '' : ' nomore') }, el('span', { class: 't' }, p.title, p.why ? el('span', { class: 'why1' }, p.why) : ''));
+  const li = el('li', { class: 'prop' + (u.open ? ' open' : '') }, head);
+  if (more) {
+    head.tabIndex = 0; head.setAttribute('role', 'button'); head.setAttribute('aria-expanded', String(u.open)); head.addEventListener('keydown', keyClick);
+    head.addEventListener('click', () => { u.open = !u.open; li.classList.toggle('open', u.open); head.setAttribute('aria-expanded', String(u.open)); });
+    li.append(el('div', { class: 'prop-more' }, p.detail));
+  }
+  if (!u.mode) {
+    li.append(el('div', { class: 'prop-act' },
+      el('button', { onclick: () => decide(p, 'wez') }, 'Biorę'),
+      el('button', { class: 'ghost', onclick: () => { u.mode = 'zmien'; u.text = u.text || p.title; renderAsystent(p.id); } }, 'Zmień'),
+      el('button', { class: 'ghost', onclick: () => { u.mode = 'nie'; u.text = ''; renderAsystent(p.id); } }, 'Nie')));
+  } else {
+    const zm = u.mode === 'zmien';
+    const f = el('input', { 'data-pid': p.id, placeholder: zm ? 'Twoja wersja' : 'Dlaczego nie? (opcjonalnie)', 'aria-label': zm ? 'Twoja wersja propozycji' : 'Powód odrzucenia' });
+    f.value = u.text; f.addEventListener('input', () => { u.text = f.value; });
+    const go = () => decide(p, u.mode, u.text);
+    f.addEventListener('keydown', e => { if (e.key === 'Enter') go(); if (e.key === 'Escape') { u.mode = null; renderAsystent(); } });
+    li.append(el('div', { class: 'prop-form' }, f, el('div', { class: 'row' },
+      el('button', { class: 'ghost grow', onclick: () => { u.mode = null; renderAsystent(); } }, 'Anuluj'),
+      el('button', { class: 'grow', onclick: go }, zm ? (p.kind === 'pomysl' ? 'Zapisz moją wersję' : 'Do planu') : 'Odrzuć'))));
+  }
+  return li;
+}
+const ST = { wzieta: ['wzięte', 'ok'], zmieniona: ['zmienione', 'ok'], odrzucona: ['nie', ''] };
+const doneRow = p => el('div', { class: 'prop-done' },
+  el('span', { class: 't' }, p.status === 'zmieniona' ? p.reply : p.title,
+    p.status === 'zmieniona' ? el('i', {}, ' (było: ' + p.title + ')') : p.status === 'odrzucona' && p.reply ? el('i', {}, ' – ' + p.reply) : ''),
+  el('span', { class: 'st ' + ST[p.status][1] }, ST[p.status][0]),
+  el('button', { class: 'ghost small', onclick: () => undo(p) }, 'Cofnij'));
+// Plan dnia zawsze na dziś (nawet gdy na ekranie Dziś oglądasz inny dzień).
+async function todayPlan() {
+  const today = ymd(new Date());
+  if (cur === today) return day.plan || [];
+  const { data, error } = await sb.from('days').select('plan').eq('date', today).maybeSingle();
+  if (error) throw error;
+  return data?.plan || [];
+}
+async function saveTodayPlan(plan) {
+  const today = ymd(new Date());
+  if (cur === today) return saveDay({ plan });
+  const { error } = await sb.from('days').upsert({ date: today, plan, updated_at: new Date().toISOString() }, { onConflict: 'user_id,date' });
+  if (error) { fail(error); return false; }
+  return true;
+}
+async function decide(p, action, text) {
+  let before; try { before = await todayPlan(); } catch (e) { return fail(e); }
+  const r = applyDecision(before, p, action, text);
+  if (r.error === 'max3') return toast('Plan ma już 3 rzeczy – odhacz albo usuń jedną');
+  if (r.error === 'pusto') return toast('Wpisz swoją wersję');
+  if (r.plan !== before && !(await saveTodayPlan(r.plan))) return;
+  const patch = { ...r.patch, decided_at: new Date().toISOString() };
+  const { error } = await sb.from('propozycje').update(patch).eq('id', p.id);
+  if (error) { if (r.plan !== before) await saveTodayPlan(before); return fail(error); }
+  Object.assign(p, patch); propUI.delete(p.id); renderAll();
+  const msg = action === 'nie' ? 'Odrzucone' + (patch.reply ? ' – asystent zapamięta powód' : '') : p.kind === 'pomysl' ? 'Zapisane – asystent weźmie to pod uwagę' : 'W planie na dziś';
+  toast(msg, ['Cofnij', () => undo(p)]);
+}
+async function undo(p) {
+  let plan; try { plan = await todayPlan(); } catch (e) { return fail(e); }
+  const np = undoDecision(plan, p);
+  if (np.length !== plan.length && !(await saveTodayPlan(np))) return;
+  const patch = { status: 'nowa', reply: null, decided_at: null };
+  const { error } = await sb.from('propozycje').update(patch).eq('id', p.id);
+  if (error) return fail(error);
+  Object.assign(p, patch); renderAll(); toast('Cofnięte');
+}
+const doneList = (det, sum, list, rows, label) => {
+  $(det).classList.toggle('hidden', !rows.length);
+  $(sum).textContent = label + ' (' + rows.length + ')'; $(list).replaceChildren(...rows.map(doneRow));
+};
+function renderAsystent(focusId) {
+  const today = ymd(new Date()), noc = coachRows.find(c => c.kind === 'noc'), sp = splitPropozycje(props, today);
   const dm = d => d.slice(8) + '.' + d.slice(5, 7);
-  $('#cDayTitle').textContent = noc && noc.date !== today ? 'Ostatnia propozycja (' + dm(noc.date) + ')' : 'Propozycja na dziś';
-  $('#cItems').replaceChildren(...coachList(cp.items));
-  if (!cp.items.length) $('#cItems').append(el('li', {}, el('div', { class: 'what' }, 'Coach jeszcze nic nie zostawił – pierwsza karta po nocy.')));
+  // Propozycje na dziś; gdy asystent jeszcze nic nie wstawił do tabeli – ostatnia karta z nocy (stary format), tylko do czytania.
+  const old = parseCoach(noc?.morning).items, hasProps = sp.open.length + sp.decided.length > 0;
+  $('#aDayTitle').textContent = hasProps || !old.length ? 'Propozycje na dziś' : noc.date === today ? 'Propozycja na dziś' : 'Ostatnia propozycja (' + dm(noc.date) + ')';
+  $('#aOpen').className = hasProps || !old.length ? 'props' : 'coach-items';
+  $('#aOpen').replaceChildren(...(sp.open.length ? sp.open.map(propItem)
+    : hasProps ? [el('li', { class: 'muted' }, 'Wszystko zdecydowane. Wzięte są w planie na „Dziś”.')]
+    : old.length ? coachList(old)
+    : [el('li', { class: 'muted' }, 'Asystent przyjdzie z propozycjami po nocy (2:00).')]));
+  doneList('#aDone', '#aDoneSum', '#aDoneList', sp.decided, 'Zdecydowane dziś');
+  $('#aWeek').replaceChildren(...weekCells());
   const work = noc?.work || [];
-  $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem'), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
+  $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem' + (noc.date === today ? '' : ' (' + dm(noc.date) + ')')), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
+  $('#aIdeasList').replaceChildren(...(sp.ideas.length ? sp.ideas.map(propItem) : [el('li', { class: 'muted' }, 'Na razie brak nowych pomysłów.')]));
+  doneList('#aIdeasDone', '#aIdeasDoneSum', '#aIdeasDoneList', sp.ideasDecided, 'Zdecydowane');
   const sums = ['tydzien', 'miesiac', 'obserwacje'].map(k => coachRows.find(c => c.kind === k)).filter(Boolean);
   $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, ({ tydzien: 'Podsumowanie tygodnia', miesiac: 'Podsumowanie miesiąca', obserwacje: 'Czego się nauczyłem' })[c.kind] + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
   $('#cReport').classList.toggle('hidden', !noc?.report); $('#cReportTxt').textContent = noc?.report || '';
@@ -679,6 +879,21 @@ function renderCoach() {
       g.progress ? el('div', { class: 'bar' }, el('i', { style: 'width:' + Math.min(100, g.progress) + '%' })) : '',
       el('div', { style: 'margin-top:8px' }, el('span', { class: 'muted' }, 'Gdzie jestem: '), g.where_now || '—'),
       el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'), extra);
+  }));
+  // Po „Zmień” / „Nie” kursor od razu w polu tej propozycji.
+  if (typeof focusId === 'string') { const f = document.querySelector('#v-asystent input[data-pid="' + focusId + '"]'); if (f) { f.focus(); f.select(); } }
+}
+// Coach: ostatnie wieczory (check-in + odpowiedź) – żeby było widać wzorce.
+function renderCoachTab() {
+  const rows = hist.filter(d => d.date !== cur && (d.evening?.checkin_at || d.coach_evening)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
+  $('#coHistN').textContent = rows.length ? '· ' + rows.length : '';
+  $('#coHist').classList.toggle('hidden', !rows.length);
+  $('#coHistList').replaceChildren(...rows.map(d => {
+    const e = d.evening || {}, m = MOODS.find(([n]) => n === e.nastroj);
+    return el('details', { class: 'wk-row hist-ci' },
+      el('summary', {}, el('span', {}, PL_DAYS[new Date(d.date + 'T12:00:00').getDay()] + ' ' + dShort(d.date)), el('span', { class: 'wk-when' }, m ? 'nastrój ' + m[0] + '/5' : '')),
+      el('div', { class: 'wk-body' }, e.blokada ? el('div', { class: 'report' }, 'Blokowało: ' + e.blokada) : '', e.doceniam ? el('div', { class: 'report' }, 'Doceniam: ' + e.doceniam) : '',
+        d.coach_evening ? el('div', { class: 'note claude' }, d.coach_evening) : el('div', { class: 'muted' }, 'Bez odpowiedzi coacha.')));
   }));
 }
 // Trening: plany z ostatnim i poprzednim wynikiem oraz celem, niżej historia treningów. Nic tu się nie wpisuje.
@@ -778,9 +993,9 @@ $('#obsOk').onclick = async () => {
   const o = coachRows.find(c => c.kind === 'obserwacje'); if (!o) return;
   const at = new Date().toISOString(), { error } = await sb.from('coach').update({ accepted_at: at }).eq('id', o.id);
   if (error) return fail(error);
-  o.accepted_at = at; renderObs(); toast('Przeczytane – zostaje w zakładce Coach');
+  o.accepted_at = at; renderObs(); toast('Przeczytane – zostaje w zakładce Asystent');
 };
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderCoach(); }
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); renderCoachTab(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
@@ -807,26 +1022,27 @@ window.addEventListener('pagehide', flushText);
 function show(v) {
   view = v; document.querySelectorAll('main section[id^="v-"]').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.toggleAttribute('aria-current', b.dataset.v === v); });
-  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', trening: 'Trening', coach: 'Coach' }[v];
-  const dated = v === 'dzis' || v === 'jedzenie';
+  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', trening: 'Trening', asystent: 'Asystent', coach: 'Coach' }[v];
+  renderCheckin(); // karta check-in przechodzi do aktywnej zakładki
+  const dated = v === 'dzis' || v === 'jedzenie' || v === 'coach';
   ['#prevDay', '#dateLbl', '#nextDay'].forEach(s => $(s).classList.toggle('hidden', !dated));
   window.scrollTo(0, 0);
 }
-// Strzałki ← → zmieniają dzień, cyfry 1–5 zakładki (poza polami tekstowymi).
+// Strzałki ← → zmieniają dzień, cyfry 1–6 zakładki (poza polami tekstowymi).
 document.addEventListener('keydown', e => {
   if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,textarea,select') || $('#app').classList.contains('hidden')) return;
-  if (/^[1-5]$/.test(e.key)) return show(VIEWS[+e.key - 1]); // 1–5 = zakładki
+  if (/^[1-6]$/.test(e.key)) return show(VIEWS[+e.key - 1]); // 1–6 = zakładki
   if (e.key === 'ArrowLeft') shift(-1); else if (e.key === 'ArrowRight' && cur < ymd(new Date())) shift(1);
 });
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
 // Przesunięcie palcem w bok = sąsiednia zakładka (nie w polach tekstowych i przewijanych tekstach).
-const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'trening', 'coach']; let touch = null;
+const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'trening', 'asystent', 'coach']; let touch = null;
 document.querySelector('main').addEventListener('touchstart', e => { touch = e.target.closest('input,textarea,select,.work,.report') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; }, { passive: true });
 document.querySelector('main').addEventListener('touchend', e => {
   if (!touch) return; const dx = e.changedTouches[0].clientX - touch.x, dy = e.changedTouches[0].clientY - touch.y; touch = null;
   if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) { const v = nextView(VIEWS, view, dx < 0 ? 1 : -1); if (v !== view) show(v); }
 }, { passive: true });
-$('#coachNight').onclick = () => show('coach');
+$('#coachNight').onclick = () => show('asystent'); $('#coachProps').onclick = () => show('asystent');
 $('#qSearch').oninput = e => { qQuery = e.target.value; renderQuick(); };
 // Ręczny wpis zostaje (decyzja Michała 6.10), choć zwykle kalorie liczy Claude.
 $('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
@@ -864,6 +1080,14 @@ $('#closeDay').onclick = () => { flushText(); saveDay({ closed: true }).then(ok 
 $('#reopenDay').onclick = () => saveDay({ closed: false }).then(renderDzis);
 bindText('#training', v => ({ training: v }));
 bindText('#doceniam', v => ({ evening: { ...day.evening, doceniam: v } }));
+bindText('#ciBlok', v => ({ evening: { ...day.evening, blokada: v } }));
+$('#ciSend').onclick = async () => {
+  if (!day.evening?.nastroj) return toast('Wybierz nastrój 1–5');
+  flushText();
+  const ok = await saveDay({ evening: checkinPatch(day.evening, { nastroj: day.evening.nastroj, blokada: $('#ciBlok').value, doceniam: $('#doceniam').value }, new Date()) });
+  if (ok) { ciEditing = false; renderCheckin(); toast('Wysłane – coach odpowie ok. 21:30'); }
+};
+$('#ciEdit').onclick = () => { ciEditing = true; renderCheckin(); };
 
 // Nadrabianie: jedno podsumowanie za lukę; „Pomiń” też zapisuje, żeby nie pytać drugi raz.
 $('#catchupOpen').onclick = () => $('#catchupForm').classList.toggle('hidden');

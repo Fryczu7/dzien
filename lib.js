@@ -226,3 +226,68 @@ export function progressSummary(progress) {
   for (const p of progress.values()) s[p.trend || 'first']++;
   return s;
 }
+
+// ---------- Asystent: liczniki serii, propozycje (Biorę / Zmień / Nie), check-in ----------
+// Seria = kolejne dni wstecz. Dziś jeszcze trwa: jeśli dziś niezrobione, seria liczy się od wczoraj.
+export function streakDays(dates, today) {
+  let d = dates.has(today) ? today : addDays(today, -1), n = 0;
+  while (dates.has(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+
+// Dni nadrobienia jako daty – tylko gdy nadrobienie pokrywa całą lukę (rehab każdego dnia, kalorie „tak”).
+function catchupDates(catchups, full) {
+  const out = [];
+  for (const c of catchups) {
+    const n = Math.round((Date.parse(c.to_date) - Date.parse(c.from_date)) / 864e5) + 1;
+    if (full(c, n)) for (let i = 0; i < n; i++) out.push(addDays(c.from_date, i));
+  }
+  return out;
+}
+
+// Liczniki na „Dziś” i w zakładce Asystent. days z historii (z kcal_target), meals z datą i kcal.
+export function counters({ days, meals, catchups = [], workouts = [], today, kcalTarget }) {
+  const from = weekStart(today), inWeek = d => from <= d && d <= today;
+  const rehab = new Set([...days.filter(d => d.rehab).map(d => d.date), ...catchupDates(catchups, (c, n) => (c.rehab_count || 0) >= n)]);
+  const sums = new Map();
+  for (const m of meals) if (m.kcal != null) sums.set(m.date, (sums.get(m.date) || 0) + m.kcal);
+  const target = d => days.find(x => x.date === d)?.kcal_target || kcalTarget;
+  const kcal = new Set([...[...sums].filter(([d, k]) => target && k >= target(d)).map(([d]) => d), ...catchupDates(catchups, c => c.kcal_ok === 'tak')]);
+  const ws = weekStats(days, catchups, today);
+  return {
+    rehabWeek: ws.rehab, rehabStreak: streakDays(rehab, today),
+    kcalWeek: [...kcal].filter(inWeek).length, kcalStreak: streakDays(kcal, today),
+    daysSoFar: ws.daysSoFar,
+    trainingWeek: trainingWeeks(workouts, days, today, 1)[0].done,
+  };
+}
+
+// Decyzja Michała o propozycji: zmiana w planie dnia + pola do zapisania w propozycje (decided_at dokłada wywołujący).
+// Pomysł (kind 'pomysl') nie trafia do planu dnia. Max 3 rzeczy w planie (rehab i leki mają własne przyciski).
+export function applyDecision(plan, prop, action, text = '') {
+  const t = String(text || '').trim();
+  if (action === 'nie') return { plan, patch: { status: 'odrzucona', reply: t || null } };
+  if (action === 'zmien' && !t) return { error: 'pusto' };
+  const patch = action === 'zmien' ? { status: 'zmieniona', reply: t } : { status: 'wzieta', reply: null };
+  if (prop.kind === 'pomysl') return { plan, patch };
+  const item = { text: action === 'zmien' ? t : prop.title, done: false, src: 'asystent', pid: prop.id };
+  const base = plan || [], at = base.findIndex(p => p.pid === prop.id);
+  if (at >= 0) return { plan: base.map((p, i) => i === at ? { ...p, text: item.text } : p), patch };
+  if (planWithoutToggles(base).length >= 3) return { error: 'max3' };
+  return { plan: [...base, item], patch };
+}
+export const undoDecision = (plan, prop) => (plan || []).filter(p => p.pid !== prop.id);
+
+// Propozycje na dziś (do decyzji i już zdecydowane) oraz pomysły (bez względu na datę).
+export function splitPropozycje(rows, today) {
+  const by = (a, b) => String(a.created_at || '').localeCompare(String(b.created_at || ''));
+  const dzis = rows.filter(r => r.kind === 'dzien' && r.date === today).sort(by), ideas = rows.filter(r => r.kind === 'pomysl').sort(by);
+  return {
+    open: dzis.filter(r => r.status === 'nowa'), decided: dzis.filter(r => r.status !== 'nowa'),
+    ideas: ideas.filter(r => r.status === 'nowa'), ideasDecided: ideas.filter(r => r.status !== 'nowa'),
+  };
+}
+
+// Check-in wieczorny w days.evening – łączymy z tym, co już jest (leki wieczorne, zasady).
+export const checkinPatch = (evening, { nastroj, blokada, doceniam }, now) =>
+  ({ ...(evening || {}), nastroj, blokada: String(blokada || '').trim(), doceniam: String(doceniam || '').trim(), checkin_at: now.toISOString() });
