@@ -163,32 +163,28 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .ex-none{color:var(--muted);font-size:14px;margin-top:2px}
 .ex-note{color:var(--muted);font-size:13px;margin-top:3px}
 .plan-notes{color:var(--muted);font-size:14px;margin:4px 0 0;padding-top:10px;border-top:1px solid var(--line)}
-/* Telefon: kolumna Jedzenie+Zakupy nie istnieje jako pudełko, elementy tylko dla komputera schowane. */
-.col2{display:contents}
-.wideonly,.colhead,.zk-head{display:none}
-/* Komputer: trzy kolumny obok siebie – Dziś | Jedzenie (+ Zakupy pod spodem) | Coach, każda przewija się osobno. */
+/* Telefon: elementy tylko dla komputera schowane. */
+.wideonly{display:none}
+/* Komputer (od 1000 px): jedna zakładka na cały ekran, zakładki u góry, karty w dwóch kolumnach (wiersz po wierszu). */
 @media (min-width:1000px){
   body{padding-bottom:0}
-  nav{display:none}
-  #app:not(.hidden){display:flex;flex-direction:column;height:100dvh}
-  header{position:static;width:100%;max-width:1440px;margin:0 auto;padding:14px 24px 12px;gap:10px;border-bottom:1px solid var(--line)}
-  header h1{font-size:22px}
-  header .talk{display:flex;padding:0 18px;min-height:44px;margin-left:12px}
-  header .datebtn.hidden{display:inline-block!important}
-  main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;width:100%;max-width:1440px;flex:1;min-height:0;padding:0 24px}
-  main section.hidden{display:block!important}
-  #v-dzis,#v-coach,.col2{display:block;overflow-y:auto;min-height:0;padding:0 6px 32px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-  .narrowonly,#coachMorning{display:none!important}
-  .colhead{display:block;position:sticky;top:0;z-index:2;background:var(--bg);margin:0;padding:18px 0 12px;font-size:15px;font-weight:600;letter-spacing:.01em}
-  .colhead small{color:var(--muted);font-weight:400;font-size:14px;margin-left:6px}
-  #v-coach .sect:first-of-type{margin-top:4px}
-  #v-zakupy{margin-top:8px}
-  .zk-head{display:flex;width:100%;align-items:center;gap:10px;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-weight:600;text-align:left}
-  .zk-head .muted{font-weight:400}
-  .zk-head::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
-  #v-zakupy.zk-open .zk-head{margin-bottom:12px}
-  #v-zakupy.zk-open .zk-head::after{transform:rotate(-135deg)}
-  #v-zakupy:not(.zk-open) .zk-body{display:none}
+  #app:not(.hidden){display:flex;flex-direction:column;min-height:100dvh}
+  header{order:0;position:static;width:100%;max-width:1200px;margin:0 auto;padding:16px 24px 8px;gap:10px}
+  header h1{font-size:24px}
+  header .talk{display:flex;padding:0 20px;min-height:44px;margin-left:12px}
+  nav{order:1;position:sticky;top:0;bottom:auto;background:var(--bg);border-top:0;border-bottom:1px solid var(--line);padding:0 max(24px,calc((100% - 1200px)/2 + 24px));justify-content:flex-start;gap:4px}
+  nav button{flex:none;flex-direction:row;gap:8px;font-size:15px;padding:14px 16px 12px;border-bottom:2px solid transparent}
+  nav button:hover{color:var(--text)}
+  nav button.on{border-bottom-color:var(--acc-ink)}
+  main{order:2;width:100%;max-width:1200px;padding:24px 24px 48px}
+  .narrowonly{display:none!important}
+  #v-dzis,#v-jedzenie,#v-trening,#v-coach,#wPlans,#wList,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
+  main section.hidden{display:none!important}
+  main .card,.brakuje{margin:0}
+  .brakuje,#catchup,.sect,#wPlans,#wList,#goals,#cWork,#cSummary,#cDay,#cReport,#logout{grid-column:1/-1}
+  .sect{margin:12px 2px 0}
+  #logout{max-width:280px;margin-top:8px}
+  #v-zakupy{max-width:760px}
   #toast{bottom:28px}
 }
 </style>
@@ -220,7 +216,6 @@ details[open]>summary::after{transform:rotate(-135deg)}
 <!-- DZIŚ -->
 <section id="v-dzis">
   <!-- Ekran do patrzenia: wpisy idą przez rozmowę z Claude, tu tylko stan dnia i kilka dotknięć. -->
-  <h2 class="colhead">Dziś</h2>
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
   <p class="muted talk-hint narrowonly">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
   <p id="brakuje" class="brakuje"></p>
@@ -261,8 +256,8 @@ details[open]>summary::after{transform:rotate(-135deg)}
       <button class="toggle" id="tRehab" aria-pressed="false"><span class="box"></span>Rehab</button>
       <button class="toggle" id="tLeki" aria-pressed="false"><span class="box"></span>Leki rano</button>
     </div>
-    <div class="kcalline narrowonly" id="dKcal" role="button" tabindex="0"></div>
-    <div class="bar narrowonly"><i id="dKcalBar" style="width:0"></i></div>
+    <div class="kcalline" id="dKcal" role="button" tabindex="0"></div>
+    <div class="bar"><i id="dKcalBar" style="width:0"></i></div>
   </div>
 
   <div class="card">
@@ -296,9 +291,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 </section>
 
 <!-- JEDZENIE -->
-<div class="col2">
 <section id="v-jedzenie" class="hidden">
-  <h2 class="colhead">Jedzenie</h2>
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zjadłeś</a>
   <p class="muted talk-hint narrowonly">Claude policzy kalorie i białko i od razu zapisze tutaj.</p>
   <div class="card">
@@ -327,10 +320,8 @@ details[open]>summary::after{transform:rotate(-135deg)}
   </div>
 </section>
 
-<!-- ZAKUPY: dwie listy do kupienia; na komputerze zwinięte pod Jedzeniem -->
+<!-- ZAKUPY: dwie listy do kupienia -->
 <section id="v-zakupy" class="hidden">
-  <button class="zk-head" id="zkHead" aria-expanded="false" aria-controls="zkBody">Zakupy <span class="muted" id="zkCount"></span></button>
-  <div class="zk-body" id="zkBody">
   <div class="tabs2"><button id="tZ" aria-pressed="true">Dla mnie</button><button class="ghost" id="tS" aria-pressed="false">Spiżarnia</button></div>
   <div class="card">
     <div class="row"><input id="iNew" placeholder="Dodaj produkt" aria-label="Produkt"><input id="iQty" placeholder="ilość" aria-label="Ilość" style="max-width:90px"><button id="iAdd" aria-label="Dodaj">+</button></div>
@@ -338,12 +329,10 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <div class="card"><div id="items"></div></div>
   <div id="iHint"></div>
   <a class="talk ghost-talk narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co dopisać</a>
-  </div>
 </section>
 
 <!-- TRENING: plany z postępem i ostatnie treningi; serie zapisuje Claude z rozmowy -->
 <section id="v-trening" class="hidden">
-  <h2 class="colhead">Trening</h2>
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zrobiłeś</a>
   <p class="muted talk-hint narrowonly">Ćwiczenie, ciężar, powtórzenia, RIR – Claude zapisze serie, a tu zobaczysz postęp.</p>
   <h3 class="sect">Plany i postęp</h3>
@@ -351,11 +340,9 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <h3 class="sect">Ostatnie treningi</h3>
   <div id="wList"></div>
 </section>
-</div>
 
 <!-- COACH: karta na dziś, nocna praca, podsumowania, cele -->
 <section id="v-coach" class="hidden">
-  <h2 class="colhead">Coach</h2>
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
   <p class="muted talk-hint narrowonly">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
   <div class="card coach" id="cDay">
@@ -550,7 +537,7 @@ function renderDzis() {
   const sleepTxt = ws.sleepAvg != null ? String(ws.sleepAvg).replace('.', ',') + ' h' : '–';
   $('#week').replaceChildren(
     el('div', {}, el('b', {}, ws.rehab + '/5'), el('span', {}, 'rehab')),
-    el('div', {}, el('b', {}, String(ws.training)), el('span', {}, 'treningi')),
+    el('div', {}, el('b', {}, ws.training + '/3'), el('span', {}, 'treningi (cel 3–5)')),
     el('div', {}, el('b', {}, ws.meds + '/' + ws.daysSoFar), el('span', {}, 'dni z lekami')),
     el('div', {}, el('b', {}, sleepTxt), el('span', {}, 'sen średnio')));
 
@@ -623,8 +610,6 @@ function coachList(list) {
 function renderItems() {
   $('#tZ').className = itemKind === 'zakupy' ? '' : 'ghost'; $('#tS').className = itemKind === 'spizarnia' ? '' : 'ghost';
   $('#tZ').setAttribute('aria-pressed', String(itemKind === 'zakupy')); $('#tS').setAttribute('aria-pressed', String(itemKind === 'spizarnia'));
-  const open = items.filter(i => !i.done && (i.kind === 'zakupy' || i.kind === 'spizarnia')).length;
-  $('#zkCount').textContent = open ? '· ' + open + ' do kupienia' : '· pusto';
   const list = items.filter(i => i.kind === itemKind);
   $('#items').replaceChildren(...list.map(i => {
     const r = checkRow(i.done, (i.urgent ? '❗ ' : '') + i.name + (i.qty ? ' · ' + i.qty : ''), async () => {
@@ -735,24 +720,18 @@ function bindText(sel, toPatch, save = saveDay) {
 function flushText() { for (const [, p] of pending) { clearTimeout(p.t); p.run(); } pending.clear(); }
 window.addEventListener('pagehide', flushText);
 
-// Komputer (od 1000 px): wszystkie kolumny naraz, zakładka „view” ma znaczenie tylko na telefonie.
-const wide = matchMedia('(min-width:1000px)');
 function show(v) {
   view = v; document.querySelectorAll('main section[id^="v-"]').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.toggleAttribute('aria-current', b.dataset.v === v); });
-  $('#title').textContent = wide.matches ? 'Dzień' : { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', trening: 'Trening', coach: 'Coach' }[v];
+  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', trening: 'Trening', coach: 'Coach' }[v];
   const dated = v === 'dzis' || v === 'jedzenie';
   ['#prevDay', '#dateLbl', '#nextDay'].forEach(s => $(s).classList.toggle('hidden', !dated));
   window.scrollTo(0, 0);
 }
-wide.addEventListener('change', () => show(view));
-// Zakupy na komputerze: zwinięte pod Jedzeniem, stan zapamiętany w przeglądarce.
-const zkSet = open => { $('#v-zakupy').classList.toggle('zk-open', open); $('#zkHead').setAttribute('aria-expanded', String(open)); try { localStorage.setItem('zkOpen', open ? '1' : ''); } catch {} };
-try { zkSet(localStorage.getItem('zkOpen') === '1'); } catch { zkSet(false); }
-$('#zkHead').onclick = () => zkSet(!$('#v-zakupy').classList.contains('zk-open'));
-// Strzałki ← → zmieniają dzień (poza polami tekstowymi).
+// Strzałki ← → zmieniają dzień, cyfry 1–5 zakładki (poza polami tekstowymi).
 document.addEventListener('keydown', e => {
   if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,textarea,select') || $('#app').classList.contains('hidden')) return;
+  if (/^[1-5]$/.test(e.key)) return show(VIEWS[+e.key - 1]); // 1–5 = zakładki
   if (e.key === 'ArrowLeft') shift(-1); else if (e.key === 'ArrowRight' && cur < ymd(new Date())) shift(1);
 });
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
