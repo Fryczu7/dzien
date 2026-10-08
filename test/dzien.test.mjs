@@ -60,4 +60,7 @@ test('missingToday: czego brakuje', () => {
   assert.deepEqual(m, ['rehab', 'leki wieczorem', '2700 kcal', '1 posiłek bez kalorii']);
   const full = missingToday({ rehab: true, morning: { leki: true }, evening: { leki_wieczor: true } }, [{ kcal: 3400, protein: 160 }], { kcal_target: 3300, protein_target: 150 }, 21);
   assert.deepEqual(full, []);
+  // Przed 18:00 brak kalorii to plan, nie zaległość – nie ma ich w „Brakuje”.
+  assert.deepEqual(missingToday(day, meals, { kcal_target: 3300 }, 11), ['rehab', '1 posiłek bez kalorii']);
+  assert.ok(missingToday(day, meals, { kcal_target: 3300 }, 18).includes('2700 kcal'));
 });

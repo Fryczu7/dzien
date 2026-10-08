@@ -10,14 +10,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dzień">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
 <style>
 :root{
   --bg:#0f1115;--card:#181b22;--card2:#1f232c;--line:#2a2f3a;--text:#e8eaef;--muted:#8b93a3;
   --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--bad:#dc2626;--bad-ink:#f87171;--blue:#60a5fa;
 }
 @media (prefers-color-scheme: light){
-  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc-ink:#15803d;--bad-ink:#b91c1c;}
+  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc:#16a34a;--acc-ink:#166534;--bad-ink:#b91c1c;}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -36,13 +37,13 @@ main{padding:0 16px;max-width:640px;margin:0 auto}
 .big{font-size:28px;font-weight:700}
 input,textarea,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font:inherit;font-size:16px}
 textarea{min-height:70px;resize:vertical}
-button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#06210f;font-weight:600}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;min-height:44px;background:var(--acc);color:#06210f;font-weight:600;cursor:pointer}
 button.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
 button.small{padding:6px 12px;font-size:14px;min-height:44px}
 button:active{opacity:.7}
-.check{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.check{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .check:last-child{border-bottom:0}
-.box{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:16px}
+.box{width:26px;height:26px;border-radius:8px;border:2px solid var(--muted);flex:none;display:grid;place-items:center;font-size:16px}
 .box.on{background:var(--acc);border-color:var(--acc);color:#06210f}
 .done .lbl{color:var(--muted);text-decoration:line-through}
 .bar{height:10px;background:var(--card2);border-radius:6px;overflow:hidden;margin:6px 0 2px}
@@ -64,18 +65,18 @@ button:active{opacity:.7}
 .note.claude{background:color-mix(in srgb,var(--acc) 12%,var(--card2))}
 .talk{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:12px;background:var(--acc);color:#06210f;font-weight:600;text-decoration:none}
 .talk:active{opacity:.7}
-.talk:focus-visible,button:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px}
+.talk:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px}
 .note small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
 .saved{font-size:13px;min-height:18px;margin:4px 0 2px;color:var(--muted)}
 .saved.ok{color:var(--acc-ink)}.saved.err{color:var(--bad-ink)}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
-nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 2px 8px;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
-nav button b{font-size:20px;line-height:1}
+nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px 2px 8px;font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 nav button.on{color:var(--acc-ink)}
 .tabs2{display:flex;gap:6px;margin-bottom:10px}
 .tabs2 button{flex:1}
 .hidden{display:none!important}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#toast{position:fixed;left:50%;bottom:90px;max-width:calc(100vw - 32px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 #toast.show{opacity:1}
 #toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:4px 4px 4px 14px}
 .toast-act{background:transparent;color:var(--bg);text-decoration:underline;text-underline-offset:3px;min-height:44px;padding:0 12px}
@@ -125,8 +126,8 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .coach-items .why{color:var(--muted);font-size:14px;display:none;margin-top:3px}
 .coach-items li.open .why{display:block}
 .wide-sm{width:100%;margin-top:10px;min-height:44px;text-align:left}
-.report{white-space:pre-wrap;font-size:14px;margin-top:8px}
-.work{white-space:pre-wrap;font-size:14px;margin-top:8px;max-height:60vh;overflow:auto}
+.report{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;margin-top:8px}
+.work{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;margin-top:8px;max-height:60vh;overflow:auto}
 .sect{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 2px 8px;font-weight:600}
 .qrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .qrow:last-child{border-bottom:0}
@@ -134,6 +135,36 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .ghost-talk{background:var(--card2);color:var(--text);border:1px solid var(--line);margin-top:4px}
 #iHint{margin:-4px 0 12px}
 #offline{background:var(--warn);color:#1a1200;text-align:center;font-size:14px;padding:6px 12px}
+.plan-add{margin-top:10px}
+.plan-add input{min-height:44px}
+/* Telefon: kolumna Jedzenie+Zakupy nie istnieje jako pudełko, elementy tylko dla komputera schowane. */
+.col2{display:contents}
+.wideonly,.colhead,.zk-head{display:none}
+/* Komputer: trzy kolumny obok siebie – Dziś | Jedzenie (+ Zakupy pod spodem) | Coach, każda przewija się osobno. */
+@media (min-width:1000px){
+  body{padding-bottom:0}
+  nav{display:none}
+  #app:not(.hidden){display:flex;flex-direction:column;height:100dvh}
+  header{position:static;width:100%;max-width:1440px;margin:0 auto;padding:14px 24px 12px;gap:10px;border-bottom:1px solid var(--line)}
+  header h1{font-size:22px}
+  header .talk{display:flex;padding:0 18px;min-height:44px;margin-left:12px}
+  header .datebtn.hidden{display:inline-block!important}
+  main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;width:100%;max-width:1440px;flex:1;min-height:0;padding:0 24px}
+  main section.hidden{display:block!important}
+  #v-dzis,#v-coach,.col2{display:block;overflow-y:auto;min-height:0;padding:0 6px 32px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .narrowonly,#coachMorning{display:none!important}
+  .colhead{display:block;position:sticky;top:0;z-index:2;background:var(--bg);margin:0;padding:18px 0 12px;font-size:15px;font-weight:600;letter-spacing:.01em}
+  .colhead small{color:var(--muted);font-weight:400;font-size:14px;margin-left:6px}
+  #v-coach .sect:first-of-type{margin-top:4px}
+  #v-zakupy{margin-top:8px}
+  .zk-head{display:flex;width:100%;align-items:center;gap:10px;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-weight:600;text-align:left}
+  .zk-head .muted{font-weight:400}
+  .zk-head::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+  #v-zakupy.zk-open .zk-head{margin-bottom:12px}
+  #v-zakupy.zk-open .zk-head::after{transform:rotate(-135deg)}
+  #v-zakupy:not(.zk-open) .zk-body{display:none}
+  #toast{bottom:28px}
+}
 </style>
 </head>
 <body>
@@ -153,17 +184,19 @@ details[open]>summary::after{transform:rotate(-135deg)}
 <div id="app" class="hidden">
 <header>
   <h1 id="title">Dziś</h1>
-  <button class="datebtn" id="prevDay">‹</button>
-  <button class="datebtn" id="dateLbl"></button>
-  <button class="datebtn" id="nextDay">›</button>
+  <button class="datebtn" id="prevDay" aria-label="Poprzedni dzień" title="Poprzedni dzień (←)">‹</button>
+  <button class="datebtn" id="dateLbl" title="Wróć do dziś"></button>
+  <button class="datebtn" id="nextDay" aria-label="Następny dzień" title="Następny dzień (→)">›</button>
+  <a class="talk wideonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
 </header>
 <main>
 
 <!-- DZIŚ -->
 <section id="v-dzis">
   <!-- Ekran do patrzenia: wpisy idą przez rozmowę z Claude, tu tylko stan dnia i kilka dotknięć. -->
-  <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
-  <p class="muted talk-hint">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
+  <h2 class="colhead">Dziś</h2>
+  <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
+  <p class="muted talk-hint narrowonly">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
   <p id="brakuje" class="brakuje"></p>
   <div id="coachMorning" class="card coach hidden">
     <h2>Propozycja na dziś</h2>
@@ -195,14 +228,15 @@ details[open]>summary::after{transform:rotate(-135deg)}
   </div>
 
   <div class="card">
-    <h2>Dziś</h2>
+    <h2>Plan – max 3</h2>
     <div id="plan"></div>
+    <div class="row plan-add" id="planAddRow"><input id="planNew" placeholder="Dodaj rzecz na dziś" aria-label="Dodaj rzecz na dziś"><button id="planAdd" aria-label="Dodaj">+</button></div>
     <div class="toggles">
-      <button class="toggle" id="tRehab"><span class="box"></span>Rehab</button>
-      <button class="toggle" id="tLeki"><span class="box"></span>Leki rano</button>
+      <button class="toggle" id="tRehab" aria-pressed="false"><span class="box"></span>Rehab</button>
+      <button class="toggle" id="tLeki" aria-pressed="false"><span class="box"></span>Leki rano</button>
     </div>
-    <div class="kcalline" id="dKcal" role="button" tabindex="0"></div>
-    <div class="bar"><i id="dKcalBar" style="width:0"></i></div>
+    <div class="kcalline narrowonly" id="dKcal" role="button" tabindex="0"></div>
+    <div class="bar narrowonly"><i id="dKcalBar" style="width:0"></i></div>
   </div>
 
   <div class="card">
@@ -211,14 +245,13 @@ details[open]>summary::after{transform:rotate(-135deg)}
   </div>
 
   <details class="card" id="allDay">
-    <summary>Cały dzień: sen, trening, plan</summary>
+    <summary>Sen i trening</summary>
     <div class="grid2" style="margin-top:12px">
       <label><span class="muted">Zasnąłem</span><input id="bed" type="time"></label>
       <label><span class="muted">Wstałem</span><input id="wake" type="time"></label>
     </div>
     <p class="muted" id="sleepH" style="margin:6px 0 12px"></p>
-    <input id="training" placeholder="Trening (np. klatka + nogi)">
-    <div class="row" style="margin-top:12px"><input id="planNew" placeholder="Dodaj rzecz na dziś (max 3)"><button id="planAdd" aria-label="Dodaj">+</button></div>
+    <input id="training" placeholder="Trening (np. klatka + nogi)" aria-label="Trening">
   </details>
 
   <!-- Nadrabianie: jedno podsumowanie za kilka dni bez wpisów -->
@@ -237,9 +270,11 @@ details[open]>summary::after{transform:rotate(-135deg)}
 </section>
 
 <!-- JEDZENIE -->
+<div class="col2">
 <section id="v-jedzenie" class="hidden">
-  <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zjadłeś</a>
-  <p class="muted talk-hint">Claude policzy kalorie i białko i od razu zapisze tutaj.</p>
+  <h2 class="colhead">Jedzenie</h2>
+  <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zjadłeś</a>
+  <p class="muted talk-hint narrowonly">Claude policzy kalorie i białko i od razu zapisze tutaj.</p>
   <div class="card">
     <h2>Dziś</h2>
     <div class="row"><span class="big" id="kcalSum">0</span><span class="muted grow">/ <span id="kcalT">–</span> kcal</span></div>
@@ -254,33 +289,31 @@ details[open]>summary::after{transform:rotate(-135deg)}
   </div>
   <details class="card" id="quickDet">
     <summary>Szybko – to, co już jadłeś</summary>
-    <input id="qSearch" type="search" placeholder="🔍 Szukaj, np. owsianka" style="margin-top:10px" autocomplete="off">
+    <input id="qSearch" type="search" placeholder="Szukaj, np. owsianka" aria-label="Szukaj w tym, co już jadłeś" style="margin-top:10px" autocomplete="off">
     <div id="quick"></div>
   </details>
-  <div class="card">
-    <h2>Dodaj ręcznie</h2>
-    <input id="mName" placeholder="Co zjadłeś"><div style="height:8px"></div>
-    <div class="grid2"><input id="mKcal" type="number" inputmode="numeric" placeholder="kcal"><input id="mProt" type="number" inputmode="numeric" placeholder="białko g"></div>
-    <div style="height:8px"></div>
-    <button id="mAdd" class="ghost" style="width:100%">Dodaj</button>
-  </div>
 </section>
 
-<!-- ZAKUPY: dwie listy do kupienia -->
+<!-- ZAKUPY: dwie listy do kupienia; na komputerze zwinięte pod Jedzeniem -->
 <section id="v-zakupy" class="hidden">
-  <div class="tabs2"><button id="tZ">Dla mnie</button><button class="ghost" id="tS">Spiżarnia</button></div>
+  <button class="zk-head" id="zkHead" aria-expanded="false" aria-controls="zkBody">Zakupy <span class="muted" id="zkCount"></span></button>
+  <div class="zk-body" id="zkBody">
+  <div class="tabs2"><button id="tZ" aria-pressed="true">Dla mnie</button><button class="ghost" id="tS" aria-pressed="false">Spiżarnia</button></div>
   <div class="card">
-    <div class="row"><input id="iNew" placeholder="Dodaj produkt"><input id="iQty" placeholder="ilość" style="max-width:90px"><button id="iAdd" aria-label="Dodaj">+</button></div>
+    <div class="row"><input id="iNew" placeholder="Dodaj produkt" aria-label="Produkt"><input id="iQty" placeholder="ilość" aria-label="Ilość" style="max-width:90px"><button id="iAdd" aria-label="Dodaj">+</button></div>
   </div>
   <div class="card"><div id="items"></div></div>
   <div id="iHint"></div>
-  <a class="talk ghost-talk" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co dopisać</a>
+  <a class="talk ghost-talk narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co dopisać</a>
+  </div>
 </section>
+</div>
 
 <!-- COACH: karta na dziś, nocna praca, podsumowania, cele -->
 <section id="v-coach" class="hidden">
-  <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
-  <p class="muted talk-hint">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
+  <h2 class="colhead">Coach</h2>
+  <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
+  <p class="muted talk-hint narrowonly">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
   <div class="card coach" id="cDay">
     <h2 id="cDayTitle">Propozycja na dziś</h2>
     <ol id="cItems" class="coach-items"></ol>
@@ -295,10 +328,10 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 </main>
 <nav>
-  <button data-v="dzis" class="on"><b>☀︎</b>Dziś</button>
-  <button data-v="jedzenie"><b>🍽</b>Jedzenie</button>
-  <button data-v="zakupy"><b>🛒</b>Zakupy</button>
-  <button data-v="coach"><b>🧭</b>Coach</button>
+  <button data-v="dzis" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>Dziś</button>
+  <button data-v="jedzenie"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>Jedzenie</button>
+  <button data-v="zakupy"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11h10.3l2-8H6.6"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="16.5" cy="19.5" r="1.3"/></svg>Zakupy</button>
+  <button data-v="coach"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Coach</button>
 </nav>
 </div>
 <div id="toast"></div>
@@ -385,8 +418,10 @@ async function loadStatic() {
 // ---------- render ----------
 // Nie nadpisuj pola, w którym jest niezapisany jeszcze tekst (zapis po 800 ms).
 const setVal = (sel, v) => { if (pending.has(sel)) return; const f = $(sel); if (f.value !== (v || '') && f._status) f._status.textContent = ''; f.value = v || ''; };
+// Spacja/Enter na elemencie z tabindex = kliknięcie (wiersze do odhaczenia, punkty coacha, linia kalorii).
+const keyClick = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); e.currentTarget.click(); } };
 function checkRow(on, label, onclick) {
-  const r = el('div', { class: 'check' + (on ? ' done' : ''), onclick }, el('div', { class: 'box' + (on ? ' on' : '') }, on ? '✓' : ''), el('span', { class: 'lbl grow' }, label));
+  const r = el('div', { class: 'check' + (on ? ' done' : ''), onclick, role: 'checkbox', 'aria-checked': String(!!on), tabindex: '0', onkeydown: keyClick }, el('div', { class: 'box' + (on ? ' on' : ''), 'aria-hidden': 'true' }, on ? '✓' : ''), el('span', { class: 'lbl grow' }, label));
   return r;
 }
 function renderHeader() {
@@ -437,7 +472,8 @@ function renderDzis() {
     const d = el('div', { class: 'rule' }, el('div', { class: 'row' }, el('span', { class: 'grow' }, r.nr + '. ' + r.text),
       el('button', { class: 'small ' + (st === 'broken' ? '' : 'ghost'), style: st === 'broken' ? 'background:var(--bad);color:#fff' : '', onclick: e => { e.stopPropagation(); const nb = st === 'broken' ? broken.filter(x => x !== r.nr) : [...broken, r.nr]; saveDay({ rules_broken: nb, evening: { ...day.evening, rules_done: true } }).then(renderDzis); } }, st === 'broken' ? 'złamane' : 'OK')),
       el('div', { class: 'why' }, r.why || ''));
-    d.addEventListener('click', () => d.classList.toggle('open'));
+    if (r.why) { d.tabIndex = 0; d.setAttribute('aria-expanded', 'false'); d.addEventListener('keydown', keyClick); }
+    d.addEventListener('click', () => { d.classList.toggle('open'); if (r.why) d.setAttribute('aria-expanded', String(d.classList.contains('open'))); });
     return d;
   }));
   setVal('#doceniam', day.evening?.doceniam);
@@ -452,9 +488,10 @@ function renderDzis() {
   // Plan dnia
   const pl = $('#plan'), shown = planWithoutToggles(plan);
   pl.replaceChildren(...shown.map(({ p, idx }) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', 'aria-label': 'Usuń', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
-  if (!shown.length) pl.append(el('div', { class: 'muted' }, 'Brak planu na dziś. Powiedz Claude, co jest najważniejsze.'));
-  $('#tRehab').classList.toggle('on', !!day.rehab);
-  $('#tLeki').classList.toggle('on', !!day.morning?.leki);
+  if (!shown.length) pl.append(el('div', { class: 'muted' }, 'Pusto. Wpisz niżej albo powiedz Claude, co dziś najważniejsze.'));
+  $('#planAddRow').classList.toggle('hidden', shown.length >= 3);
+  $('#tRehab').classList.toggle('on', !!day.rehab); $('#tRehab').setAttribute('aria-pressed', String(!!day.rehab));
+  $('#tLeki').classList.toggle('on', !!day.morning?.leki); $('#tLeki').setAttribute('aria-pressed', String(!!day.morning?.leki));
   const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
   const kt = day.kcal_target || cfg.kcal_target, pt = day.protein_target || cfg.protein_target;
   $('#dKcal').replaceChildren(el('b', {}, k + ' / ' + kt + ' kcal'), el('span', { class: 'muted' }, ' · ' + p + ' / ' + pt + ' g białka'));
@@ -524,11 +561,21 @@ async function addMeal(name, kcal, protein) {
 }
 // Punkty coacha: „co” pogrubione, „dlaczego” po dotknięciu.
 function coachList(list) {
-  return list.map(it => { const li = el('li', {}, el('div', { class: 'what' }, it.what), el('div', { class: 'why' }, it.why || '')); if (it.why) li.addEventListener('click', () => li.classList.toggle('open')); return li; });
+  return list.map(it => {
+    const li = el('li', {}, el('div', { class: 'what' }, it.what), el('div', { class: 'why' }, it.why || ''));
+    if (it.why) {
+      li.tabIndex = 0; li.setAttribute('aria-expanded', 'false'); li.addEventListener('keydown', keyClick);
+      li.addEventListener('click', () => li.setAttribute('aria-expanded', String(li.classList.toggle('open'))));
+    }
+    return li;
+  });
 }
 // Zakupy: „Dla mnie” (kind zakupy) i „Spiżarnia” (jedzenie). Obie to listy do kupienia.
 function renderItems() {
   $('#tZ').className = itemKind === 'zakupy' ? '' : 'ghost'; $('#tS').className = itemKind === 'spizarnia' ? '' : 'ghost';
+  $('#tZ').setAttribute('aria-pressed', String(itemKind === 'zakupy')); $('#tS').setAttribute('aria-pressed', String(itemKind === 'spizarnia'));
+  const open = items.filter(i => !i.done && (i.kind === 'zakupy' || i.kind === 'spizarnia')).length;
+  $('#zkCount').textContent = open ? '· ' + open + ' do kupienia' : '· pusto';
   const list = items.filter(i => i.kind === itemKind);
   $('#items').replaceChildren(...list.map(i => {
     const r = checkRow(i.done, (i.urgent ? '❗ ' : '') + i.name + (i.qty ? ' · ' + i.qty : ''), async () => {
@@ -588,14 +635,26 @@ function bindText(sel, toPatch, save = saveDay) {
 function flushText() { for (const [, p] of pending) { clearTimeout(p.t); p.run(); } pending.clear(); }
 window.addEventListener('pagehide', flushText);
 
+// Komputer (od 1000 px): wszystkie kolumny naraz, zakładka „view” ma znaczenie tylko na telefonie.
+const wide = matchMedia('(min-width:1000px)');
 function show(v) {
-  view = v; document.querySelectorAll('main>section').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
-  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', coach: 'Coach' }[v];
+  view = v; document.querySelectorAll('main section[id^="v-"]').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
+  document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.toggleAttribute('aria-current', b.dataset.v === v); });
+  $('#title').textContent = wide.matches ? 'Dzień' : { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', coach: 'Coach' }[v];
   const dated = v === 'dzis' || v === 'jedzenie';
   ['#prevDay', '#dateLbl', '#nextDay'].forEach(s => $(s).classList.toggle('hidden', !dated));
   window.scrollTo(0, 0);
 }
+wide.addEventListener('change', () => show(view));
+// Zakupy na komputerze: zwinięte pod Jedzeniem, stan zapamiętany w przeglądarce.
+const zkSet = open => { $('#v-zakupy').classList.toggle('zk-open', open); $('#zkHead').setAttribute('aria-expanded', String(open)); try { localStorage.setItem('zkOpen', open ? '1' : ''); } catch {} };
+try { zkSet(localStorage.getItem('zkOpen') === '1'); } catch { zkSet(false); }
+$('#zkHead').onclick = () => zkSet(!$('#v-zakupy').classList.contains('zk-open'));
+// Strzałki ← → zmieniają dzień (poza polami tekstowymi).
+document.addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,textarea,select') || $('#app').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') shift(-1); else if (e.key === 'ArrowRight' && cur < ymd(new Date())) shift(1);
+});
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
 // Przesunięcie palcem w bok = sąsiednia zakładka (nie w polach tekstowych i przewijanych tekstach).
 const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'coach']; let touch = null;
@@ -620,13 +679,14 @@ const onSleep = () => { const b = $('#bed').value, w = $('#wake').value; saveDay
 $('#bed').onchange = onSleep; $('#wake').onchange = onSleep;
 $('#planAdd').onclick = () => {
   const t = $('#planNew').value.trim(); if (!t) return;
-  if ((day.plan || []).filter(p => !p.done).length >= 3) return toast('Max 3 rzeczy – najpierw coś odhacz albo usuń');
+  // Zasada: max 3 główne rzeczy dziennie – odhaczona też się liczy (nie dokładamy czwartej).
+  if (planWithoutToggles(day.plan).length >= 3) return toast('Max 3 rzeczy na dzień – czwartej nie dokładamy');
   $('#planNew').value = ''; saveDay({ plan: [...(day.plan || []), { text: t, done: false }] }).then(renderDzis);
 };
 $('#planNew').onkeydown = e => { if (e.key === 'Enter') $('#planAdd').click(); };
 $('#tRehab').onclick = () => saveDay({ rehab: !day.rehab }).then(renderDzis);
 $('#tLeki').onclick = () => saveDay({ morning: { ...day.morning, leki: !day.morning?.leki } }).then(renderDzis);
-$('#dKcal').onclick = () => show('jedzenie');
+$('#dKcal').onclick = () => show('jedzenie'); $('#dKcal').onkeydown = keyClick;
 $('#ranoAll').onclick = () => {
   const req = cfg.morning_items.filter(x => x[2] !== 'opcja');
   const anyOn = req.some(([k]) => day.morning?.[k]);
@@ -657,7 +717,6 @@ async function saveCatchup(skip) {
 $('#catchupSave').onclick = () => saveCatchup(false);
 $('#catchupSkip').onclick = () => saveCatchup(true);
 
-$('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
 
 $('#tZ').onclick = () => { itemKind = 'zakupy'; renderItems(); }; $('#tS').onclick = () => { itemKind = 'spizarnia'; renderItems(); };
 $('#iAdd').onclick = async () => { const name = $('#iNew').value.trim(); if (!name) return; const { data, error } = await sb.from('items').insert({ kind: itemKind, name, qty: $('#iQty').value.trim() || null }).select().single(); if (error) return fail(error); items.push(data); $('#iNew').value = $('#iQty').value = ''; renderItems(); };
@@ -672,7 +731,7 @@ async function start() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  await Promise.all([loadDay(), loadStatic(), loadHistory()]);
+  await Promise.all([loadDay(), loadStatic(), loadHistory()]); lastLoad = Date.now();
   renderAll(); show(view);
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
@@ -689,12 +748,19 @@ sb.auth.onAuthStateChange(async (ev) => {
   }
   if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start();
 });
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'hidden') return flushText();
-  if ($('#app').classList.contains('hidden')) return;
+// Odświeżenie danych: po powrocie do apki, po kliknięciu w okno (na komputerze Claude bywa w drugim oknie obok)
+// i co minutę, gdy apka jest widoczna – żeby kalorie zapisane przez Claude pojawiały się same. Nie w trakcie pisania.
+let lastLoad = 0;
+async function refresh(force) {
+  if ($('#app').classList.contains('hidden') || document.visibilityState === 'hidden') return;
+  if (!force && (Date.now() - lastLoad < 15000 || document.activeElement?.matches('input,textarea'))) return;
+  lastLoad = Date.now();
   cur = dayOnResume(cur, followToday, new Date());
-  await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); show(view);
-});
+  await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); // bez show(): nie przewija na górę
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') return flushText(); refresh(true); });
+window.addEventListener('focus', () => refresh(false));
+setInterval(() => refresh(false), 60000);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 start();
 </script>

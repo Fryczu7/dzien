@@ -117,7 +117,8 @@ export function missingToday(day, meals, cfg, hour) {
   if (!day.morning?.leki) out.push('leki rano');
   if ((hour >= 20 || hour < 4) && !day.evening?.leki_wieczor) out.push('leki wieczorem');
   const kcal = meals.reduce((a, m) => a + (m.kcal || 0), 0), target = day.kcal_target || cfg.kcal_target;
-  if (target && kcal < target) out.push((target - kcal) + ' kcal');
+  // Kalorie dopiero od 18:00 – wcześniej „brakuje 3300 kcal” to plan dnia, nie zaległość.
+  if (target && kcal < target && (hour >= 18 || hour < 4)) out.push((target - kcal) + ' kcal');
   const bez = meals.filter(m => m.kcal == null).length;
   if (bez) out.push(bez + ' ' + posilki(bez) + ' bez kalorii');
   return out;
