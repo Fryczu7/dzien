@@ -310,3 +310,15 @@ export function eveningBrief(day, meals, cfg, props = []) {
 // „Napisz do Claude” przy propozycji: gotowa wiadomość do wklejenia w czacie projektu CEO.
 export const feedbackMsg = (prop, text) =>
   'Propozycja asystenta na dziś: „' + prop.title + '”.\nMój feedback: ' + String(text || '').trim() + '\nZareaguj na to teraz i zapisz wniosek w pamięci, żeby asystent brał to pod uwagę.';
+
+// Nastrój w check-inie: 1–5 z podpisem (apka i wiadomość do coacha).
+export const MOODS = [[1, 'fatalnie'], [2, 'słabo'], [3, 'OK'], [4, 'dobrze'], [5, 'świetnie']];
+
+// „Wyślij coachowi”: wiadomość do rozmowy z Claude, żeby coach odpowiedział od razu i zapisał odpowiedź w apce.
+export function checkinMsg(date, ev) {
+  const m = MOODS.find(([n]) => n === ev.nastroj), t = s => String(s || '').trim();
+  return ['Check-in wieczorny (' + date + ').', 'Nastrój: ' + (m ? m[0] + '/5 (' + m[1] + ')' : '–'),
+    t(ev.blokada) ? 'Co blokowało: ' + t(ev.blokada) : '', t(ev.doceniam) ? 'Doceniam się za: ' + t(ev.doceniam) : '',
+    'Odpowiedz mi teraz jako coach od mentalu – krótko i wprost. Potem zapisz tę odpowiedź w apce: select public.coach_evening_save(\'' + date + '\', \'<odpowiedź>\').']
+    .filter(Boolean).join('\n');
+}

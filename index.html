@@ -181,7 +181,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .wk-row>summary::after{margin-left:0}
 .wk-row .wk-body{padding-bottom:10px}
 .wk-tag{font-size:12px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--card2);color:var(--muted)}
-#wHist>summary .muted,#coHist>summary .muted{font-weight:400;margin-left:6px}
+#wHist>summary .muted{font-weight:400;margin-left:6px}
 #wList{margin-top:6px}
 .obs .row{margin-top:10px}
 /* Liczniki tygodnia: liczba, podpis, seria pod spodem */
@@ -235,7 +235,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   #v-dzis,#v-jedzenie,#v-trening,#v-asystent,#wPlans,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
   main section.hidden{display:none!important}
   main .card,.brakuje{margin:0}
-  .brakuje,#catchup,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cReport,#logout,#coHist{grid-column:1/-1}
+  .brakuje,#catchup,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cReport,#logout{grid-column:1/-1}
   #aDay{grid-row:span 2}
   .week{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sect{margin:12px 2px 0}
@@ -330,13 +330,14 @@ details[open]>summary::after{transform:rotate(-135deg)}
         <label class="ask" for="doceniam">Za co się dziś doceniasz?</label>
         <textarea id="doceniam"></textarea>
         <button id="ciSend" class="wide">Wyślij coachowi</button>
+        <p class="muted" style="margin:8px 2px 0">Otworzy się rozmowa z Claude z gotową wiadomością – wklej i wyślij, coach odpowie od razu.</p>
       </div>
       <div id="ciDone" class="hidden">
         <p id="ciSum" class="ci-sum"></p>
         <button class="ghost small" id="ciEdit" style="margin-top:8px">Zmień check-in</button>
       </div>
       <div id="ciReply" class="note claude hidden"></div>
-      <p id="ciWait" class="muted hidden" style="margin:10px 0 0">Coach odpowie ok. 21:30 – odpowiedź pojawi się tutaj.</p>
+      <div id="ciWait" class="hidden"><p class="muted" style="margin:10px 0 8px">Odpowiedź coacha jest w rozmowie z Claude – pojawi się też tutaj.</p><button class="ghost small" id="ciAgain">Otwórz rozmowę jeszcze raz</button></div>
     </div>
   </div>
 
@@ -465,9 +466,8 @@ details[open]>summary::after{transform:rotate(-135deg)}
 <!-- COACH od mentalu: check-in, odpowiedź, rozmowa, ostatnie wieczory -->
 <section id="v-coach" class="hidden">
   <a class="talk talk-main" id="coTalk" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
-  <p class="muted talk-hint">Wieczorem krótki check-in, coach odpowiada ok. 21:30. Rozmowa – kiedy chcesz.</p>
+  <p class="muted talk-hint">Wieczorem krótki check-in – po wysłaniu coach odpowiada od razu w rozmowie. Rozmowa – kiedy chcesz.</p>
   <div id="ciSlotCoach"></div>
-  <details class="card" id="coHist"><summary>Ostatnie wieczory <span class="muted" id="coHistN"></span></summary><div id="coHistList"></div></details>
   <button class="ghost wide" id="logout">Wyloguj</button>
 </section>
 
@@ -485,7 +485,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -699,7 +699,6 @@ function weekCells() {
 }
 // ---------- Check-in (coach od mentalu) ----------
 // Jedna karta: na „Dziś” od 20:00, w zakładce Coach zawsze. Tekst zapisuje się sam, „Wyślij coachowi” stawia checkin_at.
-const MOODS = [[1, 'fatalnie'], [2, 'słabo'], [3, 'OK'], [4, 'dobrze'], [5, 'świetnie']];
 let ciEditing = false;
 function renderCheckin() {
   if (!day) return; // zakładka kliknięta, zanim wczytał się dzień
@@ -883,19 +882,6 @@ function renderAsystent(focusId) {
   // Po „Napisz do Claude” kursor od razu w polu tej propozycji.
   if (typeof focusId === 'string') { const f = document.querySelector('#v-asystent input[data-pid="' + focusId + '"]'); if (f) { f.focus(); f.select(); } }
 }
-// Coach: ostatnie wieczory (check-in + odpowiedź) – żeby było widać wzorce.
-function renderCoachTab() {
-  const rows = hist.filter(d => d.date !== cur && (d.evening?.checkin_at || d.coach_evening)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
-  $('#coHistN').textContent = rows.length ? '· ' + rows.length : '';
-  $('#coHist').classList.toggle('hidden', !rows.length);
-  $('#coHistList').replaceChildren(...rows.map(d => {
-    const e = d.evening || {}, m = MOODS.find(([n]) => n === e.nastroj);
-    return el('details', { class: 'wk-row hist-ci' },
-      el('summary', {}, el('span', {}, PL_DAYS[new Date(d.date + 'T12:00:00').getDay()] + ' ' + dShort(d.date)), el('span', { class: 'wk-when' }, m ? 'nastrój ' + m[0] + '/5' : '')),
-      el('div', { class: 'wk-body' }, e.blokada ? el('div', { class: 'report' }, 'Blokowało: ' + e.blokada) : '', e.doceniam ? el('div', { class: 'report' }, 'Doceniam: ' + e.doceniam) : '',
-        d.coach_evening ? el('div', { class: 'note claude' }, d.coach_evening) : el('div', { class: 'muted' }, 'Bez odpowiedzi coacha.')));
-  }));
-}
 // Trening: plany z ostatnim i poprzednim wynikiem oraz celem, niżej historia treningów. Nic tu się nie wpisuje.
 const dShort = d => d ? +d.slice(8) + '.' + d.slice(5, 7) : 'bez daty';
 const withRir = s => s.rir ? ' · RIR ' + s.rir.replace('-', '–') : '';
@@ -995,7 +981,7 @@ $('#obsOk').onclick = async () => {
   if (error) return fail(error);
   o.accepted_at = at; renderObs(); toast('Przeczytane – zostaje w zakładce Asystent');
 };
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); renderCoachTab(); }
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
@@ -1085,10 +1071,12 @@ bindText('#ciBlok', v => ({ evening: { ...day.evening, blokada: v } }));
 $('#ciSend').onclick = async () => {
   if (!day.evening?.nastroj) return toast('Wybierz nastrój 1–5');
   flushText();
-  const ok = await saveDay({ evening: checkinPatch(day.evening, { nastroj: day.evening.nastroj, blokada: $('#ciBlok').value, doceniam: $('#doceniam').value }, new Date()) });
-  if (ok) { ciEditing = false; renderCheckin(); toast('Wysłane – coach odpowie ok. 21:30'); }
+  const ev = checkinPatch(day.evening, { nastroj: day.evening.nastroj, blokada: $('#ciBlok').value, doceniam: $('#doceniam').value }, new Date());
+  toClaude(checkinMsg(cur, ev)); toast('Wiadomość skopiowana – wklej w rozmowie');
+  if (await saveDay({ evening: ev })) { ciEditing = false; renderCheckin(); }
 };
 $('#ciEdit').onclick = () => { ciEditing = true; renderCheckin(); };
+$('#ciAgain').onclick = () => { toClaude(checkinMsg(cur, day.evening || {})); toast('Wiadomość skopiowana – wklej w rozmowie'); };
 
 // Nadrabianie: jedno podsumowanie za lukę; „Pomiń” też zapisuje, żeby nie pytać drugi raz.
 $('#catchupOpen').onclick = () => $('#catchupForm').classList.toggle('hidden');

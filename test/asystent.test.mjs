@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { streakDays, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch } from '../lib.js';
+import { streakDays, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, checkinMsg } from '../lib.js';
 
 // 2026-10-08 to czwartek; tydzień od poniedziałku 2026-10-05.
 const T = '2026-10-08';
@@ -109,4 +109,12 @@ test('checkinPatch: łączy z istniejącym wieczorem, zapisuje czas', () => {
   const ev = { leki_wieczor: true, doceniam: 'stare' };
   const p = checkinPatch(ev, { nastroj: 4, blokada: ' telefon ', doceniam: 'trening' }, new Date('2026-10-08T19:30:00Z'));
   assert.deepEqual(p, { leki_wieczor: true, doceniam: 'trening', nastroj: 4, blokada: 'telefon', checkin_at: '2026-10-08T19:30:00.000Z' });
+});
+
+test('checkinMsg: wiadomość do coacha z check-inu, z poleceniem zapisu odpowiedzi', () => {
+  const m = checkinMsg('2026-10-08', { nastroj: 2, blokada: 'telefon', doceniam: '' });
+  assert.match(m, /Nastrój: 2\/5 \(słabo\)/);
+  assert.match(m, /Co blokowało: telefon/);
+  assert.doesNotMatch(m, /Doceniam/);
+  assert.match(m, /coach_evening_save\('2026-10-08'/);
 });
