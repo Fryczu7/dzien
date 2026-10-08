@@ -137,6 +137,32 @@ details[open]>summary::after{transform:rotate(-135deg)}
 #offline{background:var(--warn);color:#1a1200;text-align:center;font-size:14px;padding:6px 12px}
 .plan-add{margin-top:10px}
 .plan-add input{min-height:44px}
+/* Trening: tylko do patrzenia – serie wpisuje Claude */
+.wk>summary{gap:10px}
+.wk>summary::after{margin-left:0}
+.wk-when{color:var(--muted);font-size:14px;font-weight:400;font-variant-numeric:tabular-nums;margin-left:auto;margin-right:4px;text-align:right;white-space:nowrap}
+.wk-body{margin-top:4px}
+.wk-notes{color:var(--muted);font-size:14px;margin:0 0 8px;white-space:pre-wrap}
+.wk-ex{padding:8px 0;border-top:1px solid var(--line)}
+.wk-ex .nm{font-weight:600;font-size:15px}
+.wk-sets{font-size:14px;font-variant-numeric:tabular-nums;margin-top:2px}
+.wk-sets .wu{color:var(--muted)}
+.ex{padding:12px 0;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0}
+.ex-top{display:flex;align-items:baseline;gap:8px}
+.ex-top .nm{font-weight:600;flex:1;min-width:0}
+.ex-top .rng{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ex-res{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-variant-numeric:tabular-nums}
+.ex-res .val{font-size:18px;font-weight:700}
+.ex-res .rir{color:var(--muted);font-size:14px}
+.trend{font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card2);color:var(--muted);white-space:nowrap}
+.trend.up{background:color-mix(in srgb,var(--acc) 16%,var(--card2));color:var(--acc-ink)}
+.trend.down{background:color-mix(in srgb,var(--bad) 14%,var(--card2));color:var(--bad-ink)}
+.ex-prev{color:var(--muted);font-size:14px;margin-top:2px;font-variant-numeric:tabular-nums}
+.ex-next{font-size:14px;margin-top:4px;color:var(--acc-ink);font-weight:600}
+.ex-none{color:var(--muted);font-size:14px;margin-top:2px}
+.ex-note{color:var(--muted);font-size:13px;margin-top:3px}
+.plan-notes{color:var(--muted);font-size:14px;margin:4px 0 0;padding-top:10px;border-top:1px solid var(--line)}
 /* Telefon: kolumna Jedzenie+Zakupy nie istnieje jako pudełko, elementy tylko dla komputera schowane. */
 .col2{display:contents}
 .wideonly,.colhead,.zk-head{display:none}
@@ -314,6 +340,17 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <a class="talk ghost-talk narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co dopisać</a>
   </div>
 </section>
+
+<!-- TRENING: plany z postępem i ostatnie treningi; serie zapisuje Claude z rozmowy -->
+<section id="v-trening" class="hidden">
+  <h2 class="colhead">Trening</h2>
+  <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zrobiłeś</a>
+  <p class="muted talk-hint narrowonly">Ćwiczenie, ciężar, powtórzenia, RIR – Claude zapisze serie, a tu zobaczysz postęp.</p>
+  <h3 class="sect">Plany i postęp</h3>
+  <div id="wPlans"></div>
+  <h3 class="sect">Ostatnie treningi</h3>
+  <div id="wList"></div>
+</section>
 </div>
 
 <!-- COACH: karta na dziś, nocna praca, podsumowania, cele -->
@@ -338,6 +375,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <button data-v="dzis" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>Dziś</button>
   <button data-v="jedzenie"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>Jedzenie</button>
   <button data-v="zakupy"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11h10.3l2-8H6.6"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="16.5" cy="19.5" r="1.3"/></svg>Zakupy</button>
+  <button data-v="trening"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Trening</button>
   <button data-v="coach"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Coach</button>
 </nav>
 </div>
@@ -345,7 +383,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -366,6 +404,7 @@ window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
 let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
 let day = null, rules = [], items = [], goals = [], weights = [], meals = [];
+let workouts = [], plans = []; // treningi z seriami i plany (tylko odczyt)
 let coachRows = [], mealHist = [], qQuery = ''; // historia coacha, wszystkie posiłki (do „Szybko”), szukana fraza
 // Historia do zestawienia tygodnia i wykrywania luki: dni z ostatnich 14 dni, daty posiłków, nadrobienia.
 let hist = [], mealDates = new Set(), catchups = [], gap = null, cuAnswers = {};
@@ -406,7 +445,7 @@ async function loadHistory() {
   if (m.data) mealDates = new Set(m.data.map(x => x.date));
 }
 async function loadStatic() {
-  const [r, i, g, w, s, c, mh] = await Promise.all([
+  const [r, i, g, w, s, c, mh, wk, wp] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
@@ -414,8 +453,11 @@ async function loadStatic() {
     sb.from('settings').select('*').maybeSingle(),
     sb.from('coach').select('*').order('date', { ascending: false }).limit(14),
     sb.from('meals').select('name,kcal,protein').not('kcal', 'is', null).order('created_at', { ascending: false }).limit(2000),
+    sb.from('workouts').select('*, workout_sets(*)').order('date', { ascending: false, nullsFirst: false }).limit(200),
+    sb.from('workout_plans').select('*').order('name'),
   ]);
-  const bad = [r, i, g, w, s, c, mh].find(x => x.error); if (bad) failLoad(bad.error);
+  const bad = [r, i, g, w, s, c, mh, wk, wp].find(x => x.error); if (bad) failLoad(bad.error);
+  workouts = wk.data ?? workouts; plans = wp.data ?? plans;
   // Przy błędzie zostaje to, co już było wczytane – ekran nie robi się pusty.
   rules = r.data ?? rules; items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights;
   coachRows = c.data ?? coachRows; mealHist = mh.data ?? mealHist;
@@ -618,7 +660,58 @@ function renderCoach() {
       el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'), extra);
   }));
 }
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderCoach(); }
+// Trening: plany z ostatnim i poprzednim wynikiem oraz celem, niżej historia treningów. Nic tu się nie wpisuje.
+const dShort = d => d ? +d.slice(8) + '.' + d.slice(5, 7) : 'bez daty';
+const withRir = s => s.rir ? ' · RIR ' + s.rir.replace('-', '–') : '';
+function exRow(name, plan, pr) {
+  const rng = plan && (plan.sets || plan.reps) ? (plan.sets ? plan.sets + ' × ' : '') + String(plan.reps || '').replace('-', '–') : '';
+  const kids = [el('div', { class: 'ex-top' }, el('span', { class: 'nm' }, name), rng ? el('span', { class: 'rng' }, rng) : '')];
+  if (pr) {
+    const t = trendLabel(pr.last, pr.prev);
+    kids.push(el('div', { class: 'ex-res' }, el('span', { class: 'val' }, fmtSet(pr.last)), pr.last.rir ? el('span', { class: 'rir' }, 'RIR ' + pr.last.rir.replace('-', '–')) : '',
+      t ? el('span', { class: 'trend ' + pr.trend }, t) : '', el('span', { class: 'rir' }, dShort(pr.last.date))));
+    if (pr.prev) kids.push(el('div', { class: 'ex-prev' }, 'Wcześniej: ' + fmtSet(pr.prev) + withRir(pr.prev) + ' · ' + dShort(pr.prev.date)));
+    if (pr.next) kids.push(el('div', { class: 'ex-next' }, 'Następnym razem: ' + pr.next));
+  } else kids.push(el('div', { class: 'ex-none' }, 'Jeszcze bez wyniku'));
+  if (plan?.note) kids.push(el('div', { class: 'ex-note' }, plan.note));
+  return el('div', { class: 'ex' }, ...kids);
+}
+// Rozwinięte karty zostają rozwinięte po odświeżeniu danych (co minutę i po powrocie do apki).
+const wkOpen = new Set();
+const wkCard = (key, summary, body) => {
+  const d = el('details', { class: 'card wk' }, summary, body); d.open = wkOpen.has(key);
+  d.addEventListener('toggle', () => { if (d.open) wkOpen.add(key); else wkOpen.delete(key); });
+  return d;
+};
+function renderTrening() {
+  const sorted = sortWorkouts(workouts), progress = exerciseProgress(workouts, plans);
+  const norm = s => String(s || '').toLowerCase().trim(), inPlan = new Set();
+  $('#wPlans').replaceChildren(...plans.map(p => {
+    const last = sorted.find(w => norm(w.name) === norm(p.name)), exs = p.exercises || [];
+    exs.forEach(e => inPlan.add(norm(e.name)));
+    const when = last ? 'ostatnio ' + (last.date ? dShort(last.date) : '– data nieznana') : 'jeszcze nie robiony';
+    return wkCard('p:' + p.name, el('summary', {}, el('span', {}, p.name), el('span', { class: 'wk-when' }, when)),
+      el('div', { class: 'wk-body' }, ...exs.map(e => exRow(e.name, e, progressFor(progress, e.name))), p.notes ? el('p', { class: 'plan-notes' }, p.notes) : ''));
+  }));
+  // Ćwiczenia z historią, których nie ma w żadnym planie.
+  const other = [...progress.values()].filter(x => !inPlan.has(norm(x.name)));
+  if (other.length) $('#wPlans').append(wkCard('inne', el('summary', {}, el('span', {}, 'Inne ćwiczenia'), el('span', { class: 'wk-when' }, String(other.length))),
+    el('div', { class: 'wk-body' }, ...other.map(x => exRow(x.name, null, x)))));
+  if (!plans.length && !other.length) $('#wPlans').append(el('div', { class: 'card muted' }, 'Brak planów. Powiedz Claude, jaki masz plan – zapisze go tutaj.'));
+
+  $('#wList').replaceChildren(...sorted.slice(0, 12).map(w => {
+    const n = setCounts(w), sets = w.workout_sets || [], byEx = new Map();
+    for (const s of [...sets].sort((a, b) => a.set_no - b.set_no)) { if (!byEx.has(s.exercise)) byEx.set(s.exercise, []); byEx.get(s.exercise).push(s); }
+    const cnt = n.work ? n.work + ' ' + (n.work === 1 ? 'seria' : n.work % 10 >= 2 && n.work % 10 <= 4 && (n.work % 100 < 12 || n.work % 100 > 14) ? 'serie' : 'serii') : 'bez serii';
+    return wkCard('w:' + (w.id || w.date + w.name), el('summary', {}, el('span', {}, w.name), el('span', { class: 'wk-when' }, dShort(w.date) + ' · ' + cnt)),
+      el('div', { class: 'wk-body' }, w.notes ? el('p', { class: 'wk-notes' }, w.notes) : '',
+        ...[...byEx].map(([ex, ss]) => el('div', { class: 'wk-ex' }, el('div', { class: 'nm' }, ex),
+          el('div', { class: 'wk-sets' }, ...ss.flatMap((s, i) => [i ? ' · ' : '', el('span', { class: s.warmup ? 'wu' : '' }, (s.kg == null ? '' : fmtKg(s.kg) + '×') + (s.reps ?? '?') + (s.warmup ? ' rozgrz.' : '') + (s.rir ? ' RIR ' + s.rir : ''))]),
+            ss.every(s => s.kg == null) ? el('span', { class: 'wu' }, ' (masa ciała)') : '')))));
+  }));
+  if (!sorted.length) $('#wList').append(el('div', { class: 'card muted' }, 'Jeszcze nic. Po siłowni powiedz Claude, co zrobiłeś.'));
+}
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderCoach(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
@@ -647,7 +740,7 @@ const wide = matchMedia('(min-width:1000px)');
 function show(v) {
   view = v; document.querySelectorAll('main section[id^="v-"]').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.toggleAttribute('aria-current', b.dataset.v === v); });
-  $('#title').textContent = wide.matches ? 'Dzień' : { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', coach: 'Coach' }[v];
+  $('#title').textContent = wide.matches ? 'Dzień' : { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', trening: 'Trening', coach: 'Coach' }[v];
   const dated = v === 'dzis' || v === 'jedzenie';
   ['#prevDay', '#dateLbl', '#nextDay'].forEach(s => $(s).classList.toggle('hidden', !dated));
   window.scrollTo(0, 0);
@@ -664,7 +757,7 @@ document.addEventListener('keydown', e => {
 });
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
 // Przesunięcie palcem w bok = sąsiednia zakładka (nie w polach tekstowych i przewijanych tekstach).
-const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'coach']; let touch = null;
+const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'trening', 'coach']; let touch = null;
 document.querySelector('main').addEventListener('touchstart', e => { touch = e.target.closest('input,textarea,select,.work,.report') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; }, { passive: true });
 document.querySelector('main').addEventListener('touchend', e => {
   if (!touch) return; const dx = e.changedTouches[0].clientX - touch.x, dy = e.changedTouches[0].clientY - touch.y; touch = null;

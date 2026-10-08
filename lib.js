@@ -123,3 +123,73 @@ export function missingToday(day, meals, cfg, hour) {
   if (bez) out.push(bez + ' ' + posilki(bez) + ' bez kalorii');
   return out;
 }
+
+// ---------- Treningi (tylko odczyt; serie wpisuje Claude) ----------
+// Zakres powtórzeń z planu: „6-10” → {min 6, max 10}, „10” → {10, 10}; „max” albo brak → null.
+export function parseRange(reps) {
+  const m = String(reps ?? '').match(/^\s*(\d+)\s*(?:[-–]\s*(\d+))?\s*$/);
+  return m ? { min: +m[1], max: +(m[2] ?? m[1]) } : null;
+}
+
+// Najnowsze na górze; trening bez daty (import historii) uznajemy za najstarszy.
+export const sortWorkouts = ws => [...ws].sort((a, b) =>
+  (a.date ? 0 : 1) - (b.date ? 0 : 1) || (b.date || '').localeCompare(a.date || '') || String(b.created_at || '').localeCompare(String(a.created_at || '')));
+
+const better = (a, b) => (Number(a.kg) || 0) - (Number(b.kg) || 0) || (a.reps || 0) - (b.reps || 0);
+
+// Najlepsza seria robocza jednego treningu: bez rozgrzewek; jeśli plan ma zakres, liczą się serie z co najmniej
+// dolną granicą powtórzeń (55×5 przy zakresie 6–10 to nieudana próba, nie wynik). Gdy żadna nie łapie się w zakres – najlepsza z roboczych.
+export function bestSet(sets, range) {
+  const work = sets.filter(s => !s.warmup && s.reps != null);
+  if (!work.length) return null;
+  const inRange = range ? work.filter(s => s.reps >= range.min) : work;
+  return (inRange.length ? inRange : work).reduce((a, b) => better(b, a) > 0 ? b : a);
+}
+
+// Następny cel wg zasady Michała: najpierw powtórzenia do góry zakresu, potem ciężar.
+export function nextTarget(best, range) {
+  if (!best || !range) return null;
+  const kg = best.kg == null ? 'masa ciała' : fmtKg(best.kg) + ' kg';
+  if (best.reps < range.max) return kg + ' × ' + (best.reps + 1);
+  return best.kg == null ? 'dociążenie albo więcej powtórzeń' : 'więcej kg × ' + range.min;
+}
+
+export const fmtKg = kg => String(Number(kg)).replace('.', ',');
+export const fmtSet = s => (s.kg == null ? 'masa ciała' : fmtKg(s.kg) + ' kg') + ' × ' + s.reps;
+
+// Postęp dla każdego ćwiczenia: ostatni najlepszy wynik, poprzedni (z wcześniejszego treningu) i kierunek.
+// workouts: [{date, name, created_at, workout_sets: [...]}], plans: [{exercises: [{name, reps}]}].
+export function exerciseProgress(workouts, plans = []) {
+  const ranges = new Map();
+  for (const p of plans) for (const e of p.exercises || []) ranges.set(norm(e.name), parseRange(e.reps));
+  const out = new Map();
+  for (const w of sortWorkouts(workouts)) {
+    const byEx = new Map();
+    for (const s of w.workout_sets || []) { const k = norm(s.exercise); if (!byEx.has(k)) byEx.set(k, []); byEx.get(k).push(s); }
+    for (const [k, sets] of byEx) {
+      const best = bestSet(sets, ranges.get(k)); if (!best) continue;
+      if (!out.has(k)) out.set(k, { name: sets[0].exercise, history: [] });
+      out.get(k).history.push({ ...best, date: w.date, workout: w.name });
+    }
+  }
+  for (const [k, p] of out) {
+    const [last, prev] = p.history;
+    p.last = last; p.prev = prev || null; p.range = ranges.get(k) || null;
+    p.trend = prev ? (better(last, prev) > 0 ? 'up' : better(last, prev) < 0 ? 'down' : 'same') : null;
+    p.next = nextTarget(last, p.range);
+  }
+  return out;
+}
+export const progressFor = (progress, name) => progress.get(norm(name)) || null;
+
+// Ile serii roboczych i rozgrzewkowych w treningu.
+export const setCounts = w => { const s = w.workout_sets || []; return { work: s.filter(x => !x.warmup).length, warmup: s.filter(x => x.warmup).length }; };
+
+// Różnica względem poprzedniego wyniku po ludzku: „+2,5 kg”, „+1 powt.”, „bez zmian”.
+export function trendLabel(last, prev) {
+  if (!last || !prev) return null;
+  const dk = (Number(last.kg) || 0) - (Number(prev.kg) || 0), dr = (last.reps || 0) - (prev.reps || 0);
+  if (dk) return (dk > 0 ? '+' : '−') + fmtKg(Math.abs(dk)) + ' kg';
+  if (dr) return (dr > 0 ? '+' : '−') + Math.abs(dr) + ' powt.';
+  return 'bez zmian';
+}
