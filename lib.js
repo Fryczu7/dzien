@@ -291,3 +291,22 @@ export function splitPropozycje(rows, today) {
 // Check-in wieczorny w days.evening – łączymy z tym, co już jest (leki wieczorne, zasady).
 export const checkinPatch = (evening, { nastroj, blokada, doceniam }, now) =>
   ({ ...(evening || {}), nastroj, blokada: String(blokada || '').trim(), doceniam: String(doceniam || '').trim(), checkin_at: now.toISOString() });
+
+// Wieczór: krótka ściąga do rozmowy z Claude (od 20:00) – stan dnia w kilku linijkach.
+export function eveningBrief(day, meals, cfg, props = []) {
+  const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
+  const kt = day.kcal_target || cfg.kcal_target, pt = day.protein_target || cfg.protein_target, bez = meals.filter(m => m.kcal == null).length;
+  const out = ['Kalorie ' + k + ' / ' + kt + (k >= kt ? ' – cel zrobiony' : ' – brakuje ' + (kt - k)) + ' · białko ' + p + ' / ' + pt + ' g' + (bez ? ' · ' + bez + ' ' + posilki(bez) + ' bez kalorii' : '')];
+  out.push('Rehab: ' + (day.rehab ? 'zrobiony' : 'nie było') + ' · leki rano: ' + (day.morning?.leki ? 'tak' : 'nie'));
+  out.push('Trening: ' + (String(day.training || '').trim() || 'nie było'));
+  const plan = planWithoutToggles(day.plan).map(x => x.p), left = plan.filter(x => !x.done).map(x => x.text);
+  out.push(plan.length ? 'Plan: ' + (plan.length - left.length) + ' / ' + plan.length + ' zrobione' + (left.length ? ' – zostało: ' + left.join(', ') : '') : 'Plan: pusty');
+  if (day.sleep_h) out.push('Sen: ' + String(day.sleep_h).replace('.', ',') + ' h');
+  const d = props.filter(x => x.kind === 'dzien'), n = s => d.filter(x => x.status === s).length;
+  if (d.length) out.push('Propozycje: wzięte ' + n('wzieta') + ', odrzucone ' + n('odrzucona') + (n('nowa') ? ', bez decyzji ' + n('nowa') : ''));
+  return out;
+}
+
+// „Napisz do Claude” przy propozycji: gotowa wiadomość do wklejenia w czacie projektu CEO.
+export const feedbackMsg = (prop, text) =>
+  'Propozycja asystenta na dziś: „' + prop.title + '”.\nMój feedback: ' + String(text || '').trim() + '\nZareaguj na to teraz i zapisz wniosek w pamięci, żeby asystent brał to pod uwagę.';

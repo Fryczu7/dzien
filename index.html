@@ -199,13 +199,11 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .prop-head.nomore{cursor:default}.prop-head.nomore::after{display:none}
 .prop-more{display:none;font-size:14px;margin:4px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
 .prop.open .prop-more{display:block}
-.prop-act{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-top:6px}
+.prop-act{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-top:6px}
+.brief{margin:0;padding:0 0 0 18px}
+.brief li{padding:3px 0}
 .prop-form{margin-top:8px}
 .prop-form .row{margin-top:8px}
-.prop-done{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
-.prop-done:first-child{border-top:0}
-.prop-done .t{flex:1;min-width:0}
-.prop-done .t i{font-style:normal;color:var(--muted)}
 .st{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card2);color:var(--muted);white-space:nowrap}
 .st.ok{background:color-mix(in srgb,var(--acc) 16%,var(--card2));color:var(--acc-ink)}
 .go{width:100%;margin-top:10px;min-height:44px;text-align:left;display:flex;align-items:center;gap:6px}
@@ -298,6 +296,13 @@ details[open]>summary::after{transform:rotate(-135deg)}
     <div class="row"><h2 class="grow">Rano</h2><button class="ghost small" id="ranoAll">Wszystko ✓</button></div>
     <div id="morning"></div>
     <p id="morningOpt" class="muted hidden" style="margin:8px 0 0"></p>
+  </div>
+
+  <!-- Na wieczorną rozmowę (od 20:00, dziś): ściąga stanu dnia + przycisk do Claude -->
+  <div class="card hidden" id="cardBrief">
+    <h2>Na wieczorną rozmowę</h2>
+    <ul id="briefList" class="brief"></ul>
+    <button id="briefSend" class="wide">Skopiuj i otwórz Claude</button>
   </div>
 
   <!-- Wieczór (od 20:00 i dla minionych dni): leki wieczorne, witamina C do kolacji, zasady – zamiast przypomnień w kalendarzu -->
@@ -434,14 +439,13 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <details class="card" id="wHist"><summary>Historia treningów <span class="muted" id="wHistN"></span></summary><div id="wList"></div></details>
 </section>
 
-<!-- ASYSTENT: propozycje na dziś (Biorę / Zmień / Nie), liczniki, praca z nocy, pomysły, podsumowania, cele -->
+<!-- ASYSTENT: propozycje na dziś (Biorę / Nie / Napisz do Claude), liczniki, praca z nocy, pomysły, podsumowania, cele -->
 <section id="v-asystent" class="hidden">
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz asystentowi</a>
   <p class="muted talk-hint narrowonly">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
   <div class="card coach" id="aDay">
     <h2 id="aDayTitle">Propozycje na dziś</h2>
     <ul id="aOpen" class="props"></ul>
-    <details id="aDone" class="hidden"><summary id="aDoneSum"></summary><div id="aDoneList"></div></details>
   </div>
   <div class="card" id="aWeekCard">
     <h2>Ten tydzień</h2>
@@ -450,7 +454,6 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <div class="card" id="aIdeas">
     <h2>Pomysły asystenta</h2>
     <ul id="aIdeasList" class="props"></ul>
-    <details id="aIdeasDone" class="hidden"><summary id="aIdeasDoneSum"></summary><div id="aIdeasDoneList"></div></details>
   </div>
   <div id="cWork"></div>
   <div id="cSummary"></div>
@@ -482,7 +485,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -616,6 +619,9 @@ function renderDzis() {
 
   // Wieczór / zamknięty
   $('#cardWieczor').classList.toggle('hidden', part !== 'wieczor' || !!day.closed);
+  const showBrief = isToday && part === 'wieczor';
+  $('#cardBrief').classList.toggle('hidden', !showBrief);
+  if (showBrief) $('#briefList').replaceChildren(...eveningBrief(day, meals, cfg, props.filter(x => x.date === today)).map(t => el('li', {}, t)));
   $('#cardZamkniety').classList.toggle('hidden', !day.closed);
   $('#evening').replaceChildren(...cfg.evening_items.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
   const broken = day.rules_broken || [], rulesDone = !!day.evening?.rules_done;
@@ -774,9 +780,10 @@ function renderItems() {
   if (doneIds.length) hint.append(el('button', { class: 'ghost small', onclick: async () => { const { error } = await sb.from('items').delete().in('id', doneIds); if (error) return fail(error); items = items.filter(i => !doneIds.includes(i.id)); renderItems(); toast('Kupione usunięte z listy'); } }, 'Kupione (' + doneIds.length + ') – usuń z listy'));
 }
 // ---------- Asystent ----------
-// Propozycje: tytuł, „dlaczego” od razu pod spodem, szczegóły po dotknięciu; decyzja Biorę / Zmień / Nie.
+// Propozycje: tytuł, „dlaczego” od razu pod spodem, szczegóły po dotknięciu; decyzja Biorę / Nie / Napisz do Claude.
+// Zdecydowana znika z listy (Biorę = trafia do planu „Dziś”); „Cofnij” jest w dymku po decyzji.
 // Stan rozwinięcia i wpisanego tekstu trzymamy poza DOM – odświeżenie co minutę go nie kasuje.
-const propUI = new Map(); // id → { open, mode: 'zmien'|'nie', text }
+const propUI = new Map(); // id → { open, mode: 'claude', text }
 const ui = id => { if (!propUI.has(id)) propUI.set(id, { open: false, mode: null, text: '' }); return propUI.get(id); };
 function propItem(p) {
   const u = ui(p.id), more = !!p.detail;
@@ -790,26 +797,25 @@ function propItem(p) {
   if (!u.mode) {
     li.append(el('div', { class: 'prop-act' },
       el('button', { onclick: () => decide(p, 'wez') }, 'Biorę'),
-      el('button', { class: 'ghost', onclick: () => { u.mode = 'zmien'; u.text = u.text || p.title; renderAsystent(p.id); } }, 'Zmień'),
-      el('button', { class: 'ghost', onclick: () => { u.mode = 'nie'; u.text = ''; renderAsystent(p.id); } }, 'Nie')));
+      el('button', { class: 'ghost', onclick: () => decide(p, 'nie') }, 'Nie'),
+      el('button', { class: 'ghost', onclick: () => { u.mode = 'claude'; renderAsystent(p.id); } }, 'Napisz do Claude')));
   } else {
-    const zm = u.mode === 'zmien';
-    const f = el('input', { 'data-pid': p.id, placeholder: zm ? 'Twoja wersja' : 'Dlaczego nie? (opcjonalnie)', 'aria-label': zm ? 'Twoja wersja propozycji' : 'Powód odrzucenia' });
+    const f = el('input', { 'data-pid': p.id, placeholder: 'Co jest nie tak? Co zamiast?', 'aria-label': 'Feedback do Claude o tej propozycji' });
     f.value = u.text; f.addEventListener('input', () => { u.text = f.value; });
-    const go = () => decide(p, u.mode, u.text);
+    // Feedback: propozycja znika (odrzucona z powodem – asystent go przeczyta w nocy), a Claude dostaje wiadomość od razu.
+    const go = () => { if (!u.text.trim()) return toast('Napisz, co jest nie tak'); toClaude(feedbackMsg(p, u.text)); decide(p, 'nie', u.text); };
     f.addEventListener('keydown', e => { if (e.key === 'Enter') go(); if (e.key === 'Escape') { u.mode = null; renderAsystent(); } });
     li.append(el('div', { class: 'prop-form' }, f, el('div', { class: 'row' },
       el('button', { class: 'ghost grow', onclick: () => { u.mode = null; renderAsystent(); } }, 'Anuluj'),
-      el('button', { class: 'grow', onclick: go }, zm ? (p.kind === 'pomysl' ? 'Zapisz moją wersję' : 'Do planu') : 'Odrzuć'))));
+      el('button', { class: 'grow', onclick: go }, 'Wyślij do Claude'))));
   }
   return li;
 }
-const ST = { wzieta: ['wzięte', 'ok'], zmieniona: ['zmienione', 'ok'], odrzucona: ['nie', ''] };
-const doneRow = p => el('div', { class: 'prop-done' },
-  el('span', { class: 't' }, p.status === 'zmieniona' ? p.reply : p.title,
-    p.status === 'zmieniona' ? el('i', {}, ' (było: ' + p.title + ')') : p.status === 'odrzucona' && p.reply ? el('i', {}, ' – ' + p.reply) : ''),
-  el('span', { class: 'st ' + ST[p.status][1] }, ST[p.status][0]),
-  el('button', { class: 'ghost small', onclick: () => undo(p) }, 'Cofnij'));
+// Wiadomość do Claude: kopiuje do schowka i otwiera czat projektu CEO w nowej karcie (wystarczy wkleić Ctrl+V / przytrzymać i Wklej).
+function toClaude(text) {
+  try { navigator.clipboard?.writeText(text); } catch {}
+  window.open(cfg.claude_url || 'https://claude.ai/projects', '_blank', 'noopener');
+}
 // Plan dnia zawsze na dziś (nawet gdy na ekranie Dziś oglądasz inny dzień).
 async function todayPlan() {
   const today = ymd(new Date());
@@ -835,7 +841,7 @@ async function decide(p, action, text) {
   const { error } = await sb.from('propozycje').update(patch).eq('id', p.id);
   if (error) { if (r.plan !== before) await saveTodayPlan(before); return fail(error); }
   Object.assign(p, patch); propUI.delete(p.id); renderAll();
-  const msg = action === 'nie' ? 'Odrzucone' + (patch.reply ? ' – asystent zapamięta powód' : '') : p.kind === 'pomysl' ? 'Zapisane – asystent weźmie to pod uwagę' : 'W planie na dziś';
+  const msg = action === 'nie' ? (patch.reply ? 'Skopiowane – wklej w czacie z Claude' : 'Odrzucone') : p.kind === 'pomysl' ? 'Zapisane – asystent weźmie to pod uwagę' : 'W planie na „Dziś”';
   toast(msg, ['Cofnij', () => undo(p)]);
 }
 async function undo(p) {
@@ -847,10 +853,6 @@ async function undo(p) {
   if (error) return fail(error);
   Object.assign(p, patch); renderAll(); toast('Cofnięte');
 }
-const doneList = (det, sum, list, rows, label) => {
-  $(det).classList.toggle('hidden', !rows.length);
-  $(sum).textContent = label + ' (' + rows.length + ')'; $(list).replaceChildren(...rows.map(doneRow));
-};
 function renderAsystent(focusId) {
   const today = ymd(new Date()), noc = coachRows.find(c => c.kind === 'noc'), sp = splitPropozycje(props, today);
   const dm = d => d.slice(8) + '.' + d.slice(5, 7);
@@ -859,15 +861,13 @@ function renderAsystent(focusId) {
   $('#aDayTitle').textContent = hasProps || !old.length ? 'Propozycje na dziś' : noc.date === today ? 'Propozycja na dziś' : 'Ostatnia propozycja (' + dm(noc.date) + ')';
   $('#aOpen').className = hasProps || !old.length ? 'props' : 'coach-items';
   $('#aOpen').replaceChildren(...(sp.open.length ? sp.open.map(propItem)
-    : hasProps ? [el('li', { class: 'muted' }, 'Wszystko zdecydowane. Wzięte są w planie na „Dziś”.')]
+    : hasProps ? [el('li', { class: 'muted' }, 'Wszystko zdecydowane (' + sp.decided.filter(x => x.status !== 'odrzucona').length + ' w planie na „Dziś”).')]
     : old.length ? coachList(old)
     : [el('li', { class: 'muted' }, 'Asystent przyjdzie z propozycjami po nocy (2:00).')]));
-  doneList('#aDone', '#aDoneSum', '#aDoneList', sp.decided, 'Zdecydowane dziś');
   $('#aWeek').replaceChildren(...weekCells());
   const work = noc?.work || [];
   $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem' + (noc.date === today ? '' : ' (' + dm(noc.date) + ')')), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
   $('#aIdeasList').replaceChildren(...(sp.ideas.length ? sp.ideas.map(propItem) : [el('li', { class: 'muted' }, 'Na razie brak nowych pomysłów.')]));
-  doneList('#aIdeasDone', '#aIdeasDoneSum', '#aIdeasDoneList', sp.ideasDecided, 'Zdecydowane');
   const sums = ['tydzien', 'miesiac', 'obserwacje'].map(k => coachRows.find(c => c.kind === k)).filter(Boolean);
   $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, ({ tydzien: 'Podsumowanie tygodnia', miesiac: 'Podsumowanie miesiąca', obserwacje: 'Czego się nauczyłem' })[c.kind] + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
   $('#cReport').classList.toggle('hidden', !noc?.report); $('#cReportTxt').textContent = noc?.report || '';
@@ -880,7 +880,7 @@ function renderAsystent(focusId) {
       el('div', { style: 'margin-top:8px' }, el('span', { class: 'muted' }, 'Gdzie jestem: '), g.where_now || '—'),
       el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'), extra);
   }));
-  // Po „Zmień” / „Nie” kursor od razu w polu tej propozycji.
+  // Po „Napisz do Claude” kursor od razu w polu tej propozycji.
   if (typeof focusId === 'string') { const f = document.querySelector('#v-asystent input[data-pid="' + focusId + '"]'); if (f) { f.focus(); f.select(); } }
 }
 // Coach: ostatnie wieczory (check-in + odpowiedź) – żeby było widać wzorce.
@@ -1077,6 +1077,7 @@ $('#ranoAll').onclick = () => {
 $('#rulesOk').onclick = () => { rulesOpen = false; saveDay({ rules_broken: [], evening: { ...day.evening, rules_done: true } }).then(renderDzis); };
 $('#rulesBad').onclick = () => { rulesOpen = !rulesOpen || !!(day.rules_broken || []).length; renderDzis(); };
 $('#closeDay').onclick = () => { flushText(); saveDay({ closed: true }).then(ok => { renderDzis(); if (ok) window.scrollTo({ top: 0, behavior: 'smooth' }); }); };
+$('#briefSend').onclick = () => toClaude('Wieczorne podsumowanie dnia:\n' + [...document.querySelectorAll('#briefList li')].map(li => '- ' + li.textContent).join('\n') + '\nPogadajmy o dzisiejszym dniu.');
 $('#reopenDay').onclick = () => saveDay({ closed: false }).then(renderDzis);
 bindText('#training', v => ({ training: v }));
 bindText('#doceniam', v => ({ evening: { ...day.evening, doceniam: v } }));
