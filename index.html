@@ -166,7 +166,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <p class="muted talk-hint">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
   <p id="brakuje" class="brakuje"></p>
   <div id="coachMorning" class="card coach hidden">
-    <h2>Na dziś od coacha</h2>
+    <h2>Propozycja na dziś</h2>
     <ol id="coachItems" class="coach-items"></ol>
     <button class="ghost wide-sm hidden" id="coachNight"></button>
   </div>
@@ -175,6 +175,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <div class="card hidden" id="cardRano">
     <div class="row"><h2 class="grow">Rano</h2><button class="ghost small" id="ranoAll">Wszystko ✓</button></div>
     <div id="morning"></div>
+    <p id="morningOpt" class="muted hidden" style="margin:8px 0 0"></p>
   </div>
 
   <!-- Wieczór: od 20:00 i dla minionych dni -->
@@ -281,7 +282,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
   <p class="muted talk-hint">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
   <div class="card coach" id="cDay">
-    <h2 id="cDayTitle">Na dziś</h2>
+    <h2 id="cDayTitle">Propozycja na dziś</h2>
     <ol id="cItems" class="coach-items"></ol>
   </div>
   <div id="cWork"></div>
@@ -397,7 +398,8 @@ function renderHeader() {
 function histWithDay() { return hist.filter(h => h.date !== day.date).concat(day); }
 function renderDzis() {
   const today = ymd(new Date()), isToday = cur === today, hour = new Date().getHours();
-  const items = cfg.morning_items, plan = day.plan || [];
+  // Rzeczy z dopiskiem „opcja” nie są do odhaczania – tylko przypomnienie pod listą.
+  const items = cfg.morning_items.filter(x => x[2] !== 'opcja'), opt = cfg.morning_items.filter(x => x[2] === 'opcja'), plan = day.plan || [];
   const morningDone = !!day.morning?.done || (items.length > 0 && items.every(([k]) => day.morning?.[k]));
   const part = isToday ? partOfDay(hour, morningDone) : 'wieczor';
 
@@ -417,6 +419,7 @@ function renderDzis() {
   // Rano
   $('#cardRano').classList.toggle('hidden', part !== 'rano');
   $('#morning').replaceChildren(...items.map(([k, l]) => checkRow(!!day.morning?.[k], l, () => saveDay({ morning: { ...day.morning, [k]: !day.morning?.[k] } }).then(renderDzis))));
+  $('#morningOpt').classList.toggle('hidden', !opt.length); $('#morningOpt').textContent = opt.length ? 'Opcjonalnie: ' + opt.map(x => x[1]).join(', ') : '';
   if (!items.length) $('#morning').append(el('div', { class: 'muted' }, 'Brak porannych rzeczy w ustawieniach.'));
   const anyOn = items.some(([k]) => day.morning?.[k]);
   $('#ranoAll').textContent = anyOn ? 'Gotowe' : 'Wszystko ✓';
@@ -543,7 +546,7 @@ function renderCoach() {
   const today = ymd(new Date()), noc = coachRows.find(c => c.kind === 'noc');
   const cp = parseCoach(noc?.morning);
   const dm = d => d.slice(8) + '.' + d.slice(5, 7);
-  $('#cDayTitle').textContent = noc && noc.date !== today ? 'Ostatnia karta (' + dm(noc.date) + ')' : 'Na dziś';
+  $('#cDayTitle').textContent = noc && noc.date !== today ? 'Ostatnia propozycja (' + dm(noc.date) + ')' : 'Propozycja na dziś';
   $('#cItems').replaceChildren(...coachList(cp.items));
   if (!cp.items.length) $('#cItems').append(el('li', {}, el('div', { class: 'what' }, 'Coach jeszcze nic nie zostawił – pierwsza karta po nocy.')));
   const work = noc?.work || [];
@@ -625,8 +628,9 @@ $('#tRehab').onclick = () => saveDay({ rehab: !day.rehab }).then(renderDzis);
 $('#tLeki').onclick = () => saveDay({ morning: { ...day.morning, leki: !day.morning?.leki } }).then(renderDzis);
 $('#dKcal').onclick = () => show('jedzenie');
 $('#ranoAll').onclick = () => {
-  const anyOn = cfg.morning_items.some(([k]) => day.morning?.[k]);
-  const all = anyOn ? {} : Object.fromEntries(cfg.morning_items.map(([k]) => [k, true]));
+  const req = cfg.morning_items.filter(x => x[2] !== 'opcja');
+  const anyOn = req.some(([k]) => day.morning?.[k]);
+  const all = anyOn ? {} : Object.fromEntries(req.map(([k]) => [k, true]));
   saveDay({ morning: { ...day.morning, ...all, done: true } }).then(renderDzis);
 };
 $('#rulesOk').onclick = () => { rulesOpen = false; saveDay({ rules_broken: [], evening: { ...day.evening, rules_done: true } }).then(renderDzis); };
