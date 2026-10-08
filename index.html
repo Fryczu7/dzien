@@ -115,6 +115,24 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .wide{width:100%;margin-top:14px;min-height:48px}
 .summary{margin:0;font-size:15px}
 ::selection{background:color-mix(in srgb,var(--acc) 35%,transparent)}
+/* Coach: krótkie punkty, uzasadnienie po dotknięciu */
+.coach{background:color-mix(in srgb,var(--acc) 9%,var(--card))}
+.coach-items{margin:0;padding:0;list-style:none;counter-reset:c}
+.coach-items li{counter-increment:c;display:grid;grid-template-columns:28px 1fr;gap:0 8px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.coach-items li:last-child{border-bottom:0}
+.coach-items li::before{content:counter(c);grid-row:span 2;width:24px;height:24px;border-radius:50%;background:var(--acc);color:#06210f;font-size:13px;font-weight:700;display:grid;place-items:center}
+.coach-items .what{font-weight:600}
+.coach-items .why{color:var(--muted);font-size:14px;display:none;margin-top:3px}
+.coach-items li.open .why{display:block}
+.wide-sm{width:100%;margin-top:10px;min-height:44px;text-align:left}
+.report{white-space:pre-wrap;font-size:14px;margin-top:8px}
+.work{white-space:pre-wrap;font-size:14px;margin-top:8px;max-height:60vh;overflow:auto}
+.sect{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 2px 8px;font-weight:600}
+.qrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.qrow:last-child{border-bottom:0}
+.qrow .add{min-width:44px;min-height:44px;padding:0}
+.ghost-talk{background:var(--card2);color:var(--text);border:1px solid var(--line);margin-top:4px}
+#iHint{margin:-4px 0 12px}
 #offline{background:var(--warn);color:#1a1200;text-align:center;font-size:14px;padding:6px 12px}
 </style>
 </head>
@@ -147,7 +165,11 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
   <p class="muted talk-hint">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
   <p id="brakuje" class="brakuje"></p>
-  <div id="coachMorning" class="note claude hidden"></div>
+  <div id="coachMorning" class="card coach hidden">
+    <h2>Na dziś od coacha</h2>
+    <ol id="coachItems" class="coach-items"></ol>
+    <button class="ghost wide-sm hidden" id="coachNight"></button>
+  </div>
 
   <!-- Rano: do odhaczenia porannych rzeczy albo 14:00 -->
   <div class="card hidden" id="cardRano">
@@ -215,6 +237,8 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 <!-- JEDZENIE -->
 <section id="v-jedzenie" class="hidden">
+  <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zjadłeś</a>
+  <p class="muted talk-hint">Claude policzy kalorie i białko i od razu zapisze tutaj.</p>
   <div class="card">
     <h2>Dziś</h2>
     <div class="row"><span class="big" id="kcalSum">0</span><span class="muted grow">/ <span id="kcalT">–</span> kcal</span></div>
@@ -224,104 +248,63 @@ details[open]>summary::after{transform:rotate(-135deg)}
     <div class="muted" id="left" style="margin-top:6px"></div>
   </div>
   <div class="card">
-    <a class="talk" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zjadłeś</a>
-    <p class="muted" style="margin:8px 0 0">Claude policzy kalorie i białko i od razu zapisze tutaj.</p>
+    <h2>Zjedzone</h2>
+    <div id="meals"></div>
   </div>
+  <details class="card" id="quickDet">
+    <summary>Szybko – to, co już jadłeś</summary>
+    <input id="qSearch" type="search" placeholder="🔍 Szukaj, np. owsianka" style="margin-top:10px" autocomplete="off">
+    <div id="quick"></div>
+  </details>
   <div class="card">
     <h2>Dodaj ręcznie</h2>
     <input id="mName" placeholder="Co zjadłeś"><div style="height:8px"></div>
     <div class="grid2"><input id="mKcal" type="number" inputmode="numeric" placeholder="kcal"><input id="mProt" type="number" inputmode="numeric" placeholder="białko g"></div>
     <div style="height:8px"></div>
     <button id="mAdd" class="ghost" style="width:100%">Dodaj</button>
-    <div class="muted" style="margin-top:10px">Szybko:</div>
-    <div class="quick" id="quick"></div>
-    <div class="muted" style="margin-top:8px;font-size:13px">Tu kalorie wpisujesz sam albo wybierasz szybki posiłek. Bez liczb – zapytaj Claude.</div>
-  </div>
-  <div class="card">
-    <h2>Zjedzone</h2>
-    <div id="meals"></div>
   </div>
 </section>
 
-<!-- FILM -->
-<section id="v-film" class="hidden">
-  <div class="card">
-    <h2>Film w toku</h2>
-    <div class="big" id="fTitle" style="font-size:22px"></div>
-    <div class="steps" id="fSteps"></div>
-    <div class="muted" id="fStepLbl"></div>
-    <div class="row" style="margin-top:8px"><button class="ghost small" id="fPrev">− krok</button><button class="small" id="fNext">+ krok</button></div>
-  </div>
-  <div class="card">
-    <h2>Następny ruch</h2>
-    <textarea id="fNextMove"></textarea>
-    <h2 style="margin-top:12px">Blokada</h2>
-    <textarea id="fBlocker"></textarea>
-  </div>
-  <div class="card">
-    <h2>GetMed w tym tygodniu</h2>
-    <div class="row"><span class="big" id="fWeek">0/3</span><span class="grow"></span><button class="ghost small" id="fWMinus">−</button><button class="small" id="fWPlus">+ opublikowany</button></div>
-  </div>
-  <div class="card muted" style="font-size:14px">Kroki: 1 skrypt i hook → 2 materiał → 3 montaż → 4 napisy → 5 publikacja → 6 wpis i licznik. WIP = 1.</div>
-</section>
-
-<!-- ZAKUPY -->
+<!-- ZAKUPY: dwie listy do kupienia -->
 <section id="v-zakupy" class="hidden">
-  <div class="tabs2"><button id="tZ">Zakupy</button><button class="ghost" id="tS">Spiżarnia</button></div>
+  <div class="tabs2"><button id="tZ">Dla mnie</button><button class="ghost" id="tS">Spiżarnia</button></div>
   <div class="card">
-    <div class="row"><input id="iNew" placeholder="Dodaj produkt"><input id="iQty" placeholder="ilość" style="max-width:90px"><button id="iAdd">+</button></div>
+    <div class="row"><input id="iNew" placeholder="Dodaj produkt"><input id="iQty" placeholder="ilość" style="max-width:90px"><button id="iAdd" aria-label="Dodaj">+</button></div>
   </div>
   <div class="card"><div id="items"></div></div>
-  <div class="muted" id="iHint" style="font-size:13px;padding:0 4px"></div>
+  <div id="iHint"></div>
+  <a class="talk ghost-talk" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co dopisać</a>
 </section>
 
-<!-- CELE -->
-<section id="v-cele" class="hidden">
-  <div class="card">
-    <h2 id="wTitle">Waga</h2>
-    <div class="row"><span class="big" id="wNow">–</span><span class="muted grow">kg</span></div>
-    <div class="bar"><i id="wBar" style="width:0"></i></div>
-    <div class="muted" id="wInfo"></div>
-    <p class="muted" style="margin:8px 0 0">Wagę podaj Claude, np. „ważę 76”.</p>
+<!-- COACH: karta na dziś, nocna praca, podsumowania, cele -->
+<section id="v-coach" class="hidden">
+  <a class="talk talk-main" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z coachem</a>
+  <p class="muted talk-hint">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
+  <div class="card coach" id="cDay">
+    <h2 id="cDayTitle">Na dziś</h2>
+    <ol id="cItems" class="coach-items"></ol>
   </div>
+  <div id="cWork"></div>
+  <div id="cSummary"></div>
+  <h3 class="sect">Cele</h3>
   <div id="goals"></div>
-</section>
-
-<!-- CLAUDE -->
-<section id="v-claude" class="hidden">
-  <div class="card">
-    <a class="talk" href="https://claude.ai/projects" target="_blank" rel="noopener">Porozmawiaj z Claude</a>
-    <p class="muted" style="margin:8px 0 0">Jedzenie, sen, rehab, trening, wieczór – powiedz normalnie, Claude zapisze to w apce.</p>
-  </div>
-  <div class="card">
-    <h2>Szybka notatka</h2>
-    <textarea id="nText" placeholder="Myśl, zadanie, pytanie… Claude przeczyta, gdy zapytasz go o dzień."></textarea>
-    <div class="row" style="margin-top:8px"><select id="nKind" class="grow"><option value="notatka">Notatka</option><option value="pytanie">Pytanie do coacha</option></select><button id="nAdd">Wyślij</button></div>
-  </div>
-  <div class="card">
-    <h2>Ostatnie</h2>
-    <div id="notes"></div>
-  </div>
-  <div class="card">
-    <button class="ghost" id="logout" style="width:100%">Wyloguj</button>
-  </div>
+  <details class="card" id="cReport"><summary>Pełny raport z nocy</summary><div id="cReportTxt" class="report"></div></details>
+  <button class="ghost wide" id="logout">Wyloguj</button>
 </section>
 
 </main>
 <nav>
   <button data-v="dzis" class="on"><b>☀︎</b>Dziś</button>
   <button data-v="jedzenie"><b>🍽</b>Jedzenie</button>
-  <button data-v="film"><b>🎬</b>Film</button>
   <button data-v="zakupy"><b>🛒</b>Zakupy</button>
-  <button data-v="cele"><b>🎯</b>Cele</button>
-  <button data-v="claude"><b>✎</b>Claude</button>
+  <button data-v="coach"><b>🧭</b>Coach</button>
 </nav>
 </div>
 <div id="toast"></div>
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -341,7 +324,8 @@ window.addEventListener('online', () => setOffline(false));
 window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
 let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
-let day = null, rules = [], film = null, items = [], goals = [], weights = [], notes = [], meals = [];
+let day = null, rules = [], items = [], goals = [], weights = [], meals = [];
+let coachRows = [], mealHist = [], qQuery = ''; // historia coacha, wszystkie posiłki (do „Szybko”), szukana fraza
 // Historia do zestawienia tygodnia i wykrywania luki: dni z ostatnich 14 dni, daty posiłków, nadrobienia.
 let hist = [], mealDates = new Set(), catchups = [], gap = null, cuAnswers = {};
 let rulesOpen = false; // „Coś złamałem” rozwija listę zasad
@@ -381,19 +365,19 @@ async function loadHistory() {
   if (m.data) mealDates = new Set(m.data.map(x => x.date));
 }
 async function loadStatic() {
-  const [r, f, i, g, w, n, s] = await Promise.all([
+  const [r, i, g, w, s, c, mh] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
-    sb.from('film').select('*').eq('id', 'current').maybeSingle(),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
     sb.from('weights').select('*').order('date'),
-    sb.from('notes').select('*').order('created_at', { ascending: false }).limit(30),
     sb.from('settings').select('*').maybeSingle(),
+    sb.from('coach').select('*').order('date', { ascending: false }).limit(14),
+    sb.from('meals').select('name,kcal,protein').not('kcal', 'is', null).order('created_at', { ascending: false }).limit(2000),
   ]);
-  const bad = [r, f, i, g, w, n, s].find(x => x.error); if (bad) failLoad(bad.error);
+  const bad = [r, i, g, w, s, c, mh].find(x => x.error); if (bad) failLoad(bad.error);
   // Przy błędzie zostaje to, co już było wczytane – ekran nie robi się pusty.
-  rules = r.data ?? rules; film = f.data || film || { id: 'current', title: '', step: 1, week_done: 0, week_target: 3 };
-  items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights; notes = n.data ?? notes;
+  rules = r.data ?? rules; items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights;
+  coachRows = c.data ?? coachRows; mealHist = mh.data ?? mealHist;
   if (s.data) cfg = s.data;
 }
 
@@ -418,13 +402,17 @@ function renderDzis() {
   const part = isToday ? partOfDay(hour, morningDone) : 'wieczor';
 
   // Brakuje: tylko dla dzisiaj, jedna linia zamiast pustych kart.
-  const br = $('#brakuje'); br.classList.toggle('hidden', !isToday || day.closed);
+  const br = $('#brakuje'); br.classList.toggle('hidden', !isToday || !!day.closed);
   if (isToday) {
     const miss = missingToday(day, meals, cfg, hour);
     br.className = 'brakuje' + (miss.length ? '' : ' ok');
     br.replaceChildren(...(miss.length ? [el('b', {}, 'Brakuje: '), miss.join(' · ')] : ['Na dziś wszystko jest.']));
   }
-  const cm = $('#coachMorning'); cm.classList.toggle('hidden', !day.coach_morning || day.closed); cm.textContent = day.coach_morning || '';
+  const cm = $('#coachMorning'), cp = parseCoach(day.coach_morning);
+  cm.classList.toggle('hidden', !cp.items.length || !!day.closed);
+  $('#coachItems').replaceChildren(...coachList(cp.items));
+  $('#coachNight').classList.toggle('hidden', !cp.night);
+  $('#coachNight').textContent = 'W nocy zrobiłem: ' + (cp.night || '') + ' →';
 
   // Rano
   $('#cardRano').classList.toggle('hidden', part !== 'rano');
@@ -459,9 +447,9 @@ function renderDzis() {
   const ce = $('#coachEvening'); ce.classList.toggle('hidden', !day.coach_evening); ce.textContent = day.coach_evening || '';
 
   // Plan dnia
-  const pl = $('#plan');
-  pl.replaceChildren(...plan.map((p, idx) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', 'aria-label': 'Usuń', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
-  if (!plan.length) pl.append(el('div', { class: 'muted' }, 'Brak planu na dziś. Powiedz Claude, co jest najważniejsze.'));
+  const pl = $('#plan'), shown = planWithoutToggles(plan);
+  pl.replaceChildren(...shown.map(({ p, idx }) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', 'aria-label': 'Usuń', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
+  if (!shown.length) pl.append(el('div', { class: 'muted' }, 'Brak planu na dziś. Powiedz Claude, co jest najważniejsze.'));
   $('#tRehab').classList.toggle('on', !!day.rehab);
   $('#tLeki').classList.toggle('on', !!day.morning?.leki);
   const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
@@ -510,75 +498,70 @@ function renderJedzenie() {
   const ml = $('#meals');
   ml.replaceChildren(...meals.map(m => el('div', { class: 'item' }, el('span', { class: 'muted', style: 'width:44px' }, m.time || ''), el('span', { class: 'grow' }, m.name), m.kcal == null ? el('span', { class: 'bezkcal' }, 'do policzenia') : el('span', { class: 'muted' }, m.kcal + ' / ' + (m.protein ?? '?') + ' g'), el('button', { class: 'x', 'aria-label': 'Usuń', onclick: async () => { if (!confirm('Usunąć „' + m.name + '”?')) return; const { error } = await sb.from('meals').delete().eq('id', m.id); if (error) return fail(error); meals = meals.filter(x => x.id !== m.id); renderJedzenie(); } }, '×'))));
   if (!meals.length) ml.append(el('div', { class: 'muted' }, 'Nic jeszcze nie wpisane.'));
-  // Szybki posiłek dodaje się od razu (z „Cofnij”), bez przepisywania do pól.
-  $('#quick').replaceChildren(...cfg.quick_meals.map(([n, kc, pr]) => el('button', { onclick: () => addMeal(n, kc, pr) }, n.split(' (')[0] + ' · ' + kc)));
+  renderQuick();
+}
+// „Szybko”: wszystko, co już jadł, najczęstsze na górze; jedno dotknięcie dodaje (z „Cofnij”).
+function renderQuick() {
+  const all = quickFromHistory(mealHist, cfg.quick_meals || []), list = all.filter(q => matchesQuery(q.name, qQuery));
+  $('#quick').replaceChildren(...list.slice(0, 60).map(q => el('div', { class: 'qrow' },
+    el('span', { class: 'grow' }, q.name), el('span', { class: 'muted' }, q.kcal + ' kcal · ' + (q.protein ?? '?') + ' g'),
+    el('button', { class: 'add', 'aria-label': 'Dodaj ' + q.name, onclick: () => addMeal(q.name, q.kcal, q.protein) }, '+'))));
+  if (!list.length) $('#quick').append(el('div', { class: 'muted', style: 'padding:8px 0' }, all.length ? 'Nic nie pasuje. Powiedz Claude – policzy i doda.' : 'Pusto – pojawi się tu wszystko, co zjesz.'));
 }
 async function addMeal(name, kcal, protein) {
   if (!name) return toast('Wpisz, co zjadłeś');
   const time = mealTime(cur, new Date());
   const { data, error } = await sb.from('meals').insert({ date: cur, time, name, kcal: kcal || null, protein: protein || null }).select().single();
   if (error) return fail(error);
-  meals.push(data); mealDates.add(cur); renderJedzenie(); renderDzis();
+  meals.push(data); mealDates.add(cur); if (kcal) mealHist.unshift(data); renderJedzenie(); renderDzis();
   toast(kcal ? 'Dodane: ' + name.split(' (')[0] : 'Dodane bez kalorii – powiedz Claude, policzy', ['Cofnij', async () => {
     const { error: e } = await sb.from('meals').delete().eq('id', data.id); if (e) return fail(e);
     meals = meals.filter(x => x.id !== data.id); renderJedzenie(); renderDzis(); toast('Cofnięte');
   }]);
 }
-function renderFilm() {
-  $('#fTitle').textContent = film.title || '—';
-  const st = film.step || 1, tot = film.steps_total || 6;
-  $('#fSteps').replaceChildren(...Array.from({ length: tot }, (_, i) => el('i', { class: i < st ? 'on' : '' })));
-  const names = ['skrypt i hook', 'materiał', 'montaż', 'napisy', 'publikacja', 'wpis i licznik'];
-  $('#fStepLbl').textContent = 'Krok ' + st + '/' + tot + ': ' + (names[st - 1] || '');
-  setVal('#fNextMove', film.next_move); setVal('#fBlocker', film.blocker);
-  $('#fWeek').textContent = (film.week_done || 0) + '/' + (film.week_target || 3);
+// Punkty coacha: „co” pogrubione, „dlaczego” po dotknięciu.
+function coachList(list) {
+  return list.map(it => { const li = el('li', {}, el('div', { class: 'what' }, it.what), el('div', { class: 'why' }, it.why || '')); if (it.why) li.addEventListener('click', () => li.classList.toggle('open')); return li; });
 }
-async function saveFilm(patch, keepOnError = false) {
-  const before = { ...film };
-  Object.assign(film, patch);
-  const { error } = await sb.from('film').upsert({ id: 'current', ...patch, updated_at: new Date().toISOString() }, { onConflict: 'user_id,id' });
-  if (error) { fail(error); if (!keepOnError) { film = before; renderFilm(); } return false; }
-  return true;
-}
+// Zakupy: „Dla mnie” (kind zakupy) i „Spiżarnia” (jedzenie). Obie to listy do kupienia.
 function renderItems() {
   $('#tZ').className = itemKind === 'zakupy' ? '' : 'ghost'; $('#tS').className = itemKind === 'spizarnia' ? '' : 'ghost';
   const list = items.filter(i => i.kind === itemKind);
   $('#items').replaceChildren(...list.map(i => {
-    const r = checkRow(itemKind === 'zakupy' ? i.done : false, (i.urgent ? '❗ ' : '') + i.name + (i.qty ? ' · ' + i.qty : ''), async () => {
-      if (itemKind === 'zakupy') { const done = !i.done; const { error } = await sb.from('items').update({ done }).eq('id', i.id); if (error) return fail(error); i.done = done; }
-      else { if (!confirm('Skończyło się? Przenieść „' + i.name + '” na zakupy?')) return; const { error } = await sb.from('items').update({ kind: 'zakupy', done: false }).eq('id', i.id); if (error) return fail(error); i.kind = 'zakupy'; i.done = false; toast('Na liście zakupów'); }
-      renderItems();
+    const r = checkRow(i.done, (i.urgent ? '❗ ' : '') + i.name + (i.qty ? ' · ' + i.qty : ''), async () => {
+      const done = !i.done; const { error } = await sb.from('items').update({ done }).eq('id', i.id); if (error) return fail(error); i.done = done; renderItems();
     });
-    r.append(el('button', { class: 'x', onclick: async e => { e.stopPropagation(); if (!confirm('Usunąć „' + i.name + '”?')) return; const { error } = await sb.from('items').delete().eq('id', i.id); if (error) return fail(error); items = items.filter(x => x.id !== i.id); renderItems(); } }, '×'));
+    r.append(el('button', { class: 'x', 'aria-label': 'Usuń', onclick: async e => { e.stopPropagation(); if (!confirm('Usunąć „' + i.name + '”?')) return; const { error } = await sb.from('items').delete().eq('id', i.id); if (error) return fail(error); items = items.filter(x => x.id !== i.id); renderItems(); } }, '×'));
     return r;
   }));
   if (!list.length) $('#items').append(el('div', { class: 'muted' }, 'Pusto.'));
-  const doneN = items.filter(i => i.kind === 'zakupy' && i.done).length;
-  const hint = $('#iHint'); hint.replaceChildren();
-  if (itemKind === 'zakupy' && doneN) hint.append(el('button', { class: 'ghost small', onclick: async () => { const ids = items.filter(i => i.kind === 'zakupy' && i.done).map(i => i.id); const { error } = await sb.from('items').update({ kind: 'spizarnia', done: false }).in('id', ids); if (error) return fail(error); items.forEach(i => { if (ids.includes(i.id)) { i.kind = 'spizarnia'; i.done = false; } }); renderItems(); toast('Przeniesione do spiżarni'); } }, 'Kupione (' + doneN + ') → do spiżarni'));
-  if (itemKind === 'spizarnia') hint.textContent = 'Dotknij produktu, gdy się skończy – wróci na listę zakupów.';
+  const doneIds = list.filter(i => i.done).map(i => i.id), hint = $('#iHint'); hint.replaceChildren();
+  if (doneIds.length) hint.append(el('button', { class: 'ghost small', onclick: async () => { const { error } = await sb.from('items').delete().in('id', doneIds); if (error) return fail(error); items = items.filter(i => !doneIds.includes(i.id)); renderItems(); toast('Kupione usunięte z listy'); } }, 'Kupione (' + doneIds.length + ') – usuń z listy'));
 }
-function renderCele() {
+// Coach: karta na dziś, praca z nocy, podsumowania, cele (waga raz, w celu C5).
+function renderCoach() {
+  const today = ymd(new Date()), noc = coachRows.find(c => c.kind === 'noc');
+  const cp = parseCoach(noc?.morning);
+  const dm = d => d.slice(8) + '.' + d.slice(5, 7);
+  $('#cDayTitle').textContent = noc && noc.date !== today ? 'Ostatnia karta (' + dm(noc.date) + ')' : 'Na dziś';
+  $('#cItems').replaceChildren(...coachList(cp.items));
+  if (!cp.items.length) $('#cItems').append(el('li', {}, el('div', { class: 'what' }, 'Coach jeszcze nic nie zostawił – pierwsza karta po nocy.')));
+  const work = noc?.work || [];
+  $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem'), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
+  const sums = ['tydzien', 'miesiac'].map(k => coachRows.find(c => c.kind === k)).filter(Boolean);
+  $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, (c.kind === 'tydzien' ? 'Podsumowanie tygodnia' : 'Podsumowanie miesiąca') + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
+  $('#cReport').classList.toggle('hidden', !noc?.report); $('#cReportTxt').textContent = noc?.report || '';
   const last = weights[weights.length - 1];
-  $('#wNow').textContent = last ? last.kg : '–';
-  const s0 = cfg.weight_start, mid = cfg.weight_mid, goal = cfg.weight_goal;
-  $('#wTitle').textContent = goal ? 'Waga (cel ' + (mid ? mid + ' → ' : '') + goal + ' kg)' : 'Waga';
-  $('#wBar').parentElement.classList.toggle('hidden', !(s0 && goal));
-  if (last && s0 && goal) {
-    const pct = Math.max(0, Math.min(100, (last.kg - s0) / (goal - s0) * 100)); $('#wBar').style.width = pct + '%';
-    $('#wInfo').textContent = 'Ostatni pomiar ' + last.date + '.' + (mid ? ' Do ' + mid + ' kg: ' + Math.max(0, mid - last.kg).toFixed(1) + ' kg,' : '') + ' do ' + goal + ' kg: ' + Math.max(0, goal - last.kg).toFixed(1) + ' kg.';
-  } else $('#wInfo').textContent = last ? 'Ostatni pomiar ' + last.date + '.' : '';
-  $('#goals').replaceChildren(...goals.map(g => el('div', { class: 'card' },
-    el('div', { class: 'row' }, el('span', { class: 'pill' }, g.id), el('b', { class: 'grow' }, g.title)),
-    el('div', { class: 'muted', style: 'margin-top:6px' }, 'Miara: ' + (g.metric || '') + (g.deadline ? ' · do ' + g.deadline : '')),
-    el('div', { style: 'margin-top:8px' }, el('span', { class: 'muted' }, 'Gdzie jestem: '), g.where_now || '—'),
-    el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'))));
+  $('#goals').replaceChildren(...goals.map(g => {
+    const extra = g.id === 'C5' && last ? el('div', { class: 'muted', style: 'margin-top:6px' }, 'Ostatnie ważenie: ' + last.kg + ' kg (' + dm(last.date) + '). Następne: ' + dm(addDays(last.date, 14)) + ', rano przed śniadaniem. Wagę podaj Claude.') : '';
+    return el('div', { class: 'card' },
+      el('div', { class: 'row' }, el('span', { class: 'pill' }, g.id), el('b', { class: 'grow' }, g.title)),
+      g.progress ? el('div', { class: 'bar' }, el('i', { style: 'width:' + Math.min(100, g.progress) + '%' })) : '',
+      el('div', { style: 'margin-top:8px' }, el('span', { class: 'muted' }, 'Gdzie jestem: '), g.where_now || '—'),
+      el('div', { style: 'margin-top:6px' }, el('span', { class: 'muted' }, 'Następny krok: '), g.next_step || '—'), extra);
+  }));
 }
-function renderNotes() {
-  $('#notes').replaceChildren(...notes.map(n => el('div', { class: 'note' + (n.author === 'claude' ? ' claude' : '') }, n.text, el('small', {}, (n.author === 'claude' ? 'Claude' : 'Ty') + ' · ' + (n.kind) + ' · ' + new Date(n.created_at).toLocaleString('pl-PL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + (n.author === 'michal' ? (n.processed ? ' · ✓ Claude przeczytał' : ' · czeka na Claude') : '')))));
-  if (!notes.length) $('#notes').append(el('div', { class: 'muted' }, 'Brak notatek.'));
-}
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderFilm(); renderItems(); renderCele(); renderNotes(); }
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderCoach(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
@@ -605,12 +588,21 @@ window.addEventListener('pagehide', flushText);
 function show(v) {
   view = v; document.querySelectorAll('main>section').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', film: 'Film', zakupy: 'Zakupy', cele: 'Cele', claude: 'Claude' }[v];
+  $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', coach: 'Coach' }[v];
   const dated = v === 'dzis' || v === 'jedzenie';
   ['#prevDay', '#dateLbl', '#nextDay'].forEach(s => $(s).classList.toggle('hidden', !dated));
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
+// Przesunięcie palcem w bok = sąsiednia zakładka (nie w polach tekstowych i przewijanych tekstach).
+const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'coach']; let touch = null;
+document.querySelector('main').addEventListener('touchstart', e => { touch = e.target.closest('input,textarea,select,.work,.report') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; }, { passive: true });
+document.querySelector('main').addEventListener('touchend', e => {
+  if (!touch) return; const dx = e.changedTouches[0].clientX - touch.x, dy = e.changedTouches[0].clientY - touch.y; touch = null;
+  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) { const v = nextView(VIEWS, view, dx < 0 ? 1 : -1); if (v !== view) show(v); }
+}, { passive: true });
+$('#coachNight').onclick = () => show('coach');
+$('#qSearch').oninput = e => { qQuery = e.target.value; renderQuick(); };
 const shift = async n => { rulesOpen = false;
   const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n);
   const next = ymd(d), today = ymd(new Date());
@@ -663,19 +655,11 @@ $('#catchupSkip').onclick = () => saveCatchup(true);
 
 $('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
 
-$('#fPrev').onclick = () => saveFilm({ step: Math.max(1, (film.step || 1) - 1) }).then(renderFilm);
-$('#fNext').onclick = () => saveFilm({ step: Math.min(film.steps_total || 6, (film.step || 1) + 1) }).then(renderFilm);
-bindText('#fNextMove', v => ({ next_move: v }), saveFilm);
-bindText('#fBlocker', v => ({ blocker: v }), saveFilm);
-$('#fWPlus').onclick = () => saveFilm({ week_done: (film.week_done || 0) + 1 }).then(ok => { renderFilm(); if (ok) toast('Brawo – link wpisz w notatce do Claude'); });
-$('#fWMinus').onclick = () => saveFilm({ week_done: Math.max(0, (film.week_done || 0) - 1) }).then(renderFilm);
-
 $('#tZ').onclick = () => { itemKind = 'zakupy'; renderItems(); }; $('#tS').onclick = () => { itemKind = 'spizarnia'; renderItems(); };
 $('#iAdd').onclick = async () => { const name = $('#iNew').value.trim(); if (!name) return; const { data, error } = await sb.from('items').insert({ kind: itemKind, name, qty: $('#iQty').value.trim() || null }).select().single(); if (error) return fail(error); items.push(data); $('#iNew').value = $('#iQty').value = ''; renderItems(); };
 $('#iNew').onkeydown = e => { if (e.key === 'Enter') $('#iAdd').click(); };
 
 
-$('#nAdd').onclick = async () => { const text = $('#nText').value.trim(); if (!text) return; const { data, error } = await sb.from('notes').insert({ text, kind: $('#nKind').value, author: 'michal' }).select().single(); if (error) return fail(error); notes.unshift(data); $('#nText').value = ''; renderNotes(); toast('Wysłane'); };
 $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 // ---------- auth ----------

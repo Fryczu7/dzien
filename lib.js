@@ -72,6 +72,42 @@ export function partOfDay(hour, morningDone) {
   return 'dzien';
 }
 
+// Plan dnia bez rzeczy, które mają własne przyciski (rehab, leki) – żeby nie było ich dwa razy. Indeks = pozycja w pełnym planie.
+export const planWithoutToggles = plan => (plan || []).map((p, idx) => ({ p, idx })).filter(({ p }) => !/^\s*(rehab|leki)/i.test(p.text || ''));
+
+// Karta coacha: „1. co | dlaczego”, a bez „|” – pierwsze zdanie to „co”. Linia „W nocy zrobiłem: …” osobno.
+export function parseCoach(text) {
+  const items = []; let night = null;
+  for (const raw of String(text || '').split('\n')) {
+    const line = raw.trim(); if (!line) continue;
+    const n = line.match(/^w nocy zrobiłem:\s*(.*)$/i); if (n) { night = n[1]; continue; }
+    const body = line.replace(/^(\d+[.)]|[•\-–])\s*/, '');
+    let what, why;
+    if (body.includes(' | ')) [what, why] = body.split(' | ', 2);
+    else { const m = body.match(/^(.+?[^0-9A-ZŁŚŻŹĆŃÓĘĄ])\.\s+(.+)$/); what = m ? m[1] : body.replace(/\.$/, ''); why = m ? m[2] : ''; }
+    items.push({ what: what.trim(), why: (why || '').trim() });
+  }
+  return { items, night };
+}
+
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l').trim();
+export const matchesQuery = (name, q) => !q || norm(name).includes(norm(q));
+
+// „Szybko”: wszystko, co już jadł (z kaloriami), najczęstsze na górze; wartości z ostatniego razu (rows od najnowszych).
+export function quickFromHistory(rows, presets = []) {
+  const map = new Map();
+  for (const r of rows) {
+    if (r.kcal == null || !r.name) continue;
+    const k = norm(r.name);
+    if (map.has(k)) map.get(k).n++; else map.set(k, { name: r.name.trim(), kcal: r.kcal, protein: r.protein, n: 1 });
+  }
+  for (const [name, kcal, protein] of presets) if (!map.has(norm(name))) map.set(norm(name), { name, kcal, protein, n: 0 });
+  return [...map.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'pl'));
+}
+
+// Przesunięcie palcem: następna/poprzednia zakładka, na końcach zostaje.
+export const nextView = (views, v, dir) => views[Math.max(0, Math.min(views.length - 1, views.indexOf(v) + dir))];
+
 const posilki = n => n === 1 ? 'posiłek' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'posiłki' : 'posiłków';
 
 // Lista „Brakuje: …” – tylko rzeczy, które da się dziś jeszcze zrobić albo dopowiedzieć Claude.
