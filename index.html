@@ -292,6 +292,13 @@ details[open]>summary::after{transform:rotate(-135deg)}
     <input id="qSearch" type="search" placeholder="Szukaj, np. owsianka" aria-label="Szukaj w tym, co już jadłeś" style="margin-top:10px" autocomplete="off">
     <div id="quick"></div>
   </details>
+  <div class="card">
+    <h2>Dodaj ręcznie</h2>
+    <input id="mName" placeholder="Co zjadłeś" aria-label="Co zjadłeś"><div style="height:8px"></div>
+    <div class="grid2"><input id="mKcal" type="number" inputmode="numeric" placeholder="kcal" aria-label="kcal"><input id="mProt" type="number" inputmode="numeric" placeholder="białko g" aria-label="białko w gramach"></div>
+    <div style="height:8px"></div>
+    <button id="mAdd" class="ghost" style="width:100%">Dodaj</button>
+  </div>
 </section>
 
 <!-- ZAKUPY: dwie listy do kupienia; na komputerze zwinięte pod Jedzeniem -->
@@ -665,6 +672,8 @@ document.querySelector('main').addEventListener('touchend', e => {
 }, { passive: true });
 $('#coachNight').onclick = () => show('coach');
 $('#qSearch').oninput = e => { qQuery = e.target.value; renderQuick(); };
+// Ręczny wpis zostaje (decyzja Michała 6.10), choć zwykle kalorie liczy Claude.
+$('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
 const shift = async n => { rulesOpen = false;
   const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n);
   const next = ymd(d), today = ymd(new Date());
