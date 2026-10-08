@@ -69,3 +69,33 @@ test('trendLabel: ciężar ważniejszy niż powtórzenia', async () => {
   assert.equal(trendLabel({ kg: 50, reps: 8 }, { kg: 50, reps: 8 }), 'bez zmian');
   assert.equal(trendLabel({ kg: 50, reps: 8 }, null), null);
 });
+
+test('trainingWeeks: zrobione, odwołane, opuszczone; stary wpis tekstowy bez dublowania', async () => {
+  const { trainingWeeks } = await import('../lib.js');
+  // 8.10.2026 to czwartek → tydzień 5.10–11.10.
+  const ws = [
+    { date: '2026-10-07', kind: 'silownia', status: 'zrobiony' }, { date: '2026-10-06', kind: 'wspinaczka', status: 'odwolany' },
+    { date: '2026-10-05', kind: 'kalistenika', status: 'odwolany' }, { date: '2026-10-03', kind: 'silownia' },
+    { date: '2026-10-08', kind: 'wspinaczka', status: 'zrobiony' }, { date: '2026-10-09', kind: 'bieg' }, { date: null, kind: 'silownia' },
+  ];
+  const days = [{ date: '2026-10-07', training: 'klatka' }, { date: '2026-10-06', training: 'bieg 5 km' }, { date: '2026-10-01', training: '' }];
+  const [w0, w1] = trainingWeeks(ws, days, '2026-10-08', 2);
+  assert.equal(w0.from, '2026-10-05'); assert.equal(w0.to, '2026-10-11');
+  // 7.10 siłownia (tekst w days nie dubluje), 8.10 wspinaczka; 9.10 to jutro – nie liczy się; 6.10 ma wpis w workouts (odwołany), więc tekst też nie.
+  assert.equal(w0.done, 2); assert.equal(w0.cancelled, 2); assert.equal(w0.missed, 0);
+  assert.deepEqual(w0.byKind, { silownia: 1, wspinaczka: 1 });
+  assert.equal(w1.from, '2026-09-28'); assert.equal(w1.done, 1);
+});
+
+test('withWorkoutDays: dzień z treningiem w workouts liczy się w tygodniu na „Dziś”', async () => {
+  const { withWorkoutDays, weekStats } = await import('../lib.js');
+  const days = withWorkoutDays([{ date: '2026-10-07', training: '' }, { date: '2026-10-06', training: 'bieg' }],
+    [{ date: '2026-10-07', status: 'zrobiony' }, { date: '2026-10-08' }, { date: '2026-10-05', status: 'odwolany' }]);
+  assert.equal(weekStats(days, [], '2026-10-08').training, 3);
+});
+
+test('progressSummary: liczy kierunki, pierwsze zapisy osobno', async () => {
+  const { progressSummary } = await import('../lib.js');
+  const m = new Map([['a', { trend: 'up' }], ['b', { trend: null }], ['c', { trend: 'up' }], ['d', { trend: 'down' }]]);
+  assert.deepEqual(progressSummary(m), { up: 2, same: 0, down: 1, first: 1 });
+});

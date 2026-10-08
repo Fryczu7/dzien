@@ -193,3 +193,36 @@ export function trendLabel(last, prev) {
   if (dr) return (dr > 0 ? '+' : '−') + Math.abs(dr) + ' powt.';
   return 'bez zmian';
 }
+
+// Zrobiony trening z tabeli workouts zaznacza dzień jako treningowy – tydzień na „Dziś” liczy i stare wpisy
+// tekstowe (days.training), i nowe treningi, bez podwójnego liczenia jednego dnia.
+export function withWorkoutDays(days, workouts) {
+  const dates = new Set(workouts.filter(w => w.date && (w.status ?? 'zrobiony') === 'zrobiony').map(w => w.date));
+  const out = days.map(d => dates.has(d.date) && !(d.training && d.training.trim()) ? { ...d, training: 'trening' } : d);
+  for (const dt of dates) if (!days.some(d => d.date === dt)) out.push({ date: dt, training: 'trening' });
+  return out;
+}
+
+// Tygodnie pn–nd od bieżącego wstecz: zrobione (każdy trening osobno), odwołane zajęcia, opuszczone, rodzaje.
+// Dzień z samym tekstem w days.training (bez wpisu w workouts) liczy się jako jeden trening „inne”.
+export function trainingWeeks(workouts, days, today, n = 4) {
+  const weeks = [];
+  for (let i = 0; i < n; i++) {
+    const from = addDays(weekStart(today), -7 * i), to = addDays(from, 6), inW = d => d && from <= d && d <= to && d <= today;
+    const ws = workouts.filter(w => inW(w.date)), st = w => w.status ?? 'zrobiony';
+    const done = ws.filter(w => st(w) === 'zrobiony'), doneDates = new Set(ws.map(w => w.date));
+    const extra = days.filter(d => inW(d.date) && d.training && d.training.trim() && !doneDates.has(d.date));
+    const byKind = {};
+    for (const w of done) byKind[w.kind || 'inne'] = (byKind[w.kind || 'inne'] || 0) + 1;
+    if (extra.length) byKind.inne = (byKind.inne || 0) + extra.length;
+    weeks.push({ from, to, done: done.length + extra.length, cancelled: ws.filter(w => st(w) === 'odwolany').length, missed: ws.filter(w => st(w) === 'opuszczony').length, byKind });
+  }
+  return weeks;
+}
+
+// Podsumowanie postępu: ile ćwiczeń (z co najmniej dwoma treningami) idzie w górę, stoi, spada.
+export function progressSummary(progress) {
+  const s = { up: 0, same: 0, down: 0, first: 0 };
+  for (const p of progress.values()) s[p.trend || 'first']++;
+  return s;
+}

@@ -163,6 +163,29 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .ex-none{color:var(--muted);font-size:14px;margin-top:2px}
 .ex-note{color:var(--muted);font-size:13px;margin-top:3px}
 .plan-notes{color:var(--muted);font-size:14px;margin:4px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+/* Trening: regularność, postęp, historia (wiersze w jednej karcie) */
+.wk-big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.wk-big b{font-size:28px;font-variant-numeric:tabular-nums}
+.wk-ok{color:var(--acc-ink);font-weight:600;font-size:15px}
+.wk-short{color:var(--warn);font-weight:600;font-size:15px}
+.wk-line{font-size:14px;margin-top:6px}
+.wk-weeks{margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--line);list-style:none;font-size:14px;font-variant-numeric:tabular-nums}
+.wk-weeks li{display:flex;gap:8px;padding:3px 0}
+.wk-weeks li span:first-child{color:var(--muted);min-width:96px}
+.prog-list{margin:8px 0 0;padding:0;list-style:none;font-size:14px}
+.prog-list li{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--line)}
+.prog-list li:first-child{border-top:0}
+.prog-list li span:first-child{flex:1;min-width:0}
+.ex-rest{color:var(--muted);font-size:13px;margin-top:1px}
+.wk-row{border-top:1px solid var(--line)}
+.wk-row:first-child{border-top:0}
+.wk-row>summary{gap:10px}
+.wk-row>summary::after{margin-left:0}
+.wk-row .wk-body{padding-bottom:10px}
+.wk-tag{font-size:12px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--card2);color:var(--muted)}
+#wHist>summary .muted{font-weight:400;margin-left:6px}
+#wList{margin-top:6px}
+.obs .row{margin-top:10px}
 /* Telefon: elementy tylko dla komputera schowane. */
 .wideonly{display:none}
 /* Komputer (od 1000 px): jedna zakładka na cały ekran, zakładki u góry, karty w dwóch kolumnach (wiersz po wierszu). */
@@ -178,10 +201,10 @@ details[open]>summary::after{transform:rotate(-135deg)}
   nav button.on{border-bottom-color:var(--acc-ink)}
   main{order:2;width:100%;max-width:1200px;padding:24px 24px 48px}
   .narrowonly{display:none!important}
-  #v-dzis,#v-jedzenie,#v-trening,#v-coach,#wPlans,#wList,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
+  #v-dzis,#v-jedzenie,#v-trening,#v-coach,#wPlans,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
   main section.hidden{display:none!important}
   main .card,.brakuje{margin:0}
-  .brakuje,#catchup,.sect,#wPlans,#wList,#goals,#cWork,#cSummary,#cDay,#cReport,#logout{grid-column:1/-1}
+  .brakuje,#catchup,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cDay,#cReport,#logout{grid-column:1/-1}
   .sect{margin:12px 2px 0}
   #logout{max-width:280px;margin-top:8px}
   #v-zakupy{max-width:760px}
@@ -219,6 +242,13 @@ details[open]>summary::after{transform:rotate(-135deg)}
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
   <p class="muted talk-hint narrowonly">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
   <p id="brakuje" class="brakuje"></p>
+  <!-- Obserwacje z niedzieli: widoczne, dopóki Michał nie kliknie „Przeczytane” -->
+  <div id="obsCard" class="card coach obs hidden">
+    <h2 id="obsTitle">Czego się nauczyłem w tym tygodniu</h2>
+    <ol id="obsItems" class="coach-items"></ol>
+    <details id="obsRep"><summary>Całe podsumowanie</summary><div id="obsRepTxt" class="report"></div></details>
+    <div class="row"><button id="obsOk" class="grow">Przeczytane ✓</button></div>
+  </div>
   <div id="coachMorning" class="card coach hidden">
     <h2>Propozycja na dziś</h2>
     <ol id="coachItems" class="coach-items"></ol>
@@ -334,11 +364,17 @@ details[open]>summary::after{transform:rotate(-135deg)}
 <!-- TRENING: plany z postępem i ostatnie treningi; serie zapisuje Claude z rozmowy -->
 <section id="v-trening" class="hidden">
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co zrobiłeś</a>
-  <p class="muted talk-hint narrowonly">Ćwiczenie, ciężar, powtórzenia, RIR – Claude zapisze serie, a tu zobaczysz postęp.</p>
-  <h3 class="sect">Plany i postęp</h3>
+  <p class="muted talk-hint narrowonly">Powiedz np. „ławka: 50 kg 8, 8, 7”. Pierwsza seria z pustą sztangą to zawsze rozgrzewka. Odwołane zajęcia też powiedz – nie liczą się jako opuszczone.</p>
+  <div class="card coach" id="wTrener">
+    <h2 id="wTTitle">Trener</h2>
+    <ol id="wTItems" class="coach-items"></ol>
+    <details id="wTRep" class="hidden"><summary>Pełna analiza</summary><div id="wTRepTxt" class="report"></div></details>
+  </div>
+  <div class="card" id="wWeek"></div>
+  <div class="card" id="wProg"></div>
+  <h3 class="sect">Plany</h3>
   <div id="wPlans"></div>
-  <h3 class="sect">Ostatnie treningi</h3>
-  <div id="wList"></div>
+  <details class="card" id="wHist"><summary>Historia treningów <span class="muted" id="wHistN"></span></summary><div id="wList"></div></details>
 </section>
 
 <!-- COACH: karta na dziś, nocna praca, podsumowania, cele -->
@@ -370,7 +406,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -421,7 +457,7 @@ async function saveDay(patch, keepOnError = false) {
   return true;
 }
 async function loadHistory() {
-  const today = ymd(new Date()), from = addDays(today, -14);
+  const today = ymd(new Date()), from = addDays(today, -28); // 4 tygodnie – regularność treningów
   const [d, m, c] = await Promise.all([
     sb.from('days').select('date,rehab,training,morning,sleep_h').gte('date', from).lte('date', today),
     sb.from('meals').select('date').gte('date', from).lte('date', today),
@@ -438,7 +474,7 @@ async function loadStatic() {
     sb.from('goals').select('*').order('id'),
     sb.from('weights').select('*').order('date'),
     sb.from('settings').select('*').maybeSingle(),
-    sb.from('coach').select('*').order('date', { ascending: false }).limit(14),
+    sb.from('coach').select('*').order('date', { ascending: false }).limit(60), // noc + trener codziennie, podsumowania rzadziej
     sb.from('meals').select('name,kcal,protein').not('kcal', 'is', null).order('created_at', { ascending: false }).limit(2000),
     sb.from('workouts').select('*, workout_sets(*)').order('date', { ascending: false, nullsFirst: false }).limit(200),
     sb.from('workout_plans').select('*').order('name'),
@@ -466,7 +502,7 @@ function renderHeader() {
   $('#nextDay').disabled = cur >= ymd(new Date());
 }
 // Dzień w historii zawsze w aktualnej wersji (to, co właśnie odhaczono, od razu liczy się do tygodnia).
-function histWithDay() { return hist.filter(h => h.date !== day.date).concat(day); }
+function histWithDay() { return withWorkoutDays(hist.filter(h => h.date !== day.date).concat(day), workouts); }
 function renderDzis() {
   const today = ymd(new Date()), isToday = cur === today, hour = new Date().getHours();
   // Rzeczy z dopiskiem „opcja” nie są do odhaczania – tylko przypomnienie pod listą.
@@ -537,7 +573,7 @@ function renderDzis() {
   const sleepTxt = ws.sleepAvg != null ? String(ws.sleepAvg).replace('.', ',') + ' h' : '–';
   $('#week').replaceChildren(
     el('div', {}, el('b', {}, ws.rehab + '/5'), el('span', {}, 'rehab')),
-    el('div', {}, el('b', {}, ws.training + '/3'), el('span', {}, 'treningi (cel 3–5)')),
+    el('div', {}, el('b', {}, ws.training + '/' + (cfg.training_min ?? 3)), el('span', {}, 'treningi (min. ' + (cfg.training_min ?? 3) + ')')),
     el('div', {}, el('b', {}, ws.meds + '/' + ws.daysSoFar), el('span', {}, 'dni z lekami')),
     el('div', {}, el('b', {}, sleepTxt), el('span', {}, 'sen średnio')));
 
@@ -632,8 +668,8 @@ function renderCoach() {
   if (!cp.items.length) $('#cItems').append(el('li', {}, el('div', { class: 'what' }, 'Coach jeszcze nic nie zostawił – pierwsza karta po nocy.')));
   const work = noc?.work || [];
   $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem'), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
-  const sums = ['tydzien', 'miesiac'].map(k => coachRows.find(c => c.kind === k)).filter(Boolean);
-  $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, (c.kind === 'tydzien' ? 'Podsumowanie tygodnia' : 'Podsumowanie miesiąca') + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
+  const sums = ['tydzien', 'miesiac', 'obserwacje'].map(k => coachRows.find(c => c.kind === k)).filter(Boolean);
+  $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, ({ tydzien: 'Podsumowanie tygodnia', miesiac: 'Podsumowanie miesiąca', obserwacje: 'Czego się nauczyłem' })[c.kind] + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
   $('#cReport').classList.toggle('hidden', !noc?.report); $('#cReportTxt').textContent = noc?.report || '';
   const last = weights[weights.length - 1];
   $('#goals').replaceChildren(...goals.map(g => {
@@ -651,6 +687,7 @@ const withRir = s => s.rir ? ' · RIR ' + s.rir.replace('-', '–') : '';
 function exRow(name, plan, pr) {
   const rng = plan && (plan.sets || plan.reps) ? (plan.sets ? plan.sets + ' × ' : '') + String(plan.reps || '').replace('-', '–') : '';
   const kids = [el('div', { class: 'ex-top' }, el('span', { class: 'nm' }, name), rng ? el('span', { class: 'rng' }, rng) : '')];
+  if (plan?.rest) kids.push(el('div', { class: 'ex-rest' }, 'Przerwa ' + plan.rest));
   if (pr) {
     const t = trendLabel(pr.last, pr.prev);
     kids.push(el('div', { class: 'ex-res' }, el('span', { class: 'val' }, fmtSet(pr.last)), pr.last.rir ? el('span', { class: 'rir' }, 'RIR ' + pr.last.rir.replace('-', '–')) : '',
@@ -663,14 +700,45 @@ function exRow(name, plan, pr) {
 }
 // Rozwinięte karty zostają rozwinięte po odświeżeniu danych (co minutę i po powrocie do apki).
 const wkOpen = new Set();
-const wkCard = (key, summary, body) => {
-  const d = el('details', { class: 'card wk' }, summary, body); d.open = wkOpen.has(key);
+const wkCard = (key, summary, body, cls = 'card wk') => {
+  const d = el('details', { class: cls }, summary, body); d.open = wkOpen.has(key);
   d.addEventListener('toggle', () => { if (d.open) wkOpen.add(key); else wkOpen.delete(key); });
   return d;
 };
+const KIND = { silownia: 'siłownia', wspinaczka: 'wspinaczka', kalistenika: 'kalistenika', bieg: 'bieg', inne: 'inne' };
+const seriiTxt = n => n + ' ' + (n === 1 ? 'seria' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'serie' : 'serii');
+const isDone = s => (s ?? 'zrobiony') === 'zrobiony';
 function renderTrening() {
-  const sorted = sortWorkouts(workouts), progress = exerciseProgress(workouts, plans);
+  const sorted = sortWorkouts(workouts), progress = exerciseProgress(workouts.filter(w => isDone(w.status)), plans);
   const norm = s => String(s || '').toLowerCase().trim(), inPlan = new Set();
+  const today = ymd(new Date()), min = cfg.training_min ?? 3;
+
+  // Trener nocny: punkty jak u coacha, pełna analiza po rozwinięciu.
+  const tr = coachRows.find(c => c.kind === 'trener'), tp = parseCoach(tr?.morning);
+  $('#wTTitle').textContent = tr && tr.date !== today ? 'Trener (' + dShort(tr.date) + ')' : 'Trener';
+  $('#wTItems').replaceChildren(...(tp.items.length ? coachList(tp.items) : [el('li', {}, el('div', { class: 'what' }, 'Pierwsza analiza po najbliższej nocy (2:00): treningi, waga, kalorie i progres.'))]));
+  $('#wTRep').classList.toggle('hidden', !tr?.report); $('#wTRepTxt').textContent = tr?.report || '';
+
+  // Regularność: ten tydzień względem minimum, odwołane osobno, poprzednie tygodnie od pierwszego wpisu.
+  const weeks = trainingWeeks(workouts, hist, today, 5), w0 = weeks[0];
+  const first = [...workouts.map(w => w.date), ...hist.filter(d => d.training && d.training.trim()).map(d => d.date)].filter(Boolean).sort()[0];
+  const kinds = Object.entries(w0.byKind).map(([k, n]) => KIND[k] + ' ' + n).join(' · ');
+  const range = w => dShort(w.from) + '–' + dShort(w.to);
+  $('#wWeek').replaceChildren(el('h2', {}, 'Ten tydzień'),
+    el('div', { class: 'wk-big' }, el('b', {}, String(w0.done)), el('span', { class: 'muted' }, '/ ' + min + ' minimum'),
+      w0.done >= min ? el('span', { class: 'wk-ok' }, w0.done > min ? 'minimum zrobione, +' + (w0.done - min) : 'minimum zrobione') : el('span', { class: 'wk-short' }, 'brakuje ' + (min - w0.done))),
+    kinds ? el('div', { class: 'wk-line' }, kinds) : '',
+    w0.cancelled || w0.missed ? el('div', { class: 'wk-line muted' }, [w0.cancelled ? 'odwołane zajęcia: ' + w0.cancelled + ' (nie liczą się jako opuszczone)' : '', w0.missed ? 'opuszczone: ' + w0.missed : ''].filter(Boolean).join(' · ')) : '',
+    (() => { const prev = weeks.slice(1).filter(w => first && w.to >= first); return prev.length ? el('ul', { class: 'wk-weeks' }, ...prev.map(w => el('li', {}, el('span', {}, range(w)),
+      el('span', { class: w.done >= min ? 'wk-ok' : '' }, w.done + '/' + min), w.cancelled ? el('span', { class: 'muted' }, 'odwołane ' + w.cancelled) : '', w.missed ? el('span', { class: 'muted' }, 'opuszczone ' + w.missed) : ''))) : ''; })());
+
+  // Postęp: kierunek każdego ćwiczenia, które było robione co najmniej dwa razy.
+  const ps = progressSummary(progress), moved = [...progress.values()].filter(p => p.trend);
+  $('#wProg').replaceChildren(el('h2', {}, 'Postęp'), ...(moved.length ? [
+    el('div', { class: 'wk-line' }, [ps.up ? 'w górę ' + ps.up : '', ps.same ? 'bez zmian ' + ps.same : '', ps.down ? 'w dół ' + ps.down : ''].filter(Boolean).join(' · ')),
+    el('ul', { class: 'prog-list' }, ...moved.sort((a, b) => ({ down: 0, same: 1, up: 2 })[a.trend] - ({ down: 0, same: 1, up: 2 })[b.trend]).slice(0, 8).map(p =>
+      el('li', {}, el('span', {}, p.name), el('span', { class: 'muted' }, fmtSet(p.last)), el('span', { class: 'trend ' + p.trend }, trendLabel(p.last, p.prev)))))]
+    : [el('div', { class: 'wk-line' }, progress.size ? 'Pierwsze wyniki zapisane (' + progress.size + ' ćwiczeń). Porównanie pojawi się po kolejnym treningu tego samego planu.' : 'Pojawi się po pierwszym treningu z seriami.')]));
   $('#wPlans').replaceChildren(...plans.map(p => {
     const last = sorted.find(w => norm(w.name) === norm(p.name)), exs = p.exercises || [];
     exs.forEach(e => inPlan.add(norm(e.name)));
@@ -684,19 +752,35 @@ function renderTrening() {
     el('div', { class: 'wk-body' }, ...other.map(x => exRow(x.name, null, x)))));
   if (!plans.length && !other.length) $('#wPlans').append(el('div', { class: 'card muted' }, 'Brak planów. Powiedz Claude, jaki masz plan – zapisze go tutaj.'));
 
-  $('#wList').replaceChildren(...sorted.slice(0, 12).map(w => {
+  // Historia: zwinięta na dole (wpisy do wglądu, nie do codziennego patrzenia).
+  $('#wHistN').textContent = sorted.length ? '· ' + sorted.length : '';
+  $('#wList').replaceChildren(...sorted.slice(0, 30).map(w => {
     const n = setCounts(w), sets = w.workout_sets || [], byEx = new Map();
     for (const s of [...sets].sort((a, b) => a.set_no - b.set_no)) { if (!byEx.has(s.exercise)) byEx.set(s.exercise, []); byEx.get(s.exercise).push(s); }
-    const cnt = n.work ? n.work + ' ' + (n.work === 1 ? 'seria' : n.work % 10 >= 2 && n.work % 10 <= 4 && (n.work % 100 < 12 || n.work % 100 > 14) ? 'serie' : 'serii') : 'bez serii';
+    const st = w.status ?? 'zrobiony', cnt = st === 'odwolany' ? 'odwołane' : st === 'opuszczony' ? 'opuszczone' : n.work ? seriiTxt(n.work) : (w.kind && w.kind !== 'silownia' ? KIND[w.kind] : 'bez serii');
     return wkCard('w:' + (w.id || w.date + w.name), el('summary', {}, el('span', {}, w.name), el('span', { class: 'wk-when' }, dShort(w.date) + ' · ' + cnt)),
       el('div', { class: 'wk-body' }, w.notes ? el('p', { class: 'wk-notes' }, w.notes) : '',
         ...[...byEx].map(([ex, ss]) => el('div', { class: 'wk-ex' }, el('div', { class: 'nm' }, ex),
           el('div', { class: 'wk-sets' }, ...ss.flatMap((s, i) => [i ? ' · ' : '', el('span', { class: s.warmup ? 'wu' : '' }, (s.kg == null ? '' : fmtKg(s.kg) + '×') + (s.reps ?? '?') + (s.warmup ? ' rozgrz.' : '') + (s.rir ? ' RIR ' + s.rir : ''))]),
-            ss.every(s => s.kg == null) ? el('span', { class: 'wu' }, ' (masa ciała)') : '')))));
+            ss.every(s => s.kg == null) ? el('span', { class: 'wu' }, ' (masa ciała)') : '')))), 'wk-row');
   }));
-  if (!sorted.length) $('#wList').append(el('div', { class: 'card muted' }, 'Jeszcze nic. Po siłowni powiedz Claude, co zrobiłeś.'));
+  if (!sorted.length) $('#wList').append(el('div', { class: 'muted' }, 'Jeszcze nic. Po treningu powiedz Claude, co zrobiłeś.'));
 }
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderCoach(); }
+// Obserwacje z niedzieli na „Dziś”, dopóki nie klikniesz „Przeczytane” (np. po weekendzie poza domem).
+function renderObs() {
+  const o = coachRows.find(c => c.kind === 'obserwacje'), show = !!o && !o.accepted_at, op = parseCoach(o?.morning);
+  $('#obsCard').classList.toggle('hidden', !show); if (!show) return;
+  $('#obsTitle').textContent = 'Czego się nauczyłem w tym tygodniu · ' + dShort(o.date);
+  $('#obsItems').replaceChildren(...coachList(op.items));
+  $('#obsRep').classList.toggle('hidden', !o.report); $('#obsRepTxt').textContent = o.report || '';
+}
+$('#obsOk').onclick = async () => {
+  const o = coachRows.find(c => c.kind === 'obserwacje'); if (!o) return;
+  const at = new Date().toISOString(), { error } = await sb.from('coach').update({ accepted_at: at }).eq('id', o.id);
+  if (error) return fail(error);
+  o.accepted_at = at; renderObs(); toast('Przeczytane – zostaje w zakładce Coach');
+};
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderCoach(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
