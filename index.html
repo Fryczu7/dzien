@@ -220,8 +220,30 @@ details[open]>summary::after{transform:rotate(-135deg)}
 /* Telefon: elementy tylko dla komputera schowane. */
 .wideonly{display:none}
 /* Komputer (od 1000 px): jedna zakładka na cały ekran, zakładki u góry, karty w dwóch kolumnach (wiersz po wierszu). */
+/* Stoper pracy: jeden licznik, wybór „do czego” nad nim */
+.wkinds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.wkinds button{min-height:44px;padding:8px 6px;font-size:14px;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
+.wkinds button.on{background:var(--acc);color:#06210f;border-color:var(--acc);font-weight:600}
+.clock{font-size:56px;font-weight:300;letter-spacing:-.02em;text-align:center;font-variant-numeric:tabular-nums;margin:14px 0 6px;line-height:1.1}
+.clock.run{color:var(--acc-ink)}
+#wToggle{margin-top:6px;font-size:18px}
+#wToggle.stop{background:var(--bad);color:#fff}
+.wline{margin-top:12px}
+.wline .row{font-size:15px}
+.wline .muted{font-size:14px;font-variant-numeric:tabular-nums}
+.wbar{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:9;display:flex;align-items:center;gap:10px;padding:6px 8px 6px 16px;background:var(--card2);border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.wbar span{flex:1;min-width:0;font-weight:600}
+.wbar button{background:var(--bad);color:#fff;min-height:40px;padding:6px 16px}
+body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+/* Modlitwy: tekst do czytania, większa czcionka */
+.prayer{border-top:1px solid var(--line)}
+.prayer:first-child{border-top:0}
+.prayer>summary{font-weight:500}
+.prayer-txt{white-space:pre-wrap;font-size:18px;line-height:1.55;margin:4px 0 14px}
 @media (min-width:1000px){
   body{padding-bottom:0}
+  .wbar{bottom:0}
+  body.wbar-on{padding-bottom:64px}
   #app:not(.hidden){display:flex;flex-direction:column;min-height:100dvh}
   header{order:0;position:static;width:100%;max-width:1200px;margin:0 auto;padding:16px 24px 8px;gap:10px}
   header h1{font-size:24px}
@@ -235,7 +257,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   #v-dzis,#v-jedzenie,#v-trening,#v-asystent,#wPlans,#goals,#cWork,#cSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
   main section.hidden{display:none!important}
   main .card,.brakuje{margin:0}
-  .brakuje,#catchup,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cReport,#logout{grid-column:1/-1}
+  .brakuje,#catchup,#cardPraca,.sect,#wPlans,#wTrener,#wHist,#obsCard,#goals,#cWork,#cSummary,#cReport,#logout{grid-column:1/-1}
   #aDay{grid-row:span 2}
   .week{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sect{margin:12px 2px 0}
@@ -297,6 +319,12 @@ details[open]>summary::after{transform:rotate(-135deg)}
     <div id="morning"></div>
     <p id="morningOpt" class="muted hidden" style="margin:8px 0 0"></p>
   </div>
+
+  <!-- Modlitwy: teksty w bazie (tabela modlitwy), nowe dopisuje Claude -->
+  <details class="card" id="cardModlitwy">
+    <summary>Modlitwy</summary>
+    <div id="prayers"></div>
+  </details>
 
   <!-- Na wieczorną rozmowę (od 20:00, dziś): ściąga stanu dnia + przycisk do Claude -->
   <div class="card hidden" id="cardBrief">
@@ -380,6 +408,16 @@ details[open]>summary::after{transform:rotate(-135deg)}
       <div class="ask">Sen średnio (godziny, jeśli pamiętasz)</div><input id="cuSleep" type="text" inputmode="decimal" placeholder="np. 7,5">
       <div class="row" style="margin-top:12px"><button class="ghost grow" id="catchupSkip">Pomiń</button><button class="grow" id="catchupSave">Zapisz</button></div>
     </div>
+  </div>
+
+  <!-- Stoper pracy: Michał wybiera, do czego leci czas; każdy Start/Stop zapisuje się w tabeli praca -->
+  <div class="card" id="cardPraca">
+    <h2>Praca</h2>
+    <div class="wkinds" id="wKinds" role="group" aria-label="Do czego leci czas"></div>
+    <div class="clock" id="wClock" role="timer" aria-live="off">0:00:00</div>
+    <p class="muted hidden" id="wHint" style="text-align:center;margin:0 0 6px"></p>
+    <button id="wToggle" class="wide">Start</button>
+    <div id="wLines"></div>
   </div>
 </section>
 
@@ -472,6 +510,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 </section>
 
 </main>
+<div class="wbar hidden" id="wBar"><span id="wBarTxt"></span><button id="wBarStop">Stop</button></div>
 <nav>
   <button data-v="dzis" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>Dziś</button>
   <button data-v="jedzenie"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.3-3.5 4-3.5 7.5V14H17"/></svg>Jedzenie</button>
@@ -485,7 +524,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, fmtClock, fmtHM, workLine, workBrief } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -506,6 +545,7 @@ window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
 let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
 let day = null, rules = [], items = [], goals = [], weights = [], meals = [];
+let workRows = [], prayers = []; // odcinki stopera (ten tydzień + chodzący), modlitwy
 let workouts = [], plans = []; // treningi z seriami i plany (tylko odczyt)
 let coachRows = [], mealHist = [], qQuery = '', props = []; // props = propozycje asystenta (dziś + pomysły) // historia coacha, wszystkie posiłki (do „Szybko”), szukana fraza
 // Historia do zestawienia tygodnia i wykrywania luki: dni z ostatnich 14 dni, daty posiłków, nadrobienia.
@@ -548,7 +588,7 @@ async function loadHistory() {
 }
 async function loadStatic() {
   const today = ymd(new Date());
-  const [r, i, g, w, s, c, mh, wk, wp, pd, pp] = await Promise.all([
+  const [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
@@ -560,8 +600,13 @@ async function loadStatic() {
     sb.from('workout_plans').select('*').order('name'),
     sb.from('propozycje').select('*').eq('kind', 'dzien').eq('date', today).order('created_at'),
     sb.from('propozycje').select('*').eq('kind', 'pomysl').order('created_at', { ascending: false }).limit(100),
+    sb.from('praca').select('*').gte('date', weekStart(today)).order('started_at'),
+    sb.from('praca').select('*').is('ended_at', null), // chodzący stoper, nawet sprzed tego tygodnia
+    sb.from('modlitwy').select('*').order('sort').order('created_at'),
   ]);
-  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp].find(x => x.error); if (bad) failLoad(bad.error);
+  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo].find(x => x.error); if (bad) failLoad(bad.error);
+  if (pr.data && prRun.data) workRows = [...pr.data, ...prRun.data.filter(x => !pr.data.some(y => y.id === x.id))];
+  prayers = mo.data ?? prayers;
   if (pd.data && pp.data) props = [...pd.data, ...pp.data];
   workouts = wk.data ?? workouts; plans = wp.data ?? plans;
   // Przy błędzie zostaje to, co już było wczytane – ekran nie robi się pusty.
@@ -621,7 +666,7 @@ function renderDzis() {
   $('#cardWieczor').classList.toggle('hidden', part !== 'wieczor' || !!day.closed);
   const showBrief = isToday && part === 'wieczor';
   $('#cardBrief').classList.toggle('hidden', !showBrief);
-  if (showBrief) $('#briefList').replaceChildren(...eveningBrief(day, meals, cfg, props.filter(x => x.date === today)).map(t => el('li', {}, t)));
+  if (showBrief) $('#briefList').replaceChildren(...[...eveningBrief(day, meals, cfg, props.filter(x => x.date === today)), workBrief(workTotals(workRows, today, Date.now()).day)].map(t => el('li', {}, t)));
   $('#cardZamkniety').classList.toggle('hidden', !day.closed);
   $('#evening').replaceChildren(...cfg.evening_items.map(([k, l]) => checkRow(!!day.evening?.[k], l, () => saveDay({ evening: { ...day.evening, [k]: !day.evening?.[k] } }).then(renderDzis))));
   const broken = day.rules_broken || [], rulesDone = !!day.evening?.rules_done;
@@ -695,6 +740,7 @@ function weekCells() {
     el('div', {}, el('b', {}, c.trainingWeek + '/' + min), el('span', {}, 'treningi'), el('small', { class: c.trainingWeek >= min ? 'on' : '' }, c.trainingWeek >= min ? 'minimum zrobione' : 'brakuje ' + (min - c.trainingWeek))),
     el('div', {}, el('b', {}, ws.meds + '/' + ws.daysSoFar), el('span', {}, 'dni z lekami')),
     el('div', {}, el('b', {}, sleepTxt), el('span', {}, 'sen średnio')),
+    el('div', {}, el('b', {}, fmtHM(workTotals(workRows, today, Date.now()).week.getmed) + ' h'), el('span', {}, 'GetMed (cel ' + Math.round((cfg.work_targets?.getmed?.tydzien ?? 1200) / 60) + ' h)')),
   ];
 }
 // ---------- Check-in (coach od mentalu) ----------
@@ -981,7 +1027,7 @@ $('#obsOk').onclick = async () => {
   if (error) return fail(error);
   o.accepted_at = at; renderObs(); toast('Przeczytane – zostaje w zakładce Asystent');
 };
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); }
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); renderPraca(); renderPrayers(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
@@ -1126,6 +1172,64 @@ sb.auth.onAuthStateChange(async (ev) => {
   }
   if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start();
 });
+// ---------- Stoper pracy ----------
+// Jeden licznik. Wybór „do czego” robi Michał (zapamiętany na dany dzień); zmiana w trakcie = nowy odcinek od teraz.
+const WL = Object.fromEntries(WORK);
+const WORK_DEFAULT = { getmed: { dzien: 240, tydzien: 1200 }, zlap: { dzien: 60, tydzien: 300 } }; // gdy w ustawieniach brak celów
+let wKind = null;
+try { const v = JSON.parse(localStorage.getItem('wKind') || 'null'); if (v?.date === ymd(new Date())) wKind = v.kind; } catch {}
+const keepKind = k => { wKind = k; try { localStorage.setItem('wKind', JSON.stringify({ date: ymd(new Date()), kind: k })); } catch {} };
+let wBusy = false, wCardSeen = false;
+async function workStart(kind) {
+  const row = { date: ymd(new Date()), kind, started_at: new Date().toISOString() };
+  const { data, error } = await sb.from('praca').insert(row).select().single();
+  if (error) { fail(error); await refresh(true); return false; }
+  workRows.push(data); return true;
+}
+async function workStop(r) {
+  const ended_at = new Date().toISOString();
+  const { error } = await sb.from('praca').update({ ended_at }).eq('id', r.id);
+  if (error) { fail(error); return false; }
+  r.ended_at = ended_at; return true;
+}
+async function workAction(fn) { if (wBusy) return; wBusy = true; try { await fn(); } finally { wBusy = false; renderPraca(); } }
+function renderPraca() {
+  const today = ymd(new Date()), t = workTotals(workRows, today, Date.now()), run = t.running;
+  if (run) wKind = run.kind;
+  $('#wKinds').replaceChildren(...WORK.map(([k, l]) => el('button', { class: wKind === k ? 'on' : '', 'aria-pressed': String(wKind === k), onclick: () => workAction(async () => {
+    if (run && run.kind !== k) { if (await workStop(run)) { keepKind(k); await workStart(k); } }
+    else keepKind(k);
+  }) }, l)));
+  $('#wClock').textContent = fmtClock(t.runningMs); $('#wClock').classList.toggle('run', !!run);
+  const tg = $('#wToggle'); tg.textContent = run ? 'Stop' : 'Start'; tg.classList.toggle('stop', !!run);
+  const long = run && t.runningMs > 10 * 3600e3, hint = $('#wHint');
+  hint.classList.toggle('hidden', !long && !!(run || wKind));
+  hint.textContent = long ? 'Chodzi ponad 10 h – zapomniałeś wyłączyć? Zatrzymaj i powiedz Claude, o której skończyłeś.' : 'Wybierz wyżej, nad czym pracujesz.';
+  const tgt = cfg.work_targets || WORK_DEFAULT;
+  $('#wLines').replaceChildren(...WORK.map(([k, l]) => {
+    const goal = (tgt[k] || {}).tydzien, pct = goal ? Math.min(100, t.week[k] / (goal * 600)) : 0;
+    return el('div', { class: 'wline' }, el('div', { class: 'row' }, el('b', { class: 'grow' }, l), el('span', { class: 'muted' }, workLine(k, t, tgt, today))),
+      goal ? el('div', { class: 'bar' }, el('i', { style: 'width:' + pct + '%' })) : '');
+  }));
+  const bar = !!run && !wCardSeen;
+  $('#wBar').classList.toggle('hidden', !bar); document.body.classList.toggle('wbar-on', bar);
+  if (run) $('#wBarTxt').textContent = WL[run.kind] + ' · ' + fmtClock(t.runningMs);
+}
+$('#wToggle').onclick = () => workAction(async () => {
+  const run = workTotals(workRows, ymd(new Date()), Date.now()).running;
+  if (run) return void await workStop(run);
+  if (!wKind) return toast('Najpierw wybierz: GetMed, Złap Termin albo Moje projekty');
+  await workStart(wKind);
+});
+$('#wBarStop').onclick = () => workAction(async () => { const run = workRows.find(r => !r.ended_at); if (run) await workStop(run); });
+// Pasek „GetMed 1:23:05 · Stop” tylko wtedy, gdy karty stopera nie widać na ekranie.
+new IntersectionObserver(es => { wCardSeen = es.some(e => e.isIntersecting); renderPraca(); }).observe($('#cardPraca'));
+setInterval(() => { if (workRows.some(r => !r.ended_at)) renderPraca(); }, 1000);
+function renderPrayers() {
+  $('#prayers').replaceChildren(...(prayers.length ? prayers.map(m => el('details', { class: 'prayer' }, el('summary', {}, m.title), el('div', { class: 'prayer-txt' }, m.body)))
+    : [el('p', { class: 'muted' }, 'Brak modlitw. Powiedz Claude: „dodaj modlitwę …”.')]));
+}
+
 // Odświeżenie danych: po powrocie do apki, po kliknięciu w okno (na komputerze Claude bywa w drugim oknie obok)
 // i co minutę, gdy apka jest widoczna – żeby kalorie zapisane przez Claude pojawiały się same. Nie w trakcie pisania.
 let lastLoad = 0;

@@ -322,3 +322,33 @@ export function checkinMsg(date, ev) {
     'Odpowiedz mi teraz jako coach od mentalu – krótko i wprost. Potem zapisz tę odpowiedź w apce: select public.coach_evening_save(\'' + date + '\', \'<odpowiedź>\').']
     .filter(Boolean).join('\n');
 }
+
+// ---------- Stoper pracy ----------
+// Do czego leci czas (kolejność = kolejność przycisków).
+export const WORK = [['getmed', 'GetMed'], ['zlap', 'Złap Termin'], ['projekty', 'Moje projekty']];
+const msOf = (r, now) => Math.max(0, (r.ended_at ? Date.parse(r.ended_at) : now) - Date.parse(r.started_at));
+// Suma czasu dziś i w tym tygodniu (pon–dziś) na każdą rzecz; chodzący odcinek liczy się do „teraz”.
+export function workTotals(rows, today, now) {
+  const zero = () => Object.fromEntries(WORK.map(([k]) => [k, 0])), day = zero(), week = zero(), from = weekStart(today);
+  for (const r of rows) {
+    if (!(r.kind in day)) continue;
+    const ms = msOf(r, now);
+    if (r.date === today) day[r.kind] += ms;
+    if (from <= r.date && r.date <= today) week[r.kind] += ms;
+  }
+  const running = rows.find(r => !r.ended_at) || null;
+  return { day, week, running, runningMs: running ? msOf(running, now) : 0 };
+}
+const pad = n => String(n).padStart(2, '0');
+export const fmtClock = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 3600) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };
+export const fmtHM = ms => { const m = Math.floor(ms / 60000); return Math.floor(m / 60) + ':' + pad(m % 60); };
+export const isWorkday = s => { const d = new Date(s + 'T12:00:00Z').getUTCDay(); return d >= 1 && d <= 5; };
+// „dziś 2:10 / 4:00 · tydzień 6:30 / 20:00” – cel dzienny tylko pon–pt, tygodniowy zawsze, Moje projekty bez celu.
+export function workLine(kind, totals, targets, today) {
+  const t = (targets || {})[kind] || {}, goal = min => min ? ' / ' + fmtHM(min * 60000) : '';
+  return 'dziś ' + fmtHM(totals.day[kind]) + (isWorkday(today) ? goal(t.dzien) : '') + ' · tydzień ' + fmtHM(totals.week[kind]) + goal(t.tydzien);
+}
+export const workBrief = day => {
+  const parts = WORK.filter(([k]) => day[k] >= 60000).map(([k, l]) => l + ' ' + fmtHM(day[k]));
+  return 'Praca: ' + (parts.length ? parts.join(', ') : 'nic nie zmierzone');
+};
