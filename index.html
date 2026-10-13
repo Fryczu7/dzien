@@ -581,8 +581,7 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
     <div id="pMeals"></div>
     <div class="addrow"><input id="pMealName" placeholder="Nazwa" aria-label="Nazwa posiłku"><input id="pMealKcal" class="n" type="number" inputmode="numeric" placeholder="kcal" aria-label="kcal"><input id="pMealProt" class="n" type="number" inputmode="numeric" placeholder="białko" aria-label="białko w gramach"><button id="pMealAdd" aria-label="Dodaj">+</button></div>
   </div></details>
-  <button class="ghost wide" id="pStart" style="margin-top:24px">Start od nowa (jak nowa osoba)</button>
-  <button class="ghost wide" id="pLogout" style="margin-top:8px">Wyloguj</button>
+  <button class="ghost wide" id="pLogout" style="margin-top:24px">Wyloguj</button>
 </aside>
 <!-- Start dla nowej osoby: 3 kroki, zapis na końcu (settings.onboarded = true) -->
 <div class="start hidden" id="start" role="dialog" aria-modal="true" aria-labelledby="stTitle">
@@ -1383,7 +1382,6 @@ $('#stNext').onclick = async () => {
   startClose(); applyOff(); renderAll(); toast('Gotowe – zmienisz to w ☰');
 };
 $('#stSkip').onclick = async () => { await saveSettings({ onboarded: true }); startClose(); };
-$('#pStart').onclick = startOpen;
 
 $('#pLogout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
