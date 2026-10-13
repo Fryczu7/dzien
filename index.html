@@ -230,6 +230,21 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .drawer-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .drawer-head h2{flex:1;margin:0;font-size:20px}
 .drawer h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 2px 8px;font-weight:600}
+.psec{border-bottom:1px solid var(--line)}
+.psec>summary{min-height:52px;font-weight:600;gap:8px}
+.psec>summary .muted{font-weight:400;font-size:14px}
+.psec[open]>summary{margin-bottom:4px}
+.psec>div{padding-bottom:14px}
+.psub{margin-top:8px}
+.psub>summary{min-height:44px;font-weight:500;font-size:15px}
+/* Start dla nowej osoby: pełny ekran, 3 kroki */
+.start{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+.start-in{max-width:520px;margin:0 auto}
+.start .steps{margin:0 0 18px}
+.start h2{font-size:24px;margin:0 0 6px}
+.start .lead{color:var(--muted);margin:0 0 16px}
+.start-nav{display:flex;gap:8px;margin-top:22px}
+.start-nav button{flex:1;min-height:48px}
 .sw{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;background:none;color:var(--text);border-radius:0;padding:6px 2px;font-weight:500;text-align:left;border-bottom:1px solid var(--line)}
 .sw:last-child{border-bottom:0}
 .sw .t{flex:1;min-width:0}
@@ -546,21 +561,40 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" inert>
   <div class="drawer-head"><h2 id="drawerTitle">Ustawienia</h2><button class="x" id="menuClose" aria-label="Zamknij">×</button></div>
-  <h3>Na ekranie „Dziś”</h3><div id="pCards"></div>
-  <h3>Zakładki</h3><div id="pTabs"></div>
-  <h3>Cele</h3><div id="pGoals"></div><div class="saved" id="pGoalsSt"></div>
-  <h3>Rano – rzeczy do odhaczenia</h3><div id="pMorning"></div>
-  <div class="addrow"><input id="pMorningNew" placeholder="Nowa rzecz, np. Witamina D" aria-label="Nowa rzecz poranna"><button id="pMorningAdd" aria-label="Dodaj">+</button></div>
-  <h3>Modlitwy</h3><div id="pPrayers"></div>
-  <details id="pPrayerAdd"><summary>Dodaj modlitwę</summary>
-    <input id="pPrayerTitle" placeholder="Tytuł" aria-label="Tytuł modlitwy" style="margin-top:8px">
-    <textarea id="pPrayerBody" placeholder="Tekst modlitwy" aria-label="Tekst modlitwy" rows="5"></textarea>
-    <button id="pPrayerSave" class="wide" style="margin-top:8px">Dodaj modlitwę</button>
-  </details>
-  <h3>Szybkie posiłki</h3><div id="pMeals"></div>
-  <div class="addrow"><input id="pMealName" placeholder="Nazwa" aria-label="Nazwa posiłku"><input id="pMealKcal" class="n" type="number" inputmode="numeric" placeholder="kcal" aria-label="kcal"><input id="pMealProt" class="n" type="number" inputmode="numeric" placeholder="białko" aria-label="białko w gramach"><button id="pMealAdd" aria-label="Dodaj">+</button></div>
-  <button class="ghost wide" id="pLogout" style="margin-top:28px">Wyloguj</button>
+  <!-- Każda sekcja zwinięta – rozwijasz tylko tę, której potrzebujesz -->
+  <details class="psec"><summary>Na ekranie „Dziś” <span class="muted" id="pCardsN"></span></summary><div id="pCards"></div></details>
+  <details class="psec"><summary>Zakładki <span class="muted" id="pTabsN"></span></summary><div id="pTabs"></div></details>
+  <details class="psec"><summary>Cele</summary><div><div id="pGoals"></div><div class="saved" id="pGoalsSt"></div></div></details>
+  <details class="psec"><summary>Rano – rzeczy do odhaczenia <span class="muted" id="pMorningN"></span></summary><div>
+    <div id="pMorning"></div>
+    <div class="addrow"><input id="pMorningNew" placeholder="Nowa rzecz, np. Witamina D" aria-label="Nowa rzecz poranna"><button id="pMorningAdd" aria-label="Dodaj">+</button></div>
+  </div></details>
+  <details class="psec"><summary>Moje modlitwy <span class="muted" id="pPrayersN"></span></summary><div>
+    <div id="pPrayers"></div>
+    <details class="psub" id="pPrayerAdd"><summary>Dodaj modlitwę</summary>
+      <input id="pPrayerTitle" placeholder="Tytuł" aria-label="Tytuł modlitwy" style="margin-top:8px">
+      <textarea id="pPrayerBody" placeholder="Tekst modlitwy" aria-label="Tekst modlitwy" rows="5"></textarea>
+      <button id="pPrayerSave" class="wide" style="margin-top:8px">Dodaj modlitwę</button>
+    </details>
+  </div></details>
+  <details class="psec"><summary>Szybkie posiłki <span class="muted" id="pMealsN"></span></summary><div>
+    <div id="pMeals"></div>
+    <div class="addrow"><input id="pMealName" placeholder="Nazwa" aria-label="Nazwa posiłku"><input id="pMealKcal" class="n" type="number" inputmode="numeric" placeholder="kcal" aria-label="kcal"><input id="pMealProt" class="n" type="number" inputmode="numeric" placeholder="białko" aria-label="białko w gramach"><button id="pMealAdd" aria-label="Dodaj">+</button></div>
+  </div></details>
+  <button class="ghost wide" id="pStart" style="margin-top:24px">Start od nowa (jak nowa osoba)</button>
+  <button class="ghost wide" id="pLogout" style="margin-top:8px">Wyloguj</button>
 </aside>
+<!-- Start dla nowej osoby: 3 kroki, zapis na końcu (settings.onboarded = true) -->
+<div class="start hidden" id="start" role="dialog" aria-modal="true" aria-labelledby="stTitle">
+  <div class="start-in">
+    <div class="steps" id="stSteps"><i></i><i></i><i></i></div>
+    <h2 id="stTitle"></h2>
+    <p class="lead" id="stLead"></p>
+    <div id="stBody"></div>
+    <div class="start-nav"><button class="ghost" id="stBack">Wstecz</button><button id="stNext">Dalej</button></div>
+    <button class="ghost wide small" id="stSkip" style="margin-top:10px">Pomiń – zostaw jak jest</button>
+  </div>
+</div>
 <div class="wbar hidden" id="wBar"><span id="wBarTxt"></span><button id="wBarStop">Stop</button></div>
 <nav>
   <button data-v="dzis" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>Dziś</button>
@@ -663,7 +697,7 @@ async function loadStatic() {
   // Przy błędzie zostaje to, co już było wczytane – ekran nie robi się pusty.
   rules = r.data ?? rules; items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights;
   coachRows = c.data ?? coachRows; mealHist = mh.data ?? mealHist;
-  if (s.data) cfg = s.data;
+  if (s.data) { cfg = s.data; cfgState = 'jest'; } else if (!s.error) cfgState = 'nowy'; // nowy = konto bez wiersza ustawień
   applyOff();
 }
 
@@ -1209,9 +1243,11 @@ async function start() {
   setOffline(!navigator.onLine);
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
+  uid = session.user.id;
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   await Promise.all([loadDay(), loadStatic(), loadHistory()]); lastLoad = Date.now();
   renderAll(); show(view);
+  if (cfgState === 'nowy' || (cfgState === 'jest' && !cfg.onboarded)) startOpen(); // pierwsze wejście nowej osoby; przy błędzie wczytania – nie
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
 $('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
@@ -1229,12 +1265,14 @@ sb.auth.onAuthStateChange(async (ev) => {
 });
 // ---------- Panel ustawień ----------
 // Wyłączone karty i zakładki: settings.ui.off (lista kluczy) → atrybut body[data-off], resztę robi CSS.
+let uid = null, cfgState = 'brak'; // id zalogowanej osoby; czy ustawienia wczytane (start pokazujemy tylko przy pewności)
 const offList = () => cfg.ui?.off || [];
 function applyOff() { document.body.dataset.off = offList().join(' '); if (!visibleViews([view], offList()).length) show('dzis'); }
 async function saveSettings(patch, st) {
   const before = { ...cfg }; Object.assign(cfg, patch);
   if (st) { st.textContent = 'Zapisuję…'; st.className = 'saved'; }
-  const { error } = await sb.from('settings').update({ ...patch, updated_at: new Date().toISOString() }).eq('user_id', cfg.user_id);
+  // upsert: nowa osoba może jeszcze nie mieć wiersza ustawień
+  const { error } = await sb.from('settings').upsert({ user_id: uid, ...patch, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
   if (error) { cfg = before; fail(error); if (st) { st.textContent = 'Nie zapisano'; st.className = 'saved err'; } renderDrawer(); return false; }
   if (st) { st.textContent = 'Zapisane ✓'; st.className = 'saved ok'; }
   return true;
@@ -1253,6 +1291,9 @@ function goalInput(label, value, onSave, unit) {
 }
 function renderDrawer() {
   const off = offList(), st = $('#pGoalsSt');
+  $('#pCardsN').textContent = '· ' + PANEL_CARDS.filter(([k]) => !off.includes(k)).length + ' z ' + PANEL_CARDS.length;
+  $('#pTabsN').textContent = '· ' + PANEL_TABS.filter(([k]) => !off.includes('tab-' + k)).length + ' z ' + PANEL_TABS.length;
+  $('#pMorningN').textContent = '· ' + (cfg.morning_items || []).length; $('#pPrayersN').textContent = '· ' + prayers.length; $('#pMealsN').textContent = '· ' + (cfg.quick_meals || []).length;
   $('#pCards').replaceChildren(...PANEL_CARDS.map(([k, l]) => sw(!off.includes(k), l, () => toggleOff(k))));
   $('#pTabs').replaceChildren(...PANEL_TABS.map(([k, l]) => sw(!off.includes('tab-' + k), l, () => toggleOff('tab-' + k))));
   const wt = cfg.work_targets || WORK_DEFAULT;
@@ -1311,6 +1352,39 @@ $('#pMealAdd').onclick = () => {
   if (!n || !(kc > 0)) return toast('Wpisz nazwę i kalorie');
   saveSettings({ quick_meals: [...(cfg.quick_meals || []), [n, kc, pr >= 0 ? pr : null]] }).then(ok => { if (ok) { $('#pMealName').value = $('#pMealKcal').value = $('#pMealProt').value = ''; renderDrawer(); renderJedzenie(); } });
 };
+// ---------- Start dla nowej osoby ----------
+// 3 kroki: karty na Dziś → zakładki → cele. Szkic trzymamy lokalnie, zapis dopiero „Gotowe” (albo „Pomiń”).
+let st = null;
+function startOpen() {
+  st = { step: 0, off: [...offList()], kcal: cfg.kcal_target ?? 2500, prot: cfg.protein_target ?? 120, tmin: cfg.training_min ?? 3, pmax: cfg.plan_max ?? 3 };
+  drawer(false); $('#start').classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderStart();
+}
+function startClose() { $('#start').classList.add('hidden'); document.body.style.overflow = ''; st = null; }
+function renderStart() {
+  const flip = k => { st.off = st.off.includes(k) ? st.off.filter(x => x !== k) : [...st.off, k]; renderStart(); };
+  const num = (label, key, unit) => { const f = el('input', { type: 'number', inputmode: 'numeric', 'aria-label': label }); f.value = st[key]; f.addEventListener('input', () => { st[key] = f.value; }); return el('div', { class: 'goal' }, el('span', {}, label), f, unit ? el('span', { class: 'muted u' }, unit) : ''); };
+  const S = [
+    ['Co chcesz widzieć na „Dziś”?', 'Zostaw tylko to, z czego korzystasz. Wszystko zmienisz później w ☰.', () => PANEL_CARDS.map(([k, l]) => sw(!st.off.includes(k), l, () => flip(k)))],
+    ['Które zakładki?', '„Dziś” jest zawsze. Resztę możesz schować.', () => PANEL_TABS.map(([k, l]) => sw(!st.off.includes('tab-' + k), l, () => flip('tab-' + k)))],
+    ['Twoje cele', 'Liczby, do których apka porównuje Twój dzień i tydzień.', () => [num('Kalorie dziennie', 'kcal', 'kcal'), num('Białko dziennie', 'prot', 'g'), num('Treningi – minimum w tygodniu', 'tmin'), num('Plan – max rzeczy na dzień', 'pmax')]],
+  ];
+  const [t, lead, body] = S[st.step];
+  $('#stTitle').textContent = t; $('#stLead').textContent = lead; $('#stBody').replaceChildren(...body());
+  [...$('#stSteps').children].forEach((i, n) => i.classList.toggle('on', n <= st.step));
+  $('#stBack').classList.toggle('hidden', st.step === 0);
+  $('#stNext').textContent = st.step === S.length - 1 ? 'Gotowe' : 'Dalej';
+}
+$('#stBack').onclick = () => { st.step--; renderStart(); };
+$('#stNext').onclick = async () => {
+  if (st.step < 2) { st.step++; return renderStart(); }
+  const n = (v, a, b, d) => { const x = parseInt(v, 10); return x >= a && x <= b ? x : d; };
+  const ok = await saveSettings({ ui: { ...(cfg.ui || {}), off: st.off }, kcal_target: n(st.kcal, 1000, 6000, cfg.kcal_target ?? 2500), protein_target: n(st.prot, 30, 400, cfg.protein_target ?? 120), training_min: n(st.tmin, 0, 14, 3), plan_max: n(st.pmax, 1, 10, 3), onboarded: true });
+  if (!ok) return;
+  startClose(); applyOff(); renderAll(); toast('Gotowe – zmienisz to w ☰');
+};
+$('#stSkip').onclick = async () => { await saveSettings({ onboarded: true }); startClose(); };
+$('#pStart').onclick = startOpen;
+
 $('#pLogout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 // ---------- Stoper pracy ----------
