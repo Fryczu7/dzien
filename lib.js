@@ -58,7 +58,7 @@ export function weekStats(days, catchups, today) {
   for (const x of c) if (x.sleep_h) { sleepSum += Number(x.sleep_h) * x.part; sleepN += x.part; }
   return {
     rehab: w.filter(d => d.rehab).length + Math.round(sum('rehab_count')),
-    training: w.filter(d => d.training && d.training.trim()).length + Math.round(sum('training_count')),
+    training: w.filter(d => isTrainingText(d.training)).length + Math.round(sum('training_count')),
     meds: w.filter(d => d.morning?.leki).length + Math.round(sum('meds_days')),
     daysSoFar: Math.round((Date.parse(today) - Date.parse(from)) / 864e5) + 1,
     sleepAvg: sleepN ? Math.round(sleepSum / sleepN * 10) / 10 : null,
@@ -211,7 +211,7 @@ export function trainingWeeks(workouts, days, today, n = 4) {
     const from = addDays(weekStart(today), -7 * i), to = addDays(from, 6), inW = d => d && from <= d && d <= to && d <= today;
     const ws = workouts.filter(w => inW(w.date)), st = w => w.status ?? 'zrobiony';
     const done = ws.filter(w => st(w) === 'zrobiony'), doneDates = new Set(ws.map(w => w.date));
-    const extra = days.filter(d => inW(d.date) && d.training && d.training.trim() && !doneDates.has(d.date));
+    const extra = days.filter(d => inW(d.date) && isTrainingText(d.training) && !doneDates.has(d.date));
     const byKind = {};
     for (const w of done) byKind[w.kind || 'inne'] = (byKind[w.kind || 'inne'] || 0) + 1;
     if (extra.length) byKind.inne = (byKind.inne || 0) + extra.length;
@@ -264,7 +264,7 @@ export function counters({ days, meals, catchups = [], workouts = [], today, kca
 
 // Decyzja Michała o propozycji: zmiana w planie dnia + pola do zapisania w propozycje (decided_at dokłada wywołujący).
 // Pomysł (kind 'pomysl') nie trafia do planu dnia. Max 3 rzeczy w planie (rehab i leki mają własne przyciski).
-export function applyDecision(plan, prop, action, text = '') {
+export function applyDecision(plan, prop, action, text = '', max = 3) {
   const t = String(text || '').trim();
   if (action === 'nie') return { plan, patch: { status: 'odrzucona', reply: t || null } };
   if (action === 'zmien' && !t) return { error: 'pusto' };
@@ -273,7 +273,7 @@ export function applyDecision(plan, prop, action, text = '') {
   const item = { text: action === 'zmien' ? t : prop.title, done: false, src: 'asystent', pid: prop.id };
   const base = plan || [], at = base.findIndex(p => p.pid === prop.id);
   if (at >= 0) return { plan: base.map((p, i) => i === at ? { ...p, text: item.text } : p), patch };
-  if (planWithoutToggles(base).length >= 3) return { error: 'max3' };
+  if (planWithoutToggles(base).length >= max) return { error: 'max3' };
   return { plan: [...base, item], patch };
 }
 export const undoDecision = (plan, prop) => (plan || []).filter(p => p.pid !== prop.id);
@@ -352,3 +352,27 @@ export const workBrief = day => {
   const parts = WORK.filter(([k]) => day[k] >= 60000).map(([k, l]) => l + ' ' + fmtHM(day[k]));
   return 'Praca: ' + (parts.length ? parts.join(', ') : 'nic nie zmierzone');
 };
+
+// Tekst w days.training mówiący, że treningu NIE było („brak – wspinaczka odpuszczona”), nie liczy się jako trening.
+export const isTrainingText = t => { const s = String(t || '').trim().toLowerCase(); return !!s && !/^(brak|nie |nie$|odpuszcz|odwoł|odwol|-|–)/.test(s); };
+
+// ---------- Panel ustawień ----------
+// Karty na „Dziś” i zakładki, które można wyłączyć (klucze w settings.ui.off; zakładki z przedrostkiem „tab-”).
+export const PANEL_CARDS = [['propozycje', 'Propozycje asystenta'], ['obserwacje', 'Czego się nauczyłem (niedziela)'], ['rano', 'Rano – rzeczy do odhaczenia'], ['modlitwy', 'Modlitwy'], ['plan', 'Plan na dziś'], ['tydzien', 'Ten tydzień'], ['sen', 'Sen i trening'], ['wieczor', 'Wieczór (ściąga, check-in, zamknięcie dnia)'], ['praca', 'Stoper pracy']];
+export const PANEL_TABS = [['jedzenie', 'Jedzenie'], ['zakupy', 'Zakupy'], ['trening', 'Trening'], ['asystent', 'Asystent'], ['coach', 'Coach']];
+export const visibleViews = (views, off = []) => views.filter(v => v === 'dzis' || !off.includes('tab-' + v));
+// Klucz nowej rzeczy porannej z jej nazwy (bez polskich znaków), bez powtórek.
+export function itemKey(label, items = []) {
+  const base = norm(label).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'rzecz';
+  const used = new Set(items.map(([k]) => k)); let k = base, n = 2;
+  while (used.has(k)) k = base + '_' + n++;
+  return k;
+}
+// Godziny wpisane w panelu („4”, „4,5”, „3:30”) → minuty; minuty → „4,5”.
+export function parseHours(v) {
+  const s = String(v ?? '').trim(); let m;
+  if ((m = s.match(/^(\d+):(\d{1,2})$/))) return +m[1] * 60 + +m[2];
+  const h = parseFloat(s.replace(',', '.'));
+  return Number.isFinite(h) && h >= 0 && /^[\d.,]+$/.test(s) ? Math.round(h * 60) : null;
+}
+export const fmtHoursInput = min => String(Math.round(min / 6) / 10).replace('.', ',');

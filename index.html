@@ -220,6 +220,35 @@ details[open]>summary::after{transform:rotate(-135deg)}
 /* Telefon: elementy tylko dla komputera schowane. */
 .wideonly{display:none}
 /* Komputer (od 1000 px): jedna zakładka na cały ekran, zakładki u góry, karty w dwóch kolumnach (wiersz po wierszu). */
+/* Panel ustawień (lewa strona): przełączniki kart i zakładek, cele, listy */
+.menubtn{background:none;color:var(--text);padding:0;width:44px;height:44px;display:grid;place-items:center;margin-left:-8px;flex:none}
+.menubtn .ic{width:24px;height:24px}
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / .45);z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(380px,88vw);background:var(--bg);border-right:1px solid var(--line);z-index:31;overflow-y:auto;padding:calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));transform:translateX(-102%);transition:transform .22s cubic-bezier(.2,.8,.2,1);overscroll-behavior:contain}
+.drawer.on{transform:none}
+.drawer-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.drawer-head h2{flex:1;margin:0;font-size:20px}
+.drawer h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 2px 8px;font-weight:600}
+.sw{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;background:none;color:var(--text);border-radius:0;padding:6px 2px;font-weight:500;text-align:left;border-bottom:1px solid var(--line)}
+.sw:last-child{border-bottom:0}
+.sw .t{flex:1;min-width:0}
+.sw i{width:42px;height:26px;border-radius:13px;background:var(--card2);border:1px solid var(--line);position:relative;flex:none;transition:background .15s}
+.sw i::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.sw[aria-checked="true"] i{background:var(--acc);border-color:var(--acc)}
+.sw[aria-checked="true"] i::after{transform:translateX(16px);background:#06210f}
+.goal{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center;padding:6px 0}
+.goal input{text-align:right;font-variant-numeric:tabular-nums}
+.goal .u{grid-column:1/-1;margin:-4px 0 0;font-size:13px}
+.lst{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:1px solid var(--line)}
+.lst .t{flex:1;min-width:0}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.addrow input{min-width:0}
+.addrow .n{max-width:76px}
+.drawer textarea{margin-top:6px}
+/* Wyłączone w panelu: karta albo zakładka znika, dane zostają */
+body[data-off~="propozycje"] #coachMorning,body[data-off~="obserwacje"] #obsCard,body[data-off~="rano"] #cardRano,body[data-off~="modlitwy"] #cardModlitwy,body[data-off~="plan"] #planBox,body[data-off~="tydzien"] #weekCard,body[data-off~="sen"] #allDay,body[data-off~="wieczor"] #cardBrief,body[data-off~="wieczor"] #cardWieczor,body[data-off~="wieczor"] #cardZamkniety,body[data-off~="wieczor"] #ciSlotDzis,body[data-off~="praca"] #cardPraca,body[data-off~="praca"] #wBar,
+body[data-off~="tab-jedzenie"] nav [data-v=jedzenie],body[data-off~="tab-zakupy"] nav [data-v=zakupy],body[data-off~="tab-trening"] nav [data-v=trening],body[data-off~="tab-asystent"] nav [data-v=asystent],body[data-off~="tab-coach"] nav [data-v=coach]{display:none!important}
 /* Stoper pracy: jeden licznik, wybór „do czego” nad nim */
 .wkinds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .wkinds button{min-height:44px;padding:8px 6px;font-size:14px;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500}
@@ -285,6 +314,7 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 
 <div id="app" class="hidden">
 <header>
+  <button class="menubtn" id="menuOpen" aria-label="Ustawienia" aria-controls="drawer" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <h1 id="title">Dziś</h1>
   <button class="datebtn" id="prevDay" aria-label="Poprzedni dzień" title="Poprzedni dzień (←)">‹</button>
   <button class="datebtn" id="dateLbl" title="Wróć do dziś"></button>
@@ -370,9 +400,11 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
   </div>
 
   <div class="card">
-    <h2>Plan – max 3</h2>
+    <div id="planBox">
+    <h2 id="planTitle">Plan – max 3</h2>
     <div id="plan"></div>
     <div class="row plan-add" id="planAddRow"><input id="planNew" placeholder="Dodaj rzecz na dziś" aria-label="Dodaj rzecz na dziś"><button id="planAdd" aria-label="Dodaj">+</button></div>
+    </div>
     <div class="toggles">
       <button class="toggle" id="tRehab" aria-pressed="false"><span class="box"></span>Rehab</button>
       <button class="toggle" id="tLeki" aria-pressed="false"><span class="box"></span>Leki rano</button>
@@ -381,7 +413,7 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
     <div class="bar"><i id="dKcalBar" style="width:0"></i></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="weekCard">
     <h2>Ten tydzień</h2>
     <div class="week" id="week"></div>
   </div>
@@ -510,6 +542,25 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 </section>
 
 </main>
+<!-- Panel ustawień: wysuwany z lewej (☰ w nagłówku) -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" inert>
+  <div class="drawer-head"><h2 id="drawerTitle">Ustawienia</h2><button class="x" id="menuClose" aria-label="Zamknij">×</button></div>
+  <h3>Na ekranie „Dziś”</h3><div id="pCards"></div>
+  <h3>Zakładki</h3><div id="pTabs"></div>
+  <h3>Cele</h3><div id="pGoals"></div><div class="saved" id="pGoalsSt"></div>
+  <h3>Rano – rzeczy do odhaczenia</h3><div id="pMorning"></div>
+  <div class="addrow"><input id="pMorningNew" placeholder="Nowa rzecz, np. Witamina D" aria-label="Nowa rzecz poranna"><button id="pMorningAdd" aria-label="Dodaj">+</button></div>
+  <h3>Modlitwy</h3><div id="pPrayers"></div>
+  <details id="pPrayerAdd"><summary>Dodaj modlitwę</summary>
+    <input id="pPrayerTitle" placeholder="Tytuł" aria-label="Tytuł modlitwy" style="margin-top:8px">
+    <textarea id="pPrayerBody" placeholder="Tekst modlitwy" aria-label="Tekst modlitwy" rows="5"></textarea>
+    <button id="pPrayerSave" class="wide" style="margin-top:8px">Dodaj modlitwę</button>
+  </details>
+  <h3>Szybkie posiłki</h3><div id="pMeals"></div>
+  <div class="addrow"><input id="pMealName" placeholder="Nazwa" aria-label="Nazwa posiłku"><input id="pMealKcal" class="n" type="number" inputmode="numeric" placeholder="kcal" aria-label="kcal"><input id="pMealProt" class="n" type="number" inputmode="numeric" placeholder="białko" aria-label="białko w gramach"><button id="pMealAdd" aria-label="Dodaj">+</button></div>
+  <button class="ghost wide" id="pLogout" style="margin-top:28px">Wyloguj</button>
+</aside>
 <div class="wbar hidden" id="wBar"><span id="wBarTxt"></span><button id="wBarStop">Stop</button></div>
 <nav>
   <button data-v="dzis" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>Dziś</button>
@@ -524,7 +575,7 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, fmtClock, fmtHM, workLine, workBrief } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -613,6 +664,7 @@ async function loadStatic() {
   rules = r.data ?? rules; items = i.data ?? items; goals = g.data ?? goals; weights = w.data ?? weights;
   coachRows = c.data ?? coachRows; mealHist = mh.data ?? mealHist;
   if (s.data) cfg = s.data;
+  applyOff();
 }
 
 // ---------- render ----------
@@ -692,7 +744,8 @@ function renderDzis() {
   const pl = $('#plan'), shown = planWithoutToggles(plan);
   pl.replaceChildren(...shown.map(({ p, idx }) => { const r = checkRow(p.done, p.text, () => { const np = plan.map((q, j) => j === idx ? { ...q, done: !q.done } : q); saveDay({ plan: np }).then(renderDzis); }); r.append(el('button', { class: 'x', 'aria-label': 'Usuń', onclick: e => { e.stopPropagation(); if (confirm('Usunąć „' + p.text + '”?')) saveDay({ plan: plan.filter((_, j) => j !== idx) }).then(renderDzis); } }, '×')); return r; }));
   if (!shown.length) pl.append(el('div', { class: 'muted' }, 'Pusto. Wpisz niżej albo powiedz Claude, co dziś najważniejsze.'));
-  $('#planAddRow').classList.toggle('hidden', shown.length >= 3);
+  const pmax = cfg.plan_max ?? 3; $('#planTitle').textContent = 'Plan – max ' + pmax;
+  $('#planAddRow').classList.toggle('hidden', shown.length >= pmax);
   $('#tRehab').classList.toggle('on', !!day.rehab); $('#tRehab').setAttribute('aria-pressed', String(!!day.rehab));
   $('#tLeki').classList.toggle('on', !!day.morning?.leki); $('#tLeki').setAttribute('aria-pressed', String(!!day.morning?.leki));
   const k = meals.reduce((a, m) => a + (m.kcal || 0), 0), p = meals.reduce((a, m) => a + (m.protein || 0), 0);
@@ -878,7 +931,7 @@ async function saveTodayPlan(plan) {
 }
 async function decide(p, action, text) {
   let before; try { before = await todayPlan(); } catch (e) { return fail(e); }
-  const r = applyDecision(before, p, action, text);
+  const r = applyDecision(before, p, action, text, cfg.plan_max ?? 3);
   if (r.error === 'max3') return toast('Plan ma już 3 rzeczy – odhacz albo usuń jedną');
   if (r.error === 'pusto') return toast('Wpisz swoją wersję');
   if (r.plan !== before && !(await saveTodayPlan(r.plan))) return;
@@ -1052,6 +1105,7 @@ function flushText() { for (const [, p] of pending) { clearTimeout(p.t); p.run()
 window.addEventListener('pagehide', flushText);
 
 function show(v) {
+  if (!visibleViews([v], offList()).length) v = 'dzis'; // wyłączona w panelu zakładka → Dziś
   view = v; document.querySelectorAll('main section[id^="v-"]').forEach(s => s.classList.toggle('hidden', s.id !== 'v-' + v));
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.toggleAttribute('aria-current', b.dataset.v === v); });
   $('#title').textContent = { dzis: 'Dziś', jedzenie: 'Jedzenie', zakupy: 'Zakupy', trening: 'Trening', asystent: 'Asystent', coach: 'Coach' }[v];
@@ -1063,7 +1117,7 @@ function show(v) {
 // Strzałki ← → zmieniają dzień, cyfry 1–6 zakładki (poza polami tekstowymi).
 document.addEventListener('keydown', e => {
   if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,textarea,select') || $('#app').classList.contains('hidden')) return;
-  if (/^[1-6]$/.test(e.key)) return show(VIEWS[+e.key - 1]); // 1–6 = zakładki
+  if (/^[1-6]$/.test(e.key)) { const v = visibleViews(VIEWS, offList())[+e.key - 1]; return v ? show(v) : undefined; } // 1–6 = widoczne zakładki
   if (e.key === 'ArrowLeft') shift(-1); else if (e.key === 'ArrowRight' && cur < ymd(new Date())) shift(1);
 });
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
@@ -1072,7 +1126,7 @@ const VIEWS = ['dzis', 'jedzenie', 'zakupy', 'trening', 'asystent', 'coach']; le
 document.querySelector('main').addEventListener('touchstart', e => { touch = e.target.closest('input,textarea,select,.work,.report') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; }, { passive: true });
 document.querySelector('main').addEventListener('touchend', e => {
   if (!touch) return; const dx = e.changedTouches[0].clientX - touch.x, dy = e.changedTouches[0].clientY - touch.y; touch = null;
-  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) { const v = nextView(VIEWS, view, dx < 0 ? 1 : -1); if (v !== view) show(v); }
+  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) { const v = nextView(visibleViews(VIEWS, offList()), view, dx < 0 ? 1 : -1); if (v !== view) show(v); }
 }, { passive: true });
 $('#coachNight').onclick = () => show('asystent'); $('#coachProps').onclick = () => show('asystent');
 $('#qSearch').oninput = e => { qQuery = e.target.value; renderQuick(); };
@@ -1093,7 +1147,8 @@ $('#bed').onchange = onSleep; $('#wake').onchange = onSleep;
 $('#planAdd').onclick = () => {
   const t = $('#planNew').value.trim(); if (!t) return;
   // Zasada: max 3 główne rzeczy dziennie – odhaczona też się liczy (nie dokładamy czwartej).
-  if (planWithoutToggles(day.plan).length >= 3) return toast('Max 3 rzeczy na dzień – czwartej nie dokładamy');
+  const pmax = cfg.plan_max ?? 3;
+  if (planWithoutToggles(day.plan).length >= pmax) return toast('Max ' + pmax + ' na dzień – więcej nie dokładamy (limit zmienisz w ☰)');
   $('#planNew').value = ''; saveDay({ plan: [...(day.plan || []), { text: t, done: false }] }).then(renderDzis);
 };
 $('#planNew').onkeydown = e => { if (e.key === 'Enter') $('#planAdd').click(); };
@@ -1172,6 +1227,92 @@ sb.auth.onAuthStateChange(async (ev) => {
   }
   if (ev === 'SIGNED_IN' && $('#app').classList.contains('hidden')) start();
 });
+// ---------- Panel ustawień ----------
+// Wyłączone karty i zakładki: settings.ui.off (lista kluczy) → atrybut body[data-off], resztę robi CSS.
+const offList = () => cfg.ui?.off || [];
+function applyOff() { document.body.dataset.off = offList().join(' '); if (!visibleViews([view], offList()).length) show('dzis'); }
+async function saveSettings(patch, st) {
+  const before = { ...cfg }; Object.assign(cfg, patch);
+  if (st) { st.textContent = 'Zapisuję…'; st.className = 'saved'; }
+  const { error } = await sb.from('settings').update({ ...patch, updated_at: new Date().toISOString() }).eq('user_id', cfg.user_id);
+  if (error) { cfg = before; fail(error); if (st) { st.textContent = 'Nie zapisano'; st.className = 'saved err'; } renderDrawer(); return false; }
+  if (st) { st.textContent = 'Zapisane ✓'; st.className = 'saved ok'; }
+  return true;
+}
+const sw = (on, label, onclick) => el('button', { class: 'sw', role: 'switch', 'aria-checked': String(on), onclick }, el('span', { class: 't' }, label), el('i', { 'aria-hidden': 'true' }));
+async function toggleOff(key) {
+  const off = offList(), next = off.includes(key) ? off.filter(k => k !== key) : [...off, key];
+  if (await saveSettings({ ui: { ...(cfg.ui || {}), off: next } })) { applyOff(); renderAll(); }
+  renderDrawer();
+}
+const lstRow = (label, onDel) => el('div', { class: 'lst' }, el('span', { class: 't' }, label), el('button', { class: 'x', 'aria-label': 'Usuń: ' + label, onclick: onDel }, '×'));
+function goalInput(label, value, onSave, unit) {
+  const f = el('input', { type: 'text', inputmode: 'decimal', 'aria-label': label });
+  f.value = value; f.addEventListener('change', () => onSave(f.value, f));
+  return el('div', { class: 'goal' }, el('span', {}, label), f, unit ? el('span', { class: 'muted u' }, unit) : '');
+}
+function renderDrawer() {
+  const off = offList(), st = $('#pGoalsSt');
+  $('#pCards').replaceChildren(...PANEL_CARDS.map(([k, l]) => sw(!off.includes(k), l, () => toggleOff(k))));
+  $('#pTabs').replaceChildren(...PANEL_TABS.map(([k, l]) => sw(!off.includes('tab-' + k), l, () => toggleOff('tab-' + k))));
+  const wt = cfg.work_targets || WORK_DEFAULT;
+  const int = (key, min, max) => (v, f) => { const n = parseInt(v, 10); if (!(n >= min && n <= max)) { f.value = cfg[key]; return toast('Wpisz liczbę od ' + min + ' do ' + max); } saveSettings({ [key]: n }, st).then(renderAll); };
+  const hours = (k, part) => (v, f) => { const m = parseHours(v); if (m == null || m > 24 * 60 * (part === 'tydzien' ? 7 : 1)) { f.value = fmtHoursInput(wt[k]?.[part] ?? 0); return toast('Wpisz godziny, np. 4 albo 4,5'); }
+    saveSettings({ work_targets: { ...wt, [k]: { ...(wt[k] || {}), [part]: m } } }, st).then(renderAll); };
+  $('#pGoals').replaceChildren(
+    goalInput('Kalorie dziennie', cfg.kcal_target ?? '', int('kcal_target', 1000, 6000), 'kcal'),
+    goalInput('Białko dziennie', cfg.protein_target ?? '', int('protein_target', 30, 400), 'g'),
+    goalInput('Treningi – minimum w tygodniu', cfg.training_min ?? 3, int('training_min', 0, 14)),
+    goalInput('Plan – max rzeczy na dzień', cfg.plan_max ?? 3, int('plan_max', 1, 10)),
+    goalInput('GetMed – godzin dziennie (pon–pt)', fmtHoursInput(wt.getmed?.dzien ?? 0), hours('getmed', 'dzien')),
+    goalInput('GetMed – godzin w tygodniu', fmtHoursInput(wt.getmed?.tydzien ?? 0), hours('getmed', 'tydzien')),
+    goalInput('Złap Termin – godzin dziennie (pon–pt)', fmtHoursInput(wt.zlap?.dzien ?? 0), hours('zlap', 'dzien')),
+    goalInput('Złap Termin – godzin w tygodniu', fmtHoursInput(wt.zlap?.tydzien ?? 0), hours('zlap', 'tydzien')));
+  const mi = cfg.morning_items || [];
+  $('#pMorning').replaceChildren(...(mi.length ? mi.map(([k, l, o]) => lstRow(l + (o === 'opcja' ? ' (opcjonalnie)' : ''), () => {
+    if (confirm('Usunąć „' + l + '” z poranka?')) saveSettings({ morning_items: mi.filter(x => x[0] !== k) }).then(() => { renderDrawer(); renderDzis(); });
+  })) : [el('p', { class: 'muted' }, 'Pusto.')]));
+  $('#pPrayers').replaceChildren(...(prayers.length ? prayers.map(m => lstRow(m.title, async () => {
+    if (!confirm('Usunąć modlitwę „' + m.title + '”?')) return;
+    const { error } = await sb.from('modlitwy').delete().eq('id', m.id); if (error) return fail(error);
+    prayers = prayers.filter(x => x.id !== m.id); renderDrawer(); renderPrayers();
+  })) : [el('p', { class: 'muted' }, 'Pusto.')]));
+  const qm = cfg.quick_meals || [];
+  $('#pMeals').replaceChildren(...(qm.length ? qm.map(([n, kc, pr], i) => lstRow(n + ' · ' + kc + ' kcal · ' + (pr ?? '?') + ' g', () => {
+    if (confirm('Usunąć „' + n + '” z szybkich posiłków?')) saveSettings({ quick_meals: qm.filter((_, j) => j !== i) }).then(() => { renderDrawer(); renderJedzenie(); });
+  })) : [el('p', { class: 'muted' }, 'Pusto.')]));
+}
+function drawer(open) {
+  const d = $('#drawer');
+  if (open) renderDrawer();
+  d.classList.toggle('on', open); $('#scrim').classList.toggle('on', open); d.inert = !open;
+  $('#menuOpen').setAttribute('aria-expanded', String(open));
+  if (open) $('#menuClose').focus(); else $('#menuOpen').focus();
+}
+$('#menuOpen').onclick = () => drawer(true);
+$('#menuClose').onclick = () => drawer(false);
+$('#scrim').onclick = () => drawer(false);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#drawer').classList.contains('on')) drawer(false); });
+$('#pMorningAdd').onclick = () => {
+  const l = $('#pMorningNew').value.trim(); if (!l) return;
+  const mi = cfg.morning_items || [];
+  saveSettings({ morning_items: [...mi, [itemKey(l, mi), l]] }).then(ok => { if (ok) { $('#pMorningNew').value = ''; renderDrawer(); renderDzis(); } });
+};
+$('#pMorningNew').onkeydown = e => { if (e.key === 'Enter') $('#pMorningAdd').click(); };
+$('#pPrayerSave').onclick = async () => {
+  const title = $('#pPrayerTitle').value.trim(), body = $('#pPrayerBody').value.trim();
+  if (!title || !body) return toast('Wpisz tytuł i tekst modlitwy');
+  const sort = Math.max(100, ...prayers.map(m => m.sort || 0)) + 10;
+  const { data, error } = await sb.from('modlitwy').insert({ title, body, sort }).select().single(); if (error) return fail(error);
+  prayers.push(data); $('#pPrayerTitle').value = $('#pPrayerBody').value = ''; $('#pPrayerAdd').open = false; renderDrawer(); renderPrayers(); toast('Dodane: ' + title);
+};
+$('#pMealAdd').onclick = () => {
+  const n = $('#pMealName').value.trim(), kc = parseInt($('#pMealKcal').value, 10), pr = parseInt($('#pMealProt').value, 10);
+  if (!n || !(kc > 0)) return toast('Wpisz nazwę i kalorie');
+  saveSettings({ quick_meals: [...(cfg.quick_meals || []), [n, kc, pr >= 0 ? pr : null]] }).then(ok => { if (ok) { $('#pMealName').value = $('#pMealKcal').value = $('#pMealProt').value = ''; renderDrawer(); renderJedzenie(); } });
+};
+$('#pLogout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
 // ---------- Stoper pracy ----------
 // Jeden licznik. Wybór „do czego” robi Michał (zapamiętany na dany dzień); zmiana w trakcie = nowy odcinek od teraz.
 const WL = Object.fromEntries(WORK);
