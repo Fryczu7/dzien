@@ -58,11 +58,11 @@ test('pushTest: brak urządzeń / odrzucone / błąd serwera → wyjątek z opis
 
 test('sw.js: zdarzenie push pokazuje powiadomienie z tytułem i treścią, tag praca, requireInteraction', async () => {
   const src = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
-  const handlers = {}, shown = [];
+  const handlers = {}, shown = [], posted = [];
   const self = {
     addEventListener: (t, f) => { handlers[t] = f; },
     registration: { scope: 'https://x/dzien/', showNotification: async (t, o) => shown.push([t, o]) },
-    clients: {}, skipWaiting() {},
+    clients: { matchAll: async () => [{ postMessage: m => posted.push(m) }] }, skipWaiting() {},
   };
   new Function('self', 'caches', 'location', 'fetch', src)(self, {}, { origin: 'https://x' }, () => {});
   let p;
@@ -73,6 +73,9 @@ test('sw.js: zdarzenie push pokazuje powiadomienie z tytułem i treścią, tag p
   assert.equal(shown[0][1].body, 'Minęło 15 min – wracasz do GetMed?');
   assert.equal(shown[0][1].tag, 'praca');
   assert.equal(shown[0][1].requireInteraction, true);
+  assert.equal(posted.length, 1);
+  assert.equal(posted[0].type, 'push');
+  assert.equal(posted[0].title, 'Koniec przerwy');
   assert.ok(handlers.notificationclick, 'notificationclick zostaje');
   assert.match(src, /const CACHE = 'dzien-v\d+'/);
 });

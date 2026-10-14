@@ -1,5 +1,5 @@
 // Prosty cache powłoki apki; dane zawsze z sieci (Supabase).
-const CACHE = 'dzien-v27';
+const CACHE = 'dzien-v28';
 const SHELL = ['./', './index.html', './lib.js', './spizarnia.js', './push.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -31,5 +31,7 @@ self.addEventListener('push', e => {
   e.waitUntil(self.registration.showNotification(d.title || 'Dzień', {
     body: d.body || '', tag: d.tag || 'praca', renotify: true, requireInteraction: true,
     icon: './icon-192.png', badge: './icon-192.png', data: { url: d.url || './' },
-  }));
+  }).then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+    // Otwarta apka dostaje znać (np. żeby odświeżyć stoper zamknięty przez serwer).
+    .then(cs => cs.forEach(c => c.postMessage({ type: 'push', title: d.title || '', body: d.body || '', at: Date.now() }))));
 });
