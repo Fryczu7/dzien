@@ -356,6 +356,48 @@ export const workBrief = day => {
 // Tekst w days.training mówiący, że treningu NIE było („brak – wspinaczka odpuszczona”), nie liczy się jako trening.
 export const isTrainingText = t => { const s = String(t || '').trim().toLowerCase(); return !!s && !/^(brak|nie |nie$|odpuszcz|odwoł|odwol|-|–)/.test(s); };
 
+// ---------- Menu na dziś (tabela menu: układa automat o 5:00, Michał wybiera i klika „zjadłem”) ----------
+export const MENU_SRC = { jak_ostatnio: 'jak ostatnio', z_planu: 'z planu', nowe: 'nowe' };
+export const menuChosen = s => typeof s?.chosen === 'number' && s.options?.[s.chosen] ? s.options[s.chosen] : null;
+// Suma dnia z menu: stałe + wybrane opcje; „open” = posiłki jeszcze bez wyboru.
+export function menuTotals(menu) {
+  const out = { kcal: 0, protein: 0, open: [] };
+  if (!menu) return out;
+  const add = x => { out.kcal += Number(x.kcal) || 0; out.protein += Number(x.protein) || 0; };
+  for (const x of menu.stale || []) add(x);
+  for (const s of menu.slots || []) { const o = menuChosen(s); if (o) add(o); else out.open.push(s.label || s.slot); }
+  return out;
+}
+// „Wybierz menu →” na Dziś: jest menu i któryś posiłek nie ma wyboru (zjedzony bez wyboru nie wisi).
+export const menuNeedsChoice = menu => !!menu && (menu.slots || []).some(s => !menuChosen(s) && !s.eaten);
+// Wybór opcji: nowa tablica slots (zmienia tylko ten posiłek); zjedzonego nie zmieniamy → null.
+export function chooseOption(slots, si, oi) {
+  const s = slots?.[si];
+  if (!s || s.eaten || !s.options?.[oi]) return null;
+  return slots.map((x, i) => i === si ? { ...x, chosen: oi } : x);
+}
+// „Zjadłem”: posiłek do meals + zmiana w menu (eaten). kind 'slot' (indeks posiłku) albo 'stale' (indeks stałej).
+// null, gdy już zjedzone albo nic nie wybrane – drugi klik nie robi drugiego wpisu.
+export function eatItem(menu, kind, i) {
+  const key = kind === 'slot' ? 'slots' : 'stale', list = menu?.[key], x = list?.[i];
+  if (!x || x.eaten) return null;
+  const o = kind === 'slot' ? menuChosen(x) : x;
+  if (!o) return null;
+  return { meal: { name: o.name, kcal: o.kcal ?? null, protein: o.protein ?? null }, patch: { [key]: list.map((y, j) => j === i ? { ...y, eaten: true } : y) } };
+}
+// Cofnięcie „zjadłem” (po usunięciu posiłku z meals).
+export function uneatItem(menu, kind, i) {
+  const key = kind === 'slot' ? 'slots' : 'stale';
+  return { [key]: (menu?.[key] || []).map((y, j) => j === i ? { ...y, eaten: false } : y) };
+}
+// Kolejność na ekranie: po godzinie (stałe między posiłkami); „9:30” i „09:30” tak samo, bez godziny na końcu.
+const minsOf = t => { const m = String(t || '').match(/^(\d{1,2}):(\d{2})/); return m ? +m[1] * 60 + +m[2] : 1e4; };
+export function menuTimeline(menu) {
+  if (!menu) return [];
+  const rows = [...(menu.slots || []).map((x, i) => ({ kind: 'slot', i, x })), ...(menu.stale || []).map((x, i) => ({ kind: 'stale', i, x }))];
+  return rows.sort((a, b) => minsOf(a.x.time) - minsOf(b.x.time) || (a.kind === 'slot' ? -1 : 1));
+}
+
 // ---------- Panel ustawień ----------
 // Karty na „Dziś” i zakładki, które można wyłączyć (klucze w settings.ui.off; zakładki z przedrostkiem „tab-”).
 export const PANEL_CARDS = [['propozycje', 'Propozycje asystenta'], ['obserwacje', 'Czego się nauczyłem (niedziela)'], ['rano', 'Rano – rzeczy do odhaczenia'], ['modlitwy', 'Modlitwy'], ['plan', 'Plan na dziś'], ['tydzien', 'Ten tydzień'], ['sen', 'Sen i trening'], ['wieczor', 'Wieczór (ściąga, check-in, zamknięcie dnia)'], ['praca', 'Stoper pracy']];
