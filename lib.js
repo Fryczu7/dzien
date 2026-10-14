@@ -498,7 +498,7 @@ export const menuOtherMsg = (date, slot, label) =>
 
 // ---------- Panel ustawień ----------
 // Karty na „Dziś” i zakładki, które można wyłączyć (klucze w settings.ui.off; zakładki z przedrostkiem „tab-”).
-export const PANEL_CARDS = [['propozycje', 'Propozycje asystenta'], ['obserwacje', 'Czego się nauczyłem (niedziela)'], ['rano', 'Rano – rzeczy do odhaczenia'], ['modlitwy', 'Modlitwy'], ['plan', 'Plan na dziś'], ['tydzien', 'Ten tydzień'], ['sen', 'Sen i trening'], ['wieczor', 'Wieczór (ściąga, check-in, zamknięcie dnia)'], ['praca', 'Stoper pracy']];
+export const PANEL_CARDS = [['kuznia', 'Kuźnia – zadania dnia, seria, boss'], ['propozycje', 'Propozycje asystenta'], ['obserwacje', 'Czego się nauczyłem (niedziela)'], ['rano', 'Rano – rzeczy do odhaczenia'], ['modlitwy', 'Modlitwy'], ['plan', 'Plan na dziś'], ['tydzien', 'Ten tydzień'], ['sen', 'Sen i trening'], ['wieczor', 'Wieczór (ściąga, check-in, zamknięcie dnia)'], ['praca', 'Stoper pracy']];
 export const PANEL_TABS = [['jedzenie', 'Jedzenie'], ['zakupy', 'Zakupy'], ['trening', 'Trening'], ['asystent', 'Asystent'], ['coach', 'Coach']];
 export const visibleViews = (views, off = []) => views.filter(v => v === 'dzis' || !off.includes('tab-' + v));
 // Klucz nowej rzeczy porannej z jej nazwy (bez polskich znaków), bez powtórek.

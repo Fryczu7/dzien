@@ -438,6 +438,78 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   #v-coach .talk-hint{margin:-8px 2px 0}
   #toast{bottom:28px}
 }
+/* Kuźnia (gra): na razie w barwach apki – motyw Kuźni (żelazo, żar, złoto) dojdzie po wyborze wyglądu przez Michała.
+   Wszystkie klasy z przedrostkiem kz-, żeby nie zderzyć się z resztą arkusza (.box, .bar, .card…). */
+body[data-off~="kuznia"] #kzWin{display:none!important}
+.kz{position:relative}
+.kz-sys{text-align:center;letter-spacing:.3em;margin-bottom:12px}
+.kz-hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.kz-hud b{display:block;font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums}
+.kz-lab{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.kz-tar{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.kz-tar svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.kz-tar.on{color:var(--warn-ink)}.kz-tar.on svg{fill:currentColor}
+.kz-xp{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-variant-numeric:tabular-nums;font-size:14px}
+.kz-bar{height:8px;background:var(--card2);border-radius:4px;overflow:hidden;margin:6px 0 2px}
+.kz-bar i{display:block;height:100%;width:100%;background:var(--acc);transform-origin:left;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+.kz-today{font-size:14px;color:var(--muted);margin:2px 0 0;font-variant-numeric:tabular-nums}
+.kz-zt{margin:16px 0 4px}
+.kz-zad{list-style:none;margin:0;padding:0}
+.kz-zad li{border-bottom:1px solid var(--line)}.kz-zad li:last-child{border-bottom:0}
+.kz-z{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;min-height:48px;padding:6px 0;background:none;color:var(--text);border-radius:0;font-weight:500;text-align:left}
+.kz-mark{width:22px;height:22px;border-radius:6px;border:2px solid var(--muted);display:grid;place-items:center}
+.kz-mark svg{width:14px;height:14px;fill:none;stroke:#06210f;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.kz-z.done .kz-mark{background:var(--acc);border-color:var(--acc)}
+.kz-z.done .kz-n{color:var(--muted)}
+.kz-z.data .kz-mark{border-style:dashed}.kz-z.data.done .kz-mark{border-style:solid}
+.kz-n small{display:block;color:var(--muted);font-size:13px;font-weight:400}
+.kz-pt{color:var(--muted);font-size:14px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.kz-pt b{color:var(--acc-ink);margin-left:6px}
+.kz-z.karne{color:var(--bad-ink)}.kz-z.karne .kz-mark{border-color:var(--bad-ink)}
+.kz-z.karne.done .kz-mark{background:var(--bad);border-color:var(--bad)}
+.kz-boss{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.kz-boss .row{justify-content:space-between;font-variant-numeric:tabular-nums}
+.kz-boss .kz-bar i{background:var(--bad)}
+.kz-boss p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.kz-end{width:100%;margin-top:14px;min-height:48px}
+.kz-err{color:var(--bad-ink);font-size:14px;margin:8px 0 0}
+.kz-pop{position:absolute;right:16px;font-weight:700;color:var(--acc-ink);pointer-events:none;animation:kzUp 1.1s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes kzUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-28px)}}
+.kz-hit{animation:kzHit .45s}
+@keyframes kzHit{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.kz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* Podsumowanie dnia: nakładka nad apką */
+.kz-ov{position:fixed;inset:0;z-index:48;background:rgb(0 0 0/.6);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.kz-ov-in{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;text-align:center;animation:kzOpen .45s cubic-bezier(.16,1,.3,1)}
+@keyframes kzOpen{from{opacity:0;transform:scale(.92) translateY(10px)}}
+.kz-ov h2{font-size:14px;letter-spacing:.2em;margin:0 0 12px;color:var(--muted)}
+.kz-ov h2:focus{outline:none}
+.kz-ov-xp b{display:block;font-size:56px;line-height:1;font-variant-numeric:tabular-nums}
+.kz-ov-seria{font-size:20px;font-weight:700;margin:12px 0 0;font-variant-numeric:tabular-nums}
+.kz-ov-seria.pulse{animation:kzPulse .7s ease 2}
+@keyframes kzPulse{50%{transform:scale(1.2)}}
+.kz-ov-kamien{font-weight:700;color:var(--warn-ink);margin:6px 0 0;animation:kzPulse .8s ease 2}
+.kz-ov ul{text-align:left;margin:14px 0 0;padding-left:18px;font-size:15px}
+.kz-ov li{padding:2px 0}
+.kz-ov-lvl{font-size:20px;font-weight:700;letter-spacing:.12em;color:var(--warn-ink);margin:14px 0 0;animation:kzPulse .8s ease 2}
+.kz-ov-msg{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-weight:600}
+.kz-ov-msg.bad{color:var(--bad-ink)}
+.kz-ov-act{display:grid;gap:8px;margin-top:18px}
+.kz-ov-act button{min-height:48px}
+.kz-ov-act button:disabled{opacity:.6;cursor:default}
+body.kz-on{overflow:hidden}
+/* Statystyki postaci (zakładka Asystent) */
+.kz-st h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 4px;font-weight:600}
+.kz-st h3:first-of-type{margin-top:0}
+.kz-st .row{justify-content:space-between;font-size:15px;font-variant-numeric:tabular-nums;margin-top:6px}
+.kz-sez{margin:12px 0 0;font-size:14px;color:var(--muted)}
+/* Panel ☰ → Kuźnia */
+.kz-days{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.kz-days button{min-width:44px;min-height:40px;padding:4px 8px;background:var(--card2);color:var(--text);border:1px solid var(--line);font-weight:500;font-size:14px}
+.kz-days button.on{background:var(--acc);color:#06210f;border-color:var(--acc)}
+.kz-tryb{margin:6px 0 2px;font-size:14px}
+@media (prefers-reduced-motion: reduce){.kz-pop,.kz-hit,.kz-ov-in,.kz-ov-seria.pulse,.kz-ov-kamien,.kz-ov-lvl{animation:none}.kz-bar i{transition:none}}
+@media (min-width:1000px){#kzWin{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -470,6 +542,28 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   <!-- Ekran do patrzenia: wpisy idą przez rozmowę z Claude, tu tylko stan dnia i kilka dotknięć. -->
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude</a>
   <p class="muted talk-hint narrowonly">Jedzenie, sen, rehab, trening – powiedz normalnie, Claude zapisze i policzy.</p>
+  <!-- Kuźnia (gra): zadania dnia liczone z danych (funkcje kuznia_* w bazie), seria z tarczą, boss tygodnia. Zastępuje „Brakuje”. -->
+  <section class="card kz hidden" id="kzWin" aria-labelledby="kzT">
+    <h2 class="kz-sys" id="kzT">[ KUŹNIA ]</h2>
+    <div class="kz-hud">
+      <div><span class="kz-lab">Ranga</span><b id="kzRanga">–</b></div>
+      <div><span class="kz-lab">Seria</span><b id="kzSeria">0</b><span class="kz-tar" id="kzTar"></span></div>
+      <div><span class="kz-lab">Poziom</span><b id="kzPoziom">1</b></div>
+    </div>
+    <div class="kz-xp"><span class="kz-lab">Doświadczenie</span><span id="kzXpTxt"></span></div>
+    <div class="kz-bar" aria-hidden="true"><i id="kzXpBar" style="transform:scaleX(0)"></i></div>
+    <p class="kz-today" id="kzDzisXp"></p>
+    <h3 class="kz-lab kz-zt" id="kzZT">Zadania dnia</h3>
+    <ul class="kz-zad" id="kzZad"></ul>
+    <div class="kz-boss hidden" id="kzBoss">
+      <div class="row"><b id="kzBossN"></b><span class="muted" id="kzBossHp"></span></div>
+      <div class="kz-bar" aria-hidden="true"><i id="kzBossBar"></i></div>
+      <p id="kzBossTxt"></p>
+    </div>
+    <p class="kz-err hidden" id="kzErr" role="alert"></p>
+    <button class="kz-end hidden" id="kzEnd">Zakończ dzień</button>
+    <span class="kz-sr" id="kzLive" aria-live="polite"></span>
+  </section>
   <p id="brakuje" class="brakuje"></p>
   <button class="ghost go menugo hidden" id="menuGo"></button>
   <!-- Obserwacje z niedzieli: widoczne, dopóki Michał nie kliknie „Przeczytane” -->
@@ -681,6 +775,11 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 <section id="v-asystent" class="hidden">
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz asystentowi</a>
   <p class="muted talk-hint narrowonly">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
+  <div class="card kz-st hidden" id="kzStCard">
+    <h2>Postać · [ KUŹNIA ]</h2>
+    <div id="kzSt"></div>
+    <p class="kz-sez" id="kzSez"></p>
+  </div>
   <div class="card coach" id="aDay">
     <h2 id="aDayTitle">Propozycje na dziś</h2>
     <ul id="aOpen" class="props"></ul>
@@ -721,6 +820,9 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
     <button class="wide" id="pWorkTest" style="margin-top:12px">Przetestuj przerwę (20 s)</button>
     <p class="muted" style="margin:6px 0 0">Test gra tylko przy otwartej apce. Przy zablokowanym telefonie prawdziwy alarm przychodzi jako powiadomienie z dźwiękiem telefonu – telefon nie pozwala stronom na własny dźwięk.</p>
   </div></details>
+  <details class="psec" id="pKzSec"><summary>Kuźnia – zadania dnia i boss <span class="muted" id="pKzN"></span></summary><div>
+    <div id="pKz"></div><div class="saved" id="pKzSt"></div>
+  </div></details>
   <details class="psec"><summary>Rano – rzeczy do odhaczenia <span class="muted" id="pMorningN"></span></summary><div>
     <div id="pMorning"></div>
     <div class="addrow"><input id="pMorningNew" placeholder="Nowa rzecz, np. Witamina D" aria-label="Nowa rzecz poranna"><button id="pMorningAdd" aria-label="Dodaj">+</button></div>
@@ -742,7 +844,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 <!-- Start dla nowej osoby: 3 kroki, zapis na końcu (settings.onboarded = true) -->
 <div class="start hidden" id="start" role="dialog" aria-modal="true" aria-labelledby="stTitle">
   <div class="start-in">
-    <div class="steps" id="stSteps"><i></i><i></i><i></i></div>
+    <div class="steps" id="stSteps"><i></i><i></i><i></i><i></i></div>
     <h2 id="stTitle"></h2>
     <p class="lead" id="stLead"></p>
     <div id="stBody"></div>
@@ -757,6 +859,19 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
     <p class="pg-lead">Asystent przejrzał pamięć. Przeklikaj – po ostatniej wracasz do apki.</p>
     <div class="pg-body" id="pgBody"></div>
     <div class="pg-act" id="pgAct"></div>
+  </div>
+</div>
+<!-- Kuźnia: podsumowanie dnia po „Zakończ dzień” albo po otwarciu apki, gdy zamknęły się zaległe dni -->
+<div class="kz-ov hidden" id="kzOv" role="dialog" aria-modal="true" aria-labelledby="kzOvT">
+  <div class="kz-ov-in">
+    <h2 id="kzOvT" tabindex="-1"></h2>
+    <div class="kz-ov-xp"><b id="kzOvXp">+0</b><span class="kz-lab">doświadczenia</span></div>
+    <p class="kz-ov-seria" id="kzOvSeria"></p>
+    <p class="kz-ov-kamien hidden" id="kzOvKamien"></p>
+    <ul id="kzOvLines"></ul>
+    <p class="kz-ov-lvl hidden" id="kzOvLvl"></p>
+    <p class="kz-ov-msg" id="kzOvMsg"></p>
+    <div class="kz-ov-act"><button class="ghost hidden" id="kzOvRepair" disabled></button><button id="kzOvOk">Dalej</button></div>
   </div>
 </div>
 <!-- Pasek boczny (komputer): ☰ zostaje na ekranie przy przewijaniu -->
@@ -775,7 +890,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -995,6 +1110,7 @@ function renderDzis() {
       c.replaceChildren(...opts.map(([v, l]) => el('button', { class: cuAnswers[key] === v ? 'on' : '', onclick: () => { cuAnswers[key] = cuAnswers[key] === v ? undefined : v; renderDzis(); } }, l)));
     });
   }
+  renderKuznia(); kzSoon(); // okno Kuźni na górze; po zapisie (rehab, plan, posiłek…) świeży stan z bazy
 }
 // Liczniki: rehab x/5 i seria, dni z kaloriami ≥ celu i seria, treningi wobec minimum, leki, sen.
 const dniTxt = n => n + ' ' + (n === 1 ? 'dzień' : 'dni');
@@ -1452,7 +1568,7 @@ $('#obsOk').onclick = async () => {
   if (error) return fail(error);
   o.accepted_at = at; renderObs(); toast('Przeczytane – zostaje w zakładce Asystent');
 };
-function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); renderPraca(); renderPrayers(); }
+function renderAll() { document.querySelectorAll('.talk').forEach(a => { a.href = cfg.claude_url || 'https://claude.ai/projects'; }); renderHeader(); renderDzis(); renderJedzenie(); renderItems(); renderTrening(); renderObs(); renderAsystent(); renderPraca(); renderPrayers(); renderKzStaty(); }
 
 // ---------- events ----------
 // Pola tekstowe: zapis 800 ms po ostatnim znaku i natychmiast przy wyjściu z pola albo schowaniu apki.
@@ -1509,10 +1625,10 @@ const shift = async n => { rulesOpen = false;
   const next = ymd(d), today = ymd(new Date());
   if (isFuture(next, today)) return toast('To jeszcze nie ten dzień');
   flushText(); cur = next; followToday = cur === today;
-  await loadDay(); renderAll();
+  await Promise.all([loadDay(), loadKuznia()]); renderAll();
 };
 $('#prevDay').onclick = () => shift(-1); $('#nextDay').onclick = () => shift(1);
-$('#dateLbl').onclick = async () => { flushText(); cur = ymd(new Date()); followToday = true; await loadDay(); renderAll(); };
+$('#dateLbl').onclick = async () => { flushText(); cur = ymd(new Date()); followToday = true; await Promise.all([loadDay(), loadKuznia()]); renderAll(); };
 
 const onSleep = () => { const b = $('#bed').value, w = $('#wake').value; saveDay({ bed: b || null, wake: w || null, sleep_h: hoursBetween(b, w) }).then(renderDzis); };
 $('#bed').onchange = onSleep; $('#wake').onchange = onSleep;
@@ -1583,9 +1699,10 @@ async function start() {
   if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
   uid = session.user.id;
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad()]); lastLoad = Date.now();
+  await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad(), loadKuznia()]); lastLoad = Date.now();
   renderAll(); show(view);
   if (cfgState === 'nowy' || (cfgState === 'jest' && !cfg.onboarded)) startOpen(); // pierwsze wejście nowej osoby; przy błędzie wczytania – nie
+  await kzZalegle(); // Kuźnia: zamknięcie zaległych dni i podsumowanie ostatniego
   pgCheck(); // przegląd pamięci – po starcie, nie nad oknem startu
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
@@ -1664,7 +1781,7 @@ function renderDrawer() {
 }
 function drawer(open) {
   const d = $('#drawer');
-  if (open) { renderDrawer(); if ($('#pWorkSec').open) renderWorkPanel(); }
+  if (open) { renderDrawer(); if ($('#pWorkSec').open) renderWorkPanel(); if ($('#pKzSec').open) renderKzPanel(); }
   d.classList.toggle('on', open); $('#scrim').classList.toggle('on', open); d.inert = !open;
   $('#menuOpen').setAttribute('aria-expanded', String(open)); $('#menuRail').setAttribute('aria-expanded', String(open));
   const back = getComputedStyle($('#menuRail')).display !== 'none' && $('#menuRail').offsetParent ? $('#menuRail') : $('#menuOpen');
@@ -1697,7 +1814,7 @@ $('#pMealAdd').onclick = () => {
 // 3 kroki: karty na Dziś → zakładki → cele. Szkic trzymamy lokalnie, zapis dopiero „Gotowe” (albo „Pomiń”).
 let st = null;
 function startOpen() {
-  st = { step: 0, off: [...offList()], kcal: cfg.kcal_target ?? 2500, prot: cfg.protein_target ?? 120, tmin: cfg.training_min ?? 3, pmax: cfg.plan_max ?? 3 };
+  st = { step: 0, off: [...offList()], kcal: cfg.kcal_target ?? 2500, prot: cfg.protein_target ?? 120, tmin: cfg.training_min ?? 3, pmax: cfg.plan_max ?? 3, kzOff: [], boss: cfg.boss?.cel ?? 20 };
   drawer(false); $('#start').classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderStart();
 }
 function startClose() { $('#start').classList.add('hidden'); document.body.style.overflow = ''; st = null; }
@@ -1708,6 +1825,9 @@ function renderStart() {
     ['Co chcesz widzieć na „Dziś”?', 'Zostaw tylko to, z czego korzystasz. Wszystko zmienisz później w ☰.', () => PANEL_CARDS.map(([k, l]) => sw(!st.off.includes(k), l, () => flip(k)))],
     ['Które zakładki?', '„Dziś” jest zawsze. Resztę możesz schować.', () => PANEL_TABS.map(([k, l]) => sw(!st.off.includes('tab-' + k), l, () => flip('tab-' + k)))],
     ['Twoje cele', 'Liczby, do których apka porównuje Twój dzień i tydzień.', () => [num('Kalorie dziennie', 'kcal', 'kcal'), num('Białko dziennie', 'prot', 'g'), num('Treningi – minimum w tygodniu', 'tmin'), num('Plan – max rzeczy na dzień', 'pmax')]],
+    ['Twoje zadania dnia i boss', 'Kuźnia liczy punkty sama z tego, co zapisujesz. Zostaw zadania, które chcesz robić codziennie – cele, dni i własne zadania zmienisz w ☰ → Kuźnia.', () => [
+      ...(kz.dom || []).map(z => sw(!st.kzOff.includes(z.k), z.nazwa + ' · ' + kzDniTekst(z.dni), () => { st.kzOff = st.kzOff.includes(z.k) ? st.kzOff.filter(x => x !== z.k) : [...st.kzOff, z.k]; renderStart(); })),
+      num('Boss tygodnia – godzin GetMed w tygodniu (0 = bez bossa)', 'boss', 'h')]],
   ];
   const [t, lead, body] = S[st.step];
   $('#stTitle').textContent = t; $('#stLead').textContent = lead; $('#stBody').replaceChildren(...body());
@@ -1717,11 +1837,14 @@ function renderStart() {
 }
 $('#stBack').onclick = () => { st.step--; renderStart(); };
 $('#stNext').onclick = async () => {
-  if (st.step < 2) { st.step++; return renderStart(); }
+  if (st.step < 3) { st.step++; return renderStart(); }
   const n = (v, a, b, d) => { const x = parseInt(v, 10); return x >= a && x <= b ? x : d; };
-  const ok = await saveSettings({ ui: { ...(cfg.ui || {}), off: st.off }, kcal_target: n(st.kcal, 1000, 6000, cfg.kcal_target ?? 2500), protein_target: n(st.prot, 30, 400, cfg.protein_target ?? 120), training_min: n(st.tmin, 0, 14, 3), plan_max: n(st.pmax, 1, 10, 3), onboarded: true });
+  // Kuźnia: wszystkie domyślne zadania = null (domyślne z bazy); boss z godzin GetMed, 0 = bez bossa.
+  const bossH = n(st.boss, 0, 100, 20), kzZad = st.kzOff.length && kz.dom ? kzZadaniaZapis(kz.dom.filter(z => !st.kzOff.includes(z.k))) : cfg.kuznia_zadania ?? null;
+  const ok = await saveSettings({ ui: { ...(cfg.ui || {}), off: st.off }, kcal_target: n(st.kcal, 1000, 6000, cfg.kcal_target ?? 2500), protein_target: n(st.prot, 30, 400, cfg.protein_target ?? 120), training_min: n(st.tmin, 0, 14, 3), plan_max: n(st.pmax, 1, 10, 3),
+    kuznia_zadania: kzZad, boss: bossH ? { nazwa: 'Strażnik ' + bossH + ' godzin', zrodlo: cfg.boss?.zrodlo || 'praca:getmed', cel: bossH } : null, onboarded: true });
   if (!ok) return;
-  startClose(); applyOff(); renderAll(); toast('Gotowe – zmienisz to w ☰');
+  startClose(); applyOff(); renderAll(); loadKuznia().then(renderKuznia); toast('Gotowe – zmienisz to w ☰');
 };
 $('#stSkip').onclick = async () => { await saveSettings({ onboarded: true }); startClose(); };
 
@@ -1952,7 +2075,7 @@ new IntersectionObserver(es => { wCardSeen = es.some(e => e.isIntersecting); ren
 // zablokowany go zatrzymuje – wtedy stop liczy się przy powrocie (refresh → checkAutoStop) z końcem na 60. minucie,
 // a powiadomienie na czas wysyła serwer.
 setInterval(() => {
-  if (workRows.some(r => !r.ended_at)) { checkAutoStop(); renderPraca(); }
+  if (workRows.some(r => !r.ended_at)) { checkAutoStop(); renderPraca(); kzTick(); }
   else if (openBreak()) { checkBreakSounds(); closeStaleBreak(); renderPraca(); }
 }, 1000);
 // Panel: stoper i przerwy – długość pracy, zakres przerwy, dźwięki z odsłuchem, powiadomienia, test.
@@ -2021,6 +2144,297 @@ function renderPrayers() {
     : [el('p', { class: 'muted' }, 'Brak modlitw. Powiedz Claude: „dodaj modlitwę …”.')]));
 }
 
+// ---------- Kuźnia (gra) ----------
+// Cała logika gry jest w bazie (funkcje kuznia_*, migracja 20261014_kuznia.sql) – apka woła je i rysuje wynik.
+// Ręczne odhaczenia i zadanie karne apka zapisuje sama w kuznia_dni (reczne, karne_zrobione). Godziny stopera rosną na żywo
+// między odświeżeniami (kzNaZywo z lib.js), reszta odświeża się co minutę i po każdym zapisie (kzSoon).
+const H = 3600e3;
+let kz = { stan: null, dzien: null, dni: {}, dom: null, last: null, lastDate: null, err: null, t: 0, busy: false };
+const kzWidzianeGet = () => { try { return localStorage.getItem('kzWidziane'); } catch { return null; } };
+const kzWidzianeSet = d => { try { if (!kzWidzianeGet() || d > kzWidzianeGet()) localStorage.setItem('kzWidziane', d); } catch {} };
+async function loadKuznia() {
+  const today = ymd(new Date()), dates = [...new Set([cur, addDays(today, -1), today])];
+  const [s, d, r] = await Promise.all([
+    sb.rpc('kuznia_stan_teraz'),
+    sb.rpc('kuznia_dzien_na_zywo', { p_date: cur }),
+    sb.from('kuznia_dni').select('date,reczne,zadanie_karne,karne_zrobione,zadania,xp,czysty,zaliczony,zamkniety_at,podsumowanie').in('date', dates),
+  ]);
+  kz.t = Date.now();
+  const bad = [s, d, r].find(x => x.error);
+  kz.err = bad ? bad.error : null; if (bad) console.error(bad.error); // przy błędzie zostaje to, co było
+  if (s.data) kz.stan = s.data;
+  if (d.data && d.data.date === cur) kz.dzien = d.data;
+  if (r.data) { for (const dt of dates) delete kz.dni[dt]; for (const x of r.data) kz.dni[x.date] = x; }
+  if (!kz.dom) { const { data } = await sb.rpc('kuznia_domyslne_zadania'); if (Array.isArray(data)) kz.dom = data; }
+}
+// Po każdym zapisie (renderDzis) – świeży stan z bazy, najwyżej raz na 3 s.
+function kzSoon() {
+  if (!kz.stan || Date.now() - kz.t < 3000) return;
+  kz.t = Date.now(); clearTimeout(kzSoon.h);
+  kzSoon.h = setTimeout(() => loadKuznia().then(renderKuznia), 400);
+}
+// Dzień oglądany na Dziś: zamknięty = wynik zapisany przy zamknięciu, otwarty = na żywo z bazy + stoper z apki.
+function kzBaza() {
+  const row = kz.dni[cur];
+  if (row?.zamkniety_at) return { date: cur, zadania: row.zadania || [], xp: row.xp, czysty: row.czysty, zaliczony: row.zaliczony, zadanie_karne: row.zadanie_karne, karne_zrobione: row.karne_zrobione, boss: kz.dzien?.boss ?? null, zamkniety: true };
+  return kz.dzien && kz.dzien.date === cur ? kz.dzien : null;
+}
+function kzLive() {
+  const b = kzBaza(), today = ymd(new Date());
+  return b && !b.zamkniety && cur === today ? kzNaZywo(b, workTotals(workRows, today, Date.now()).day) : b;
+}
+// Boss tygodnia: z bazy, a dziś godziny pracy z apki (rosną razem ze stoperem).
+function kzBossNow() {
+  const b = cur === ymd(new Date()) ? kz.stan?.boss : kzBaza()?.boss, src = cfg.boss?.zrodlo || '';
+  if (!b) return null;
+  if (cur !== ymd(new Date()) || !src.startsWith('praca:')) return b;
+  const week = workTotals(workRows, ymd(new Date()), Date.now()).week[src.slice(6)];
+  return week == null ? b : { ...b, hp: Math.max(0, Math.round((b.cel - week / H) * 100) / 100) };
+}
+const KZ_CHECK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+const KZ_TARCZA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/></svg>';
+const kzMark = on => { const m = el('span', { class: 'kz-mark', 'aria-hidden': 'true' }); if (on) m.innerHTML = KZ_CHECK; return m; };
+const kzNum = n => String(Math.round(n * 100) / 100).replace('.', ',');
+const KZ_RECZNE = ['reczne', 'modlitwa'];
+// Dotknięcie zadania z danych prowadzi tam, gdzie się je robi.
+function kzIdz(z) {
+  const src = String(z.zrodlo || '');
+  if (src.startsWith('praca:')) return $('#cardPraca').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (src === 'kalorie') return show('jedzenie');
+  if (src === 'trening') return show('trening');
+  if (src === 'plan') return $('#planBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (src === 'sen') { $('#allDay').open = true; return $('#allDay').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+function kzPrawo(z) {
+  const p = kzPostep(z), kids = [p];
+  if (z.xp > 0) kids.push(el('b', {}, '+' + z.xp));
+  return kids;
+}
+function kzWiersz(z, closed) {
+  const reczne = KZ_RECZNE.includes(z.zrodlo), act = !closed && reczne;
+  const btn = el('button', { class: 'kz-z' + (z.zrobione ? ' done' : '') + (reczne ? '' : ' data'), 'data-k': z.k,
+    ...(reczne ? { role: 'checkbox', 'aria-checked': String(!!z.zrobione) } : {}), ...(closed && reczne ? { 'aria-disabled': 'true' } : {}),
+    onclick: () => act ? kzOdhacz(z) : reczne ? toast('Dzień już zamknięty') : kzIdz(z) },
+    kzMark(z.zrobione), el('span', { class: 'kz-n' }, z.nazwa, z.premia ? el('small', {}, 'premia – dziś nie było obowiązkowe') : ''), el('span', { class: 'kz-pt' }, ...kzPrawo(z)));
+  return el('li', {}, btn);
+}
+function renderKuznia() {
+  const win = $('#kzWin'), today = ymd(new Date()), isToday = cur === today, s = kz.stan, on = !offList().includes('kuznia');
+  win.classList.toggle('hidden', !s && !kz.err);
+  // „Brakuje” zastępuje okno Kuźni (spec); bez Kuźni (wyłączona w ☰) wraca.
+  if (on && (s || kz.err) && isToday) $('#brakuje').classList.add('hidden');
+  $('#kzErr').classList.toggle('hidden', !kz.err); $('#kzErr').textContent = kz.err ? (navigator.onLine ? 'Kuźnia nie wczytała się – spróbuję za minutę.' : 'Brak sieci – pokazuję ostatni stan Kuźni.') : '';
+  if (!s) return;
+  $('#kzRanga').textContent = s.ranga; $('#kzPoziom').textContent = s.poziom; $('#kzSeria').textContent = s.seria;
+  const tar = $('#kzTar'); tar.className = 'kz-tar' + (s.tarcze > 0 ? ' on' : ''); tar.innerHTML = KZ_TARCZA;
+  tar.append(s.tarcze > 0 ? 'tarcza gotowa' : 'tarcza zużyta'); tar.title = s.tarcze > 0 ? 'Tarcza uratuje serię jeden raz' : 'Nowa tarcza po 7 dniach serii';
+  $('#kzXpTxt').textContent = s.w_poziomie + ' / ' + s.prog + ' · razem ' + s.xp_suma;
+  $('#kzXpBar').style.transform = 'scaleX(' + kzPasek(s) + ')';
+  const live = kzLive(), closed = !!live?.zamkniety;
+  $('#kzZT').textContent = 'Zadania dnia' + (isToday ? '' : ' · ' + PL_DAYS[new Date(cur + 'T12:00:00').getDay()] + ' ' + dShort(cur));
+  $('#kzDzisXp').textContent = live ? '+' + live.xp + ' XP ' + (isToday ? 'dziś' : 'tego dnia') + (closed ? ' · dzień zamknięty' : live.czysty ? ' · czysty dzień' : live.zaliczony ? ' · dzień zaliczony' : ' · zrób jedno zadanie, żeby zaliczyć dzień') : '';
+  const rows = [];
+  if (live?.zadanie_karne) rows.push(el('li', {}, el('button', { class: 'kz-z karne' + (live.karne_zrobione ? ' done' : ''), role: 'checkbox', 'aria-checked': String(!!live.karne_zrobione), 'data-k': '_karne',
+    onclick: () => closed ? toast('Dzień już zamknięty') : kzKarne(!live.karne_zrobione) }, kzMark(live.karne_zrobione), el('span', { class: 'kz-n' }, 'Zadanie karne', el('small', {}, live.zadanie_karne)), el('span', { class: 'kz-pt' }, s.tryb === 'hard' ? 'albo −30 XP' : ''))));
+  rows.push(...kzWidoczne(live?.zadania).map(z => kzWiersz(z, closed)));
+  if (!live) rows.push(el('li', { class: 'muted', style: 'padding:10px 0' }, 'Wczytuję zadania dnia…'));
+  $('#kzZad').replaceChildren(...rows);
+  kzBossRender();
+  const row = kz.dni[cur], end = $('#kzEnd');
+  end.classList.toggle('hidden', !(isToday && live) && !row?.podsumowanie);
+  end.textContent = row?.podsumowanie ? 'Podsumowanie dnia' : 'Zakończ dzień';
+  kzZyskiPokaz(live);
+}
+function kzBossRender() {
+  const b = kzBossNow(), box = $('#kzBoss'); box.classList.toggle('hidden', !b); if (!b) return;
+  const hp = Math.max(0, b.hp);
+  $('#kzBossN').textContent = b.nazwa; $('#kzBossHp').textContent = kzNum(hp) + ' / ' + b.cel + ' życia';
+  $('#kzBossBar').style.transform = 'scaleX(' + (b.cel ? hp / b.cel : 0) + ')';
+  $('#kzBossTxt').textContent = hp <= 0 ? 'Pokonany – +200 XP przy zamknięciu niedzieli.' : 'Boss tygodnia (sezon ' + (kz.stan?.sezon?.nr ?? 1) + '): każda godzina zabiera 1 punkt życia. Pokonany do niedzieli = +200 XP.';
+}
+// Animacja „+X” przy zadaniu, które właśnie zyskało punkty (też przy pełnej godzinie stopera) i cios w bossa.
+function kzZyskiPokaz(live) {
+  const zy = kz.lastDate === cur ? kzZyski(kz.last, live) : [];
+  kz.last = live; kz.lastDate = cur;
+  if (!zy.length) return;
+  const win = $('#kzWin');
+  for (const { k, xp } of zy) {
+    const r = win.querySelector('[data-k="' + k + '"]'); if (!r) continue;
+    const p = el('span', { class: 'kz-pop', 'aria-hidden': 'true' }, '+' + xp + ' XP');
+    p.style.top = (r.closest('li').offsetTop + 10) + 'px'; win.append(p); setTimeout(() => p.remove(), 1200);
+    const z = live.zadania.find(x => x.k === k);
+    if (z && cfg.boss?.zrodlo && z.zrodlo === cfg.boss.zrodlo) { const b = $('#kzBoss'); b.classList.remove('kz-hit'); void b.offsetWidth; b.classList.add('kz-hit'); }
+  }
+  $('#kzLive').textContent = zy.map(({ k, xp }) => '+' + xp + ' XP: ' + (live.zadania.find(x => x.k === k)?.nazwa || '')).join(', ');
+}
+// Co sekundę przy chodzącym stoperze: tylko liczby (bez przebudowy listy – fokus i animacje zostają).
+function kzTick() {
+  if (!kz.stan || cur !== ymd(new Date()) || $('#kzWin').classList.contains('hidden')) return;
+  const live = kzLive(); if (!live || live.zamkniety) return;
+  for (const z of live.zadania) {
+    if (!String(z.zrodlo).startsWith('praca:')) continue;
+    const b = document.querySelector('#kzZad [data-k="' + z.k + '"]'); if (!b) continue;
+    if (b.classList.contains('done') !== !!z.zrobione) return renderKuznia();
+    b.querySelector('.kz-pt').replaceChildren(...kzPrawo(z));
+  }
+  $('#kzDzisXp').textContent = '+' + live.xp + ' XP dziś' + (live.czysty ? ' · czysty dzień' : live.zaliczony ? ' · dzień zaliczony' : ' · zrób jedno zadanie, żeby zaliczyć dzień');
+  kzBossRender(); kzZyskiPokaz(live);
+}
+// Ręczne odhaczenie (modlitwa, własne zadania) → kuznia_dni.reczne. Modlitwa z „Rano” liczy się sama i tam się ją odznacza.
+async function kzOdhacz(z) {
+  const date = cur, row = kz.dni[date] || { date, reczne: {} };
+  if (z.zrodlo === 'modlitwa' && z.zrobione && row.reczne?.[z.k] !== true) return toast('Modlitwa odhaczona w „Rano” – odznacz ją tam');
+  if (kz.busy) return; kz.busy = true;
+  const reczne = { ...(row.reczne || {}), [z.k]: !z.zrobione };
+  try {
+    const { error } = await sb.from('kuznia_dni').upsert({ date, reczne }, { onConflict: 'user_id,date' });
+    if (error) return fail(error);
+    kz.dni[date] = { ...row, reczne }; await loadKuznia(); renderKuznia();
+  } finally { kz.busy = false; }
+}
+async function kzKarne(done) {
+  if (kz.busy) return; kz.busy = true;
+  try {
+    const { error } = await sb.from('kuznia_dni').upsert({ date: cur, karne_zrobione: done }, { onConflict: 'user_id,date' });
+    if (error) return fail(error);
+    await loadKuznia(); renderKuznia(); if (done) toast('Zadanie karne zaliczone');
+  } finally { kz.busy = false; }
+}
+// „Zakończ dzień” – zamknięcie dzisiejszego dnia w bazie (idempotentne) i podsumowanie. Zamknięty dzień: tylko podsumowanie.
+$('#kzEnd').onclick = async () => {
+  const row = kz.dni[cur];
+  if (row?.podsumowanie) return kzPodsumowanie(row.podsumowanie);
+  if (cur !== ymd(new Date()) || kz.busy) return;
+  if (!confirm('Zakończyć dzień? To, co zrobisz później, nie doliczy się już do dzisiaj.')) return;
+  kz.busy = true; $('#kzEnd').disabled = true; $('#kzEnd').textContent = 'Zamykam…';
+  try {
+    flushText();
+    const { data, error } = await sb.rpc('kuznia_zamknij_dzien', { p_date: cur });
+    if (error) return fail(error);
+    kzWidzianeSet(cur); await loadKuznia(); renderKuznia(); renderKzStaty(); kzPodsumowanie(data);
+  } finally { kz.busy = false; $('#kzEnd').disabled = false; renderKuznia(); }
+};
+// Po otwarciu apki: zamknij zaległe dni (do wczoraj) i pokaż podsumowanie ostatniego, jeśli jeszcze go nie było.
+// Pierwsze w ogóle zamknięcie (nowe konto) – po cichu, bez „winy” za dzień sprzed gry. Dzień zamknięty w nocy przez asystenta – też pokazujemy.
+async function kzZalegle() {
+  const s = kz.stan; if (!s) return;
+  const wczoraj = addDays(ymd(new Date()), -1); let pokaz = null;
+  if (!s.ostatni_zamkniety || s.ostatni_zamkniety < wczoraj) {
+    const { data, error } = await sb.rpc('kuznia_zamknij_zalegle', { p_do: wczoraj });
+    if (error) return console.error(error);
+    if (!s.ostatni_zamkniety) kzWidzianeSet(wczoraj); else pokaz = kzDoPokazania(data, kzWidzianeGet());
+    await loadKuznia(); renderKuznia(); renderKzStaty();
+  } else { const r = kz.dni[wczoraj]; pokaz = kzDoPokazania(r?.podsumowanie ? [r.podsumowanie] : [], kzWidzianeGet()); }
+  if (pokaz && $('#start').classList.contains('hidden')) kzPodsumowanie(pokaz);
+}
+const kzDzien = d => PL_DAYS[new Date(d + 'T12:00:00').getDay()] + ' ' + dShort(d);
+let kzOvOpen = false;
+function kzPodsumowanie(p) {
+  if (!p) return;
+  kzWidzianeSet(p.date);
+  const boss = p.boss, lines = [], bad = !p.czysty;
+  $('#kzOvT').textContent = '[ KUŹNIA ] ' + (boss?.pokonany ? 'BOSS POKONANY' : p.czysty ? 'DZIEŃ WYKUTY' : 'DZIEŃ ZAKOŃCZONY') + ' · ' + kzDzien(p.date);
+  if (p.tarcza_uzyta) lines.push('Tarcza uratowała serię. Nowa po 7 dniach serii.');
+  const lost = !p.zaliczony && !p.tarcza_uzyta && p.seria === 0 && p.seria_utracona > 0;
+  if (lost) lines.push('Seria przepadła – było ' + kzDni(p.seria_utracona) + '.');
+  if (p.kara_dyscyplina) lines.push('Niewykonane zadania: −' + p.kara_dyscyplina + ' Dyscypliny.');
+  if (p.karne === 'zrobione') lines.push('Zadanie karne zaliczone.');
+  if (p.karne === 'niezrobione') lines.push('Zadanie karne niezrobione' + ((kz.stan?.tryb || cfg.kuznia_tryb) === 'hard' ? ': −30 XP.' : '.'));
+  if (p.zadanie_karne_jutro) lines.push('Jutro zadanie karne: ' + p.zadanie_karne_jutro.replace(/^Nadrób:\s*/, 'nadrób ') + '.');
+  if (boss?.pokonany) lines.push('Boss tygodnia pokonany: +200 XP.');
+  else if (boss && new Date(p.date + 'T12:00:00').getDay() === 0) lines.push(boss.nazwa + ' przetrwał z ' + kzNum(Math.max(0, boss.hp)) + ' życia. Nowy boss w poniedziałek.');
+  $('#kzOvLines').replaceChildren(...lines.map(t => el('li', {}, t)));
+  $('#kzOvSeria').textContent = (p.zaliczony ? '▲ ' : '') + 'Seria: ' + kzDni(p.seria);
+  $('#kzOvSeria').classList.remove('pulse');
+  const kam = p.zaliczony ? kzKamien(p.seria - 1, p.seria) : null;
+  $('#kzOvKamien').classList.toggle('hidden', !kam); $('#kzOvKamien').textContent = kam ? kzDni(kam) + ' serii – ogień nie gaśnie.' : '';
+  $('#kzOvLvl').classList.toggle('hidden', !p.poziom_w_gore); $('#kzOvLvl').textContent = p.poziom_w_gore ? 'POZIOM W GÓRĘ · ' + p.poziom + ' · ' + p.ranga : '';
+  $('#kzOvMsg').textContent = p.komunikat || ''; $('#kzOvMsg').classList.toggle('bad', bad);
+  // Płatna naprawa serii – w wersji 1 tylko pokazana (cena z symulatora), płatność w fazie C.
+  $('#kzOvRepair').classList.toggle('hidden', !lost); $('#kzOvRepair').textContent = 'Przywróć serię ' + kzDni(p.seria_utracona) + ' – 9,99 zł · wkrótce';
+  $('#kzOv').classList.remove('hidden'); document.body.classList.add('kz-on'); kzOvOpen = true;
+  ['header', 'main', '.rail', 'nav', '#pg'].forEach(sel => { const e = $('#app ' + sel); if (e) e.inert = true; });
+  $('#kzOvOk').focus();
+  // Licznik XP: od 0 do wyniku w ok. 1 s; potem pulsuje seria.
+  const xp = p.xp || 0, t0 = performance.now(), dur = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1000, out = $('#kzOvXp');
+  const step = t => { const f = dur ? (t - t0) / dur : 1; out.textContent = (xp < 0 ? '' : '+') + kzLicznik(xp, f); if (f < 1 && kzOvOpen) requestAnimationFrame(step); else if (p.zaliczony) $('#kzOvSeria').classList.add('pulse'); };
+  requestAnimationFrame(step);
+}
+function kzOvClose() {
+  if (!kzOvOpen) return;
+  kzOvOpen = false; $('#kzOv').classList.add('hidden'); document.body.classList.remove('kz-on');
+  ['header', 'main', '.rail', 'nav', '#pg'].forEach(sel => { const e = $('#app ' + sel); if (e) e.inert = sel === '#pg' ? false : !!pgQ; });
+  $('#kzEnd').focus({ preventScroll: true }); pgCheck();
+}
+$('#kzOvOk').onclick = kzOvClose;
+document.addEventListener('keydown', e => { if (kzOvOpen && e.key === 'Escape') kzOvClose(); });
+// Statystyki postaci (zakładka Asystent): 8 statystyk 0–99 z 28 dni, sezon 6 tygodni.
+function renderKzStaty() {
+  const s = kz.stan, card = $('#kzStCard'); card.classList.toggle('hidden', !s); if (!s) return;
+  const st = s.statystyki || {};
+  $('#kzSt').replaceChildren(...KZ_STATY.flatMap(([obszar, lista]) => [el('h3', {}, obszar), ...lista.map(n => el('div', {},
+    el('div', { class: 'row' }, el('span', {}, n), el('b', {}, String(st[n] ?? 0))),
+    el('div', { class: 'kz-bar', 'aria-hidden': 'true' }, el('i', { style: 'transform:scaleX(' + Math.min(1, (st[n] ?? 0) / 99) + ')' }))))]));
+  const sz = s.sezon || {}, tydz = sz.start ? Math.min(6, Math.floor((Date.parse(ymd(new Date())) - Date.parse(sz.start)) / (7 * 864e5)) + 1) : null;
+  $('#kzSez').textContent = 'Sezon ' + (sz.nr ?? 1) + (tydz ? ' · tydzień ' + tydz + ' z 6' : ' · zacznie się po pierwszym zamkniętym dniu') + ' · poziom sezonu ' + (sz.poziom ?? 0) + ' · najdłuższa seria ' + kzDni(s.najdluzsza_seria || 0) + '. Statystyki liczą się z zamkniętych dni (ostatnie 28).';
+}
+// Panel ☰ → Kuźnia: tryb, stałe zadania dnia (cel, XP, dni), własne zadania, boss tygodnia, przypomnienia.
+const KZ_ZRODLA = { 'praca:getmed': 'GetMed (stoper)', 'praca:zlap': 'Złap Termin (stoper)', 'praca:projekty': 'Moje projekty (stoper)', trening: 'trening z zakładki Trening', kalorie: 'kalorie z Jedzenia', sen: 'sen', modlitwa: 'modlitwa (rano albo tutaj)', plan: 'plan dnia', rehab: 'rehab', reczne: 'odhaczasz w oknie Kuźni' };
+const kzLista = () => cfg.kuznia_zadania || kz.dom || [];
+function renderKzPanel() {
+  const st = $('#pKzSt'), lista = kzLista(), tryb = cfg.kuznia_tryb || 'normal';
+  $('#pKzN').textContent = '· ' + (tryb === 'hard' ? 'Hard' : 'Normal');
+  const zapisz = (nowa, msg) => saveSettings({ kuznia_zadania: nowa === null ? null : kzZadaniaZapis(nowa) }, st).then(ok => { renderKzPanel(); if (ok) { loadKuznia().then(renderKuznia); if (msg) toast(msg); } });
+  const zmien = (i, patch) => zapisz(lista.map((z, j) => j === i ? { ...z, ...patch } : z));
+  const wiersz = (z, i) => {
+    const src = String(z.zrodlo || 'reczne'), godz = src.startsWith('praca:') || src === 'sen', kcal = src === 'kalorie', xpK = src.startsWith('praca:') ? 'xp_jedn' : 'xp';
+    const meta = (godz ? 'cel ' + kzNum(z.cel) + ' h · ' : kcal ? 'cel ' + Math.round(z.cel * 100) + '% kalorii · ' : '') + (z[xpK] ?? (src.startsWith('praca:') ? 10 : 10)) + ' XP' + (src.startsWith('praca:') ? '/h' : src === 'plan' ? ' za rzecz' : '') + ' · ' + kzDniTekst(z.dni);
+    const dni = Array.isArray(z.dni) ? z.dni : [1, 2, 3, 4, 5, 6, 7];
+    const body = [el('p', { class: 'muted', style: 'margin:4px 0 0' }, 'Liczy się z: ' + (KZ_ZRODLA[src] || src) + ' · statystyka ' + (z.stat || 'Wiedza'))];
+    if (godz) body.push(goalInput('Cel (godziny)', kzNum(z.cel), (v, f) => { const m = parseHours(v); if (!m) { f.value = kzNum(z.cel); return toast('Wpisz godziny, np. 4 albo 1,5'); } zmien(i, { cel: m / 60 }); }));
+    if (kcal) body.push(goalInput('Cel (% kalorii z celu)', Math.round(z.cel * 100), (v, f) => { const n = parseInt(v, 10); if (!(n >= 10 && n <= 200)) { f.value = Math.round(z.cel * 100); return toast('Wpisz od 10 do 200'); } zmien(i, { cel: n / 100 }); }));
+    body.push(goalInput(src.startsWith('praca:') ? 'XP za godzinę' : src === 'plan' ? 'XP za odhaczoną rzecz' : 'XP za zrobienie', z[xpK] ?? 10, (v, f) => { const n = parseInt(v, 10); if (!(n >= 0 && n <= 100)) { f.value = z[xpK] ?? 10; return toast('Wpisz od 0 do 100'); } zmien(i, { [xpK]: n }); }));
+    body.push(el('div', { class: 'kz-days', role: 'group', 'aria-label': 'Dni tygodnia: ' + z.nazwa }, ...['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd'].map((l, di) => {
+      const d = di + 1, on = dni.includes(d);
+      return el('button', { class: on ? 'on' : '', 'aria-pressed': String(on), onclick: () => zmien(i, { dni: on ? dni.filter(x => x !== d) : [...dni, d] }) }, l);
+    })));
+    body.push(el('button', { class: 'ghost small', style: 'margin-top:8px', onclick: () => { if (confirm('Usunąć „' + z.nazwa + '” z zadań dnia?')) zapisz(lista.filter((_, j) => j !== i)); } }, 'Usuń z zadań dnia'));
+    const d = el('details', { class: 'psub' }, el('summary', {}, el('span', {}, z.nazwa, el('span', { class: 'muted', style: 'display:block;font-weight:400;font-size:13px' }, meta))), ...body);
+    d.open = kzPanelOpen.has(z.k); d.addEventListener('toggle', () => d.open ? kzPanelOpen.add(z.k) : kzPanelOpen.delete(z.k));
+    return d;
+  };
+  const nowe = el('input', { placeholder: 'Własne zadanie, np. Czytanie 20 min', 'aria-label': 'Nowe własne zadanie dnia' });
+  const dodaj = () => { const t = kzNoweZadanie(nowe.value, lista); if (!t) return toast('Wpisz nazwę zadania'); zapisz([...lista, t], 'Dodane – odhaczasz je w oknie Kuźni'); };
+  nowe.addEventListener('keydown', e => { if (e.key === 'Enter') dodaj(); });
+  const b = cfg.boss, bossOn = !!b;
+  const bossSave = patch => saveSettings({ boss: { ...b, ...patch } }, st).then(() => { renderKzPanel(); loadKuznia().then(renderKuznia); });
+  const bossNazwa = el('input', { type: 'text', 'aria-label': 'Nazwa bossa', onchange: () => { const n = bossNazwa.value.trim(); if (!n) { bossNazwa.value = b.nazwa || ''; return toast('Wpisz nazwę'); } bossSave({ nazwa: n }); } });
+  if (bossOn) bossNazwa.value = b.nazwa || '';
+  const bossBody = bossOn ? [
+    el('label', { class: 'goal', style: 'grid-template-columns:1fr' }, el('span', {}, 'Nazwa bossa'), bossNazwa),
+    el('label', { class: 'goal' }, el('span', {}, 'Z czego traci życie'), el('select', { 'aria-label': 'Źródło bossa', onchange: e => bossSave({ zrodlo: e.target.value }) },
+      ...WORK.map(([k, l]) => { const o = el('option', { value: 'praca:' + k }, l + ' – godziny stopera'); if (b.zrodlo === 'praca:' + k) o.selected = true; return o; }))),
+    goalInput('Cel na tydzień (godziny = życie bossa)', kzNum(b.cel), (v, f) => { const m = parseHours(v); if (!m) { f.value = kzNum(b.cel); return toast('Wpisz godziny, np. 20'); } bossSave({ cel: m / 60 }); }),
+  ] : [];
+  $('#pKz').replaceChildren(
+    el('h3', {}, 'Tryb'),
+    el('div', { class: 'seg', role: 'group', 'aria-label': 'Tryb Kuźni' }, ...[['normal', 'Normal'], ['hard', 'Hard']].map(([k, l]) => el('button', { class: tryb === k ? 'on' : 'ghost', 'aria-pressed': String(tryb === k),
+      onclick: () => tryb !== k && saveSettings({ kuznia_tryb: k }, st).then(ok => { renderKzPanel(); if (ok) loadKuznia().then(renderKuznia); }) }, l))),
+    el('p', { class: 'muted kz-tryb' }, tryb === 'hard' ? 'Hard: seria i 1 tarcza, −5 Dyscypliny za każde niewykonane zadanie, a po nieczystym dniu zadanie karne na jutro (nadrób + 1 h pracy). Niezrobione zadanie karne = −30 XP. Poziom nigdy nie spada.'
+      : 'Normal: seria i 1 tarcza (ratuje serię raz, nowa po 7 dniach), −5 Dyscypliny za każde niewykonane zadanie dnia. Dzień zaliczony = choć jedno zadanie zrobione.'),
+    el('h3', {}, 'Zadania dnia'),
+    ...lista.map(wiersz),
+    el('div', { class: 'addrow' }, nowe, el('button', { 'aria-label': 'Dodaj zadanie', onclick: dodaj }, '+')),
+    cfg.kuznia_zadania ? el('button', { class: 'ghost small', style: 'margin-top:8px', onclick: () => { if (confirm('Przywrócić domyślne zadania dnia? Własne zadania znikną.')) zapisz(null, 'Domyślne zadania przywrócone'); } }, 'Przywróć domyślne') : '',
+    el('h3', {}, 'Boss tygodnia'),
+    sw(bossOn, 'Boss tygodnia', () => saveSettings({ boss: bossOn ? null : { nazwa: 'Strażnik 20 godzin', zrodlo: 'praca:getmed', cel: 20 } }, st).then(() => { renderKzPanel(); loadKuznia().then(renderKuznia); })),
+    ...bossBody,
+    el('h3', {}, 'Przypomnienia'),
+    sw(cfg.kuznia_przypomnienia !== false, 'Przypomnienia 18:00 i 21:30 (gdy seria zagrożona)', () => saveSettings({ kuznia_przypomnienia: cfg.kuznia_przypomnienia === false }, st).then(renderKzPanel)));
+}
+const kzPanelOpen = new Set();
+$('#pKzSec').addEventListener('toggle', e => { if (e.target.open) renderKzPanel(); });
+
 // ---------- Przegląd pamięci ----------
 // Asystent nocny zapisuje wątpliwości i swoje poprawki w public.przeglad. Apka sama pokazuje je w oknie nad ekranem,
 // jedna po drugiej; decyzja idzie przez funkcję przeglad_decyzja. „Później” chowa okno (localStorage, z datą).
@@ -2037,7 +2451,7 @@ function pgCheck() {
   const today = ymd(new Date()), list = przegladDoPokazania(pgRows, today);
   const odlozone = przegladPozniej(pgLaterGet(), today, Date.now(), pgFirst); pgFirst = false; // „uruchomienie apki” liczy się tylko przy pierwszym sprawdzeniu
   const pisze = !!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]');
-  const inneOkno = $('#app').classList.contains('hidden') || !$('#start').classList.contains('hidden') || $('#drawer').classList.contains('on');
+  const inneOkno = $('#app').classList.contains('hidden') || !$('#start').classList.contains('hidden') || $('#drawer').classList.contains('on') || kzOvOpen;
   if (!przegladOtworzyc({ count: list.length, odlozone, pisze, inneOkno })) return;
   pgQ = list; pgI = 0; pgErr = ''; pgPisz = null; pgBusy = null;
   $('#pg').classList.remove('hidden'); document.body.classList.add('pg-on'); pgBehind();
@@ -2105,7 +2519,7 @@ async function refresh(force) {
   if (!force && (Date.now() - lastLoad < 15000 || document.activeElement?.matches('input,textarea'))) return;
   lastLoad = Date.now();
   cur = dayOnResume(cur, followToday, new Date());
-  await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad()]); renderAll(); pgCheck(); // bez show(): nie przewija na górę
+  await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad(), loadKuznia()]); renderAll(); pgCheck(); // bez show(): nie przewija na górę
   for (const k of ['stop', 'end']) if (wb()['custom_' + k] && !customBuf[k]) loadCustom(k);
   checkAutoStop(); checkBreakSounds(); // powrót z tła: godzina mogła minąć, gdy zegar stał
 }

@@ -133,3 +133,8 @@ test('KZ_STATY: 8 statystyk w 4 obszarach', () => {
   assert.equal(KZ_STATY.flatMap(([, s]) => s).length, 8);
   assert.deepEqual(KZ_STATY.map(([o]) => o), ['Ciało', 'Praca', 'Głowa', 'Duch i relacje']);
 });
+
+test('PANEL_CARDS: okno Kuźni można wyłączyć w ☰ (pierwsze na liście)', async () => {
+  const { PANEL_CARDS } = await import('../lib.js');
+  assert.equal(PANEL_CARDS[0][0], 'kuznia');
+});
