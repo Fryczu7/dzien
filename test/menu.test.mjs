@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, menuChosen } from '../lib.js';
+import { menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, menuChosen, slotGone, menuLeft, eatOther, menuOtherMsg, MENU_SRC } from '../lib.js';
 
 const opt = (name, kcal, protein, src) => ({ name, kcal, protein, src, detail: name + ' – skład' });
 const menu = () => ({
@@ -70,11 +70,57 @@ test('eatItem: stała pozycja → wpis + stale[i].eaten; cofnięcie zdejmuje eat
   assert.equal(eatItem(m, 'stale', 9), null);
 });
 
-test('menuChosen i menuTimeline: kolejność po godzinie, stałe między posiłkami', () => {
+test('menuChosen i menuTimeline: posiłki po godzinie, stałe osobno', () => {
   const m = menu(); m.slots[2].chosen = 0;
   assert.equal(menuChosen(m.slots[2]).name, 'Kanapki');
   assert.equal(menuChosen(m.slots[0]), null);
-  m.stale.push({ name: 'Bez godziny', kcal: 1 }); m.slots[0].time = '9:30';
-  assert.deepEqual(menuTimeline(m).map(r => r.x.name || r.x.label), ['Śniadanie', 'Shake', 'Obiad', 'Mieszanka studencka 100 g', 'Banan', 'Kolacja', 'Bez godziny']);
+  m.slots[0].time = '21:30';
+  assert.deepEqual(menuTimeline(m).map(r => r.x.label), ['Obiad', 'Kolacja', 'Śniadanie']);
+  assert.ok(menuTimeline(m).every(r => r.kind === 'slot'));
   assert.deepEqual(menuTimeline(null), []);
+});
+
+test('slotGone: posiłek bez wyboru znika 2 h po swojej porze, na minionym dniu od razu', () => {
+  const m = menu(), sn = m.slots[0]; // 11:00
+  assert.equal(slotGone(sn, 12 * 60 + 59), false);
+  assert.equal(slotGone(sn, 13 * 60), true);
+  assert.equal(slotGone(sn, 'miniony'), true);
+  assert.equal(slotGone(sn, null), false);
+  sn.chosen = 0; assert.equal(slotGone(sn, 16 * 60), false, 'wybrany zostaje, żeby kliknąć „Zjadłem”');
+  sn.chosen = null; sn.eaten = true; assert.equal(slotGone(sn, 16 * 60), false);
+});
+
+test('menuNeedsChoice i menuTotals.open o 16:00: śniadanie z 11:00 już nie wisi', () => {
+  const m = menu(), o16 = 16 * 60;
+  assert.deepEqual(menuTotals(m, o16).open, ['Obiad', 'Kolacja']);
+  m.slots[1].chosen = 0; m.slots[2].chosen = 0;
+  assert.equal(menuNeedsChoice(m, o16), false);
+  assert.equal(menuNeedsChoice(m), true, 'bez godziny – śniadanie dalej czeka');
+});
+
+test('menuLeft: zostało w planie = wybrane niezjedzone + niezjedzone stałe', () => {
+  const m = menu(); m.slots[1].chosen = 0; m.slots[2].chosen = 1; m.slots[2].eaten = true; m.stale[0].eaten = true;
+  assert.deepEqual(menuLeft(m), { kcal: 700 + 105 + 500, protein: 50 + 1 + 15 });
+  assert.deepEqual(menuLeft(null), { kcal: 0, protein: 0 });
+});
+
+test('eatOther: „coś innego” zamyka posiłek, bez kalorii też; drugi raz nic', () => {
+  const m = menu(), r = eatOther(m, 1, { name: ' Bigos + 2 bułki ', kcal: 690, protein: 30 });
+  assert.deepEqual(r.meal, { name: 'Bigos + 2 bułki', kcal: 690, protein: 30 });
+  assert.deepEqual([r.patch.slots[1].eaten, r.patch.slots[1].inne.name, r.patch.slots[1].chosen], [true, 'Bigos + 2 bułki', null]);
+  assert.deepEqual(eatOther(m, 0, { name: 'Pasztet z bułką' }).meal, { name: 'Pasztet z bułką', kcal: null, protein: null });
+  assert.equal(eatOther(m, 0, { name: '  ' }), null);
+  m.slots = r.patch.slots;
+  assert.equal(eatOther(m, 1, { name: 'X' }), null);
+  // suma liczy „coś innego”; cofnięcie zdejmuje inne
+  assert.equal(menuTotals(m).kcal, 1335 + 690);
+  const u = uneatItem(m, 'slot', 1).slots[1];
+  assert.deepEqual([u.eaten, 'inne' in u, u.meal_id], [false, false, null]);
+});
+
+test('menuOtherMsg i etykieta „ustalone”', () => {
+  const t = menuOtherMsg('2026-10-14', 'obiad', 'Obiad');
+  assert.match(t, /menu_zjedzone\('2026-10-14', 'obiad', '<nazwa>', <kcal>, <białko>\)/);
+  assert.match(t, /Zjadłem: $/);
+  assert.equal(MENU_SRC.ustalone, 'ustalone');
 });

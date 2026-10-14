@@ -1,5 +1,5 @@
 // Prosty cache powłoki apki; dane zawsze z sieci (Supabase).
-const CACHE = 'dzien-v24';
+const CACHE = 'dzien-v25';
 const SHELL = ['./', './index.html', './lib.js', './spizarnia.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
