@@ -227,7 +227,7 @@ export function progressSummary(progress) {
   return s;
 }
 
-// ---------- Asystent: liczniki serii, propozycje (Biorę / Zmień / Nie), check-in ----------
+// ---------- Liczniki serii (karta „Ten tydzień” na Dziś), propozycje asystenta (Biorę / Zmień / Nie), check-in ----------
 // Seria = kolejne dni wstecz. Dziś jeszcze trwa: jeśli dziś niezrobione, seria liczy się od wczoraj.
 export function streakDays(dates, today) {
   let d = dates.has(today) ? today : addDays(today, -1), n = 0;
@@ -338,6 +338,32 @@ export function workTotals(rows, today, now) {
   }
   const running = rows.find(r => !r.ended_at) || null;
   return { day, week, running, runningMs: running ? msOf(running, now) : 0 };
+}
+// Przerwa co godzinę: po 60 min ciągłej pracy stoper sam staje, odcinek kończy się dokładnie na 60. minucie.
+// „Ciągła” = chodzący odcinek plus poprzednie, które przechodzą w siebie bez luki (zmiana „do czego” w trakcie).
+export const WORK_LIMIT_MS = 60 * 60e3, WORK_JOIN_MS = 60e3, BREAK_MIN_MS = 5 * 60e3, BREAK_MAX_MS = 15 * 60e3;
+export function workChainStart(rows, run, joinMs = WORK_JOIN_MS) {
+  let start = Date.parse(run.started_at);
+  const done = rows.filter(r => r !== run && r.ended_at).sort((a, b) => Date.parse(b.ended_at) - Date.parse(a.ended_at));
+  for (const r of done) {
+    const end = Date.parse(r.ended_at);
+    if (end > start + joinMs) continue; // kończy się po starcie łańcucha – nie poprzednik
+    if (start - end > joinMs) break;    // luka = przerwa, łańcuch się urywa
+    start = Math.min(start, Date.parse(r.started_at));
+  }
+  return start;
+}
+// Kiedy zamknąć chodzący odcinek: ISO końca (start łańcucha + limit, nie „teraz” – działa też po powrocie z tła) albo null.
+export function workAutoStop(rows, now, limitMs = WORK_LIMIT_MS) {
+  const run = rows.find(r => !r.ended_at);
+  if (!run) return null;
+  const end = Math.max(Date.parse(run.started_at), workChainStart(rows, run) + limitMs);
+  return now >= end ? new Date(end).toISOString() : null;
+}
+// Licznik przerwy: ile trwa i w jakiej fazie (krótka < 5 min, ok 5–15, koniec ≥ 15).
+export function breakState(startMs, now, minMs = BREAK_MIN_MS, maxMs = BREAK_MAX_MS) {
+  const ms = Math.max(0, now - startMs);
+  return { ms, phase: ms < minMs ? 'krotka' : ms < maxMs ? 'ok' : 'koniec' };
 }
 const pad = n => String(n).padStart(2, '0');
 export const fmtClock = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 3600) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };

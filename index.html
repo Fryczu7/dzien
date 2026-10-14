@@ -15,10 +15,10 @@
 <style>
 :root{
   --bg:#0f1115;--card:#181b22;--card2:#1f232c;--line:#2a2f3a;--text:#e8eaef;--muted:#8b93a3;
-  --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--bad:#dc2626;--bad-ink:#f87171;--blue:#60a5fa;
+  --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--warn-ink:#f59e0b;--bad:#dc2626;--bad-ink:#f87171;--blue:#60a5fa;
 }
 @media (prefers-color-scheme: light){
-  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc:#16a34a;--acc-ink:#166534;--bad-ink:#b91c1c;}
+  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc:#16a34a;--acc-ink:#166534;--bad-ink:#b91c1c;--warn-ink:#b45309;}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -272,12 +272,19 @@ body[data-off~="tab-jedzenie"] nav [data-v=jedzenie],body[data-off~="tab-zakupy"
 .clock.run{color:var(--acc-ink)}
 #wToggle{margin-top:6px;font-size:18px}
 #wToggle.stop{background:var(--bad);color:#fff}
+#wBreakEnd{margin-top:8px}
+.wbreak{text-align:center;margin:14px 0 0}
+.wbreak .wb-title{font-size:22px;font-weight:600;margin:0 0 4px;color:var(--warn-ink)}
+.wbreak .muted{margin:0;text-wrap:balance}
+.clock.brk{color:var(--warn-ink);margin-top:6px}
+.clock.brk.end{color:var(--acc-ink)}
 .wline{margin-top:12px}
 .wline .row{font-size:15px}
 .wline .muted{font-size:14px;font-variant-numeric:tabular-nums}
 .wbar{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:9;display:flex;align-items:center;gap:10px;padding:6px 8px 6px 16px;background:var(--card2);border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
 .wbar span{flex:1;min-width:0;font-weight:600}
 .wbar button{background:var(--bad);color:#fff;min-height:40px;padding:6px 16px}
+.wbar button.back{background:var(--acc);color:#06210f}
 body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 /* Modlitwy: tekst do czytania, większa czcionka */
 .prayer{border-top:1px solid var(--line)}
@@ -502,13 +509,19 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
     </div>
   </div>
 
-  <!-- Stoper pracy: Michał wybiera, do czego leci czas; każdy Start/Stop zapisuje się w tabeli praca -->
+  <!-- Stoper pracy: Michał wybiera, do czego leci czas; każdy Start/Stop zapisuje się w tabeli praca.
+       Po godzinie ciągłej pracy stoper sam staje i karta pokazuje przerwę 5–15 min z licznikiem i „Wracam”. -->
   <div class="card" id="cardPraca">
     <h2>Praca</h2>
     <div class="wkinds" id="wKinds" role="group" aria-label="Do czego leci czas"></div>
+    <div class="wbreak hidden" id="wBreak" role="status" aria-live="polite">
+      <p class="wb-title">Przerwa 5–15 min</p>
+      <p class="muted" id="wBreakTxt"></p>
+    </div>
     <div class="clock" id="wClock" role="timer" aria-live="off">0:00:00</div>
     <p class="muted hidden" id="wHint" style="text-align:center;margin:0 0 6px"></p>
     <button id="wToggle" class="wide">Start</button>
+    <button id="wBreakEnd" class="ghost wide hidden">Koniec pracy na dziś</button>
     <div id="wLines"></div>
   </div>
 </section>
@@ -578,17 +591,13 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   <details class="card" id="wHist"><summary>Historia treningów <span class="muted" id="wHistN"></span></summary><div id="wList"></div></details>
 </section>
 
-<!-- ASYSTENT: propozycje na dziś (Biorę / Nie / Napisz do Claude), liczniki, praca z nocy, pomysły, podsumowania, cele -->
+<!-- ASYSTENT: propozycje na dziś (Biorę / Nie / Napisz do Claude), praca z nocy, pomysły, podsumowania, cele. Liczniki tygodnia są tylko na „Dziś” (decyzja Michała 14.10). -->
 <section id="v-asystent" class="hidden">
   <a class="talk talk-main narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz asystentowi</a>
   <p class="muted talk-hint narrowonly">Zna Twoje dane, cele i to, co zrobił w nocy. Zapytaj np. „co dziś?” albo „co zrobiłeś w nocy?”.</p>
   <div class="card coach" id="aDay">
     <h2 id="aDayTitle">Propozycje na dziś</h2>
     <ul id="aOpen" class="props"></ul>
-  </div>
-  <div class="card" id="aWeekCard">
-    <h2>Ten tydzień</h2>
-    <div class="week" id="aWeek"></div>
   </div>
   <div class="card" id="aIdeas">
     <h2>Pomysły asystenta</h2>
@@ -661,7 +670,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, WORK_LIMIT_MS, BREAK_MIN_MS, BREAK_MAX_MS, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline } from './lib.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -849,7 +858,7 @@ function renderDzis() {
   $('#dKcal').replaceChildren(el('b', {}, k + ' / ' + kt + ' kcal'), el('span', { class: 'muted' }, ' · ' + p + ' / ' + pt + ' g białka'));
   $('#dKcalBar').style.width = Math.min(100, k / kt * 100) + '%';
 
-  // Tydzień: liczniki i serie (te same na Dziś i w zakładce Asystent)
+  // Tydzień: liczniki i serie – tylko tutaj, na „Dziś” (od 14.10 nie ma ich w zakładce Asystent)
   $('#week').replaceChildren(...weekCells());
   renderCheckin();
 
@@ -1144,7 +1153,6 @@ function renderAsystent(focusId) {
     : hasProps ? [el('li', { class: 'muted' }, 'Wszystko zdecydowane (' + sp.decided.filter(x => x.status !== 'odrzucona').length + ' w planie na „Dziś”).')]
     : old.length ? coachList(old)
     : [el('li', { class: 'muted' }, 'Asystent przyjdzie z propozycjami po nocy (2:00).')]));
-  $('#aWeek').replaceChildren(...weekCells());
   const work = noc?.work || [];
   $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem' + (noc.date === today ? '' : ' (' + dm(noc.date) + ')')), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
   $('#aIdeasList').replaceChildren(...(sp.ideas.length ? sp.ideas.map(propItem) : [el('li', { class: 'muted' }, 'Na razie brak nowych pomysłów.')]));
@@ -1542,30 +1550,110 @@ let wKind = null;
 try { const v = JSON.parse(localStorage.getItem('wKind') || 'null'); if (v?.date === ymd(new Date())) wKind = v.kind; } catch {}
 const keepKind = k => { wKind = k; try { localStorage.setItem('wKind', JSON.stringify({ date: ymd(new Date()), kind: k })); } catch {} };
 let wBusy = false, wCardSeen = false;
+// Podgląd lokalny: ?limit=20&przerwa=30 skraca godzinę pracy i 15 min przerwy do sekund (na produkcji ignorowane).
+const qs = new URLSearchParams(location.search), devHost = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const WLIMIT = devHost && +qs.get('limit') ? +qs.get('limit') * 1000 : WORK_LIMIT_MS;
+const BMAX = devHost && +qs.get('przerwa') ? +qs.get('przerwa') * 1000 : BREAK_MAX_MS, BMIN = BMAX * BREAK_MIN_MS / BREAK_MAX_MS;
+// Przerwa po automatycznym stopie: { at: ms końca odcinka, kind, chimed } – w localStorage, żeby przetrwała odświeżenie.
+// Karta przerwy znika po 2 h (wtedy to już nie przerwa, tylko koniec pracy).
+const BREAK_SHOW_MS = 2 * 3600e3;
+let wBreak = null;
+try { const v = JSON.parse(localStorage.getItem('wBreak') || 'null'); if (v && Date.now() - v.at < BREAK_SHOW_MS) wBreak = v; } catch {}
+const setBreak = b => { wBreak = b; try { b ? localStorage.setItem('wBreak', JSON.stringify(b)) : localStorage.removeItem('wBreak'); } catch {} };
+
+// Dźwięk z Web Audio (bez plików). Przeglądarka pozwala grać dopiero po dotknięciu – odblokowujemy przy pierwszym kliknięciu.
+let actx = null;
+function audioUnlock() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    const s = actx.createBufferSource(); s.buffer = actx.createBuffer(1, 1, 22050); s.connect(actx.destination); s.start(0); // iOS: cichy dźwięk = odblokowanie
+  } catch {}
+}
+document.addEventListener('pointerdown', audioUnlock, { once: true });
+function tones(list) {
+  if (!actx) return;
+  try {
+    actx.resume?.(); const t0 = actx.currentTime + 0.05;
+    for (const [f, at, dur, vol, type] of list) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + at); g.gain.exponentialRampToValueAtTime(vol, t0 + at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + dur);
+      o.connect(g).connect(actx.destination); o.start(t0 + at); o.stop(t0 + at + dur + 0.05);
+    }
+  } catch {}
+}
+// Stop: wyraźne trzy tony w dół, dwa razy. Koniec przerwy: dwa łagodne tony w górę.
+const soundStop = () => tones([0, 1.6].flatMap(o => [[880, o, .3, .6, 'square'], [660, o + .35, .3, .6, 'square'], [440, o + .7, .6, .6, 'square']]));
+const soundSoft = () => tones([[523, 0, .9, .3, 'sine'], [784, .45, 1.3, .3, 'sine']]);
+// Powiadomienie systemowe przez service worker (Android i iOS wymagają SW; iOS tylko apka z ekranu głównego, iOS 16.4+).
+function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); } catch {} }
+async function notify(title, body) {
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible' && document.hasFocus()) return; // patrzy na apkę – wystarczy karta i dźwięk
+    const reg = await navigator.serviceWorker?.getRegistration();
+    const o = { body, tag: 'praca', renotify: true, requireInteraction: true, icon: 'icon-192.png' };
+    reg ? await reg.showNotification(title, o) : new Notification(title, o);
+  } catch {}
+}
+
 async function workStart(kind) {
   const row = { date: ymd(new Date()), kind, started_at: new Date().toISOString() };
   const { data, error } = await sb.from('praca').insert(row).select().single();
   if (error) { fail(error); await refresh(true); return false; }
-  workRows.push(data); return true;
+  workRows.push(data); setBreak(null); return true;
 }
-async function workStop(r) {
-  const ended_at = new Date().toISOString();
-  const { error } = await sb.from('praca').update({ ended_at }).eq('id', r.id);
+// ended_at podany = automatyczny stop (koniec na 60. minucie). Tylko chodzący wiersz – drugie urządzenie nie nadpisze końca.
+async function workStop(r, ended_at = new Date().toISOString()) {
+  const { error } = await sb.from('praca').update({ ended_at }).eq('id', r.id).is('ended_at', null);
   if (error) { fail(error); return false; }
   r.ended_at = ended_at; return true;
 }
 async function workAction(fn) { if (wBusy) return; wBusy = true; try { await fn(); } finally { wBusy = false; renderPraca(); } }
+// Godzina minęła → zamknij odcinek na start + 60 min (także po powrocie z tła), przerwa, dźwięk, powiadomienie.
+async function checkAutoStop() {
+  if (wBusy) return;
+  const end = workAutoStop(workRows, Date.now(), WLIMIT); if (!end) return;
+  const run = workRows.find(r => !r.ended_at);
+  await workAction(async () => {
+    if (!await workStop(run, end)) return;
+    const at = Date.parse(end); if (Date.now() - at < BREAK_SHOW_MS) setBreak({ at, kind: run.kind, chimed: false }); // po > 2 h nie ma już „przerwy”
+    if (Date.now() - at < 5 * 60e3) soundStop(); // po długim powrocie z tła już nie grać – karta mówi sama
+    notify('Przerwa 5–15 min', 'Godzina pracy (' + WL[run.kind] + ') zapisana. Wstań od komputera.');
+  });
+}
+// Koniec przerwy (15 min): łagodny dźwięk raz; po powrocie z tła po czasie – bez dźwięku.
+function checkBreakEnd() {
+  if (!wBreak || wBreak.chimed) return;
+  const late = Date.now() - wBreak.at - BMAX; if (late < 0) return;
+  if (late < 2 * 60e3) { soundSoft(); notify('Koniec przerwy', 'Minęło 15 min – wracasz do ' + WL[wBreak.kind] + '?'); }
+  setBreak({ ...wBreak, chimed: true });
+}
 function renderPraca() {
-  const today = ymd(new Date()), t = workTotals(workRows, today, Date.now()), run = t.running;
+  const today = ymd(new Date()), now = Date.now(), t = workTotals(workRows, today, now), run = t.running;
   if (run) wKind = run.kind;
+  if (wBreak && now - wBreak.at >= BREAK_SHOW_MS) setBreak(null);
+  const brk = !run && wBreak ? breakState(wBreak.at, now, BMIN, BMAX) : null;
   $('#wKinds').replaceChildren(...WORK.map(([k, l]) => el('button', { class: wKind === k ? 'on' : '', 'aria-pressed': String(wKind === k), onclick: () => workAction(async () => {
     if (run && run.kind !== k) { if (await workStop(run)) { keepKind(k); await workStart(k); } }
     else keepKind(k);
   }) }, l)));
-  $('#wClock').textContent = fmtClock(t.runningMs); $('#wClock').classList.toggle('run', !!run);
-  const tg = $('#wToggle'); tg.textContent = run ? 'Stop' : 'Start'; tg.classList.toggle('stop', !!run);
+  $('#wBreak').classList.toggle('hidden', !brk);
+  if (brk) {
+    const left = Math.ceil((BMIN - brk.ms) / 60e3);
+    $('#wBreakTxt').textContent = brk.phase === 'krotka' ? 'Godzina pracy zapisana. Wstań od komputera – jeszcze min. ' + left + ' min.'
+      : brk.phase === 'ok' ? 'Możesz wracać, kiedy chcesz.' : 'Minęło 15 min – czas wracać.';
+  }
+  const clock = $('#wClock');
+  clock.textContent = brk ? fmtClock(brk.ms).replace(/^0:/, '') : fmtClock(t.runningMs);
+  clock.classList.toggle('run', !!run); clock.classList.toggle('brk', !!brk); clock.classList.toggle('end', brk?.phase === 'koniec');
+  clock.setAttribute('aria-label', brk ? 'Przerwa trwa' : 'Czas pracy');
+  const tg = $('#wToggle');
+  tg.textContent = run ? 'Stop' : brk ? 'Wracam – ' + WL[wKind || wBreak.kind] : 'Start'; tg.classList.toggle('stop', !!run);
+  $('#wBreakEnd').classList.toggle('hidden', !brk);
   const long = run && t.runningMs > 10 * 3600e3, hint = $('#wHint');
-  hint.classList.toggle('hidden', !long && !!(run || wKind));
+  hint.classList.toggle('hidden', !long && !!(run || wKind || brk));
   hint.textContent = long ? 'Chodzi ponad 10 h – zapomniałeś wyłączyć? Zatrzymaj i powiedz Claude, o której skończyłeś.' : 'Wybierz wyżej, nad czym pracujesz.';
   const tgt = cfg.work_targets || WORK_DEFAULT;
   $('#wLines').replaceChildren(...WORK.map(([k, l]) => {
@@ -1573,20 +1661,32 @@ function renderPraca() {
     return el('div', { class: 'wline' }, el('div', { class: 'row' }, el('b', { class: 'grow' }, l), el('span', { class: 'muted' }, workLine(k, t, tgt, today))),
       goal ? el('div', { class: 'bar' }, el('i', { style: 'width:' + pct + '%' })) : '');
   }));
-  const bar = !!run && !wCardSeen;
+  // Pasek na dole, gdy karty nie widać: chodzący stoper (Stop) albo przerwa (Wracam).
+  const bar = !!(run || brk) && !wCardSeen;
   $('#wBar').classList.toggle('hidden', !bar); document.body.classList.toggle('wbar-on', bar);
   if (run) $('#wBarTxt').textContent = WL[run.kind] + ' · ' + fmtClock(t.runningMs);
+  else if (brk) $('#wBarTxt').textContent = 'Przerwa · ' + fmtClock(brk.ms).replace(/^0:/, '');
+  $('#wBarStop').textContent = run ? 'Stop' : 'Wracam'; $('#wBarStop').classList.toggle('back', !run);
 }
-$('#wToggle').onclick = () => workAction(async () => {
-  const run = workTotals(workRows, ymd(new Date()), Date.now()).running;
+// Start / Stop / Wracam (po przerwie: nowy odcinek w tym samym „do czego”, chyba że wybrał inne).
+async function toggleWork() {
+  audioUnlock(); const run = workTotals(workRows, ymd(new Date()), Date.now()).running;
   if (run) return void await workStop(run);
-  if (!wKind) return toast('Najpierw wybierz: GetMed, Złap Termin albo Moje projekty');
-  await workStart(wKind);
-});
-$('#wBarStop').onclick = () => workAction(async () => { const run = workRows.find(r => !r.ended_at); if (run) await workStop(run); });
+  const kind = wKind || wBreak?.kind;
+  if (!kind) return toast('Najpierw wybierz: GetMed, Złap Termin albo Moje projekty');
+  askNotify(); keepKind(kind); await workStart(kind);
+}
+$('#wToggle').onclick = () => workAction(toggleWork);
+$('#wBarStop').onclick = () => workAction(toggleWork);
+$('#wBreakEnd').onclick = () => { setBreak(null); renderPraca(); toast('Koniec pracy na dziś'); };
 // Pasek „GetMed 1:23:05 · Stop” tylko wtedy, gdy karty stopera nie widać na ekranie.
 new IntersectionObserver(es => { wCardSeen = es.some(e => e.isIntersecting); renderPraca(); }).observe($('#cardPraca'));
-setInterval(() => { if (workRows.some(r => !r.ended_at)) renderPraca(); }, 1000);
+// Co sekundę: limit godziny, koniec przerwy, licznik. W tle przeglądarka zwalnia zegar (do ~1/min), a telefon
+// zablokowany go zatrzymuje – wtedy stop liczy się przy powrocie (refresh → checkAutoStop) z końcem na 60. minucie.
+setInterval(() => {
+  if (workRows.some(r => !r.ended_at)) { checkAutoStop(); renderPraca(); }
+  else if (wBreak) { checkBreakEnd(); renderPraca(); }
+}, 1000);
 function renderPrayers() {
   $('#prayers').replaceChildren(...(prayers.length ? prayers.map(m => el('details', { class: 'prayer' }, el('summary', {}, m.title), el('div', { class: 'prayer-txt' }, m.body)))
     : [el('p', { class: 'muted' }, 'Brak modlitw. Powiedz Claude: „dodaj modlitwę …”.')]));
@@ -1601,6 +1701,7 @@ async function refresh(force) {
   lastLoad = Date.now();
   cur = dayOnResume(cur, followToday, new Date());
   await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); // bez show(): nie przewija na górę
+  checkAutoStop(); checkBreakEnd(); // powrót z tła: godzina mogła minąć, gdy zegar stał
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') return flushText(); refresh(true); });
 window.addEventListener('focus', () => refresh(false));

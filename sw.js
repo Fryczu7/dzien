@@ -1,5 +1,5 @@
 // Prosty cache powłoki apki; dane zawsze z sieci (Supabase).
-const CACHE = 'dzien-v20';
+const CACHE = 'dzien-v21';
 const SHELL = ['./', './index.html', './lib.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -15,4 +15,12 @@ self.addEventListener('fetch', e => {
     fetch(e.request).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return r; })
       .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
   );
+});
+// Kliknięcie w powiadomienie (przerwa w pracy) – pokaż otwartą apkę albo ją otwórz.
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs.find(x => x.url.startsWith(self.registration.scope));
+    return c ? c.focus() : self.clients.openWindow('./');
+  }));
 });
