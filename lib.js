@@ -546,3 +546,78 @@ export function przegladPrzyciski(p) {
 }
 // Wynik funkcji przeglad_decyzja: 'ok' i 'już zdecydowane' / 'brak pozycji' = pozycja zamknięta, idziemy dalej.
 export const przegladDalej = wynik => ['ok', 'już zdecydowane', 'brak pozycji'].includes(wynik);
+
+// ---------- Kuźnia (gra): logika w bazie (kuznia_*), tu tylko to, co apka rysuje między odświeżeniami ----------
+// Stoper chodzi co sekundę – godziny pracy na żywo z odcinków w apce (workTotals().day), reszta z kuznia_dzien_na_zywo.
+// XP jak w bazie: godzina = 10, praca łącznie maks. 100/dzień; czysty dzień (wszystkie aktywne zrobione) +25.
+const kzLiczba = (n, d = 1) => String(Math.round(n * 10 ** d) / 10 ** d).replace('.', ',');
+export function kzNaZywo(dzien, workDayMs) {
+  if (!dzien) return null;
+  let praca = 0;
+  const zadania = (dzien.zadania || []).map(z => {
+    const kind = String(z.zrodlo || '').startsWith('praca:') ? z.zrodlo.slice(6) : null;
+    if (!kind || !workDayMs || workDayMs[kind] == null) { if (kind) praca += z.xp || 0; return z; }
+    const postep = Math.round(workDayMs[kind] / 36e3) / 100, xp = Math.min(Math.round(postep * 10), Math.max(0, 100 - praca));
+    praca += xp;
+    return { ...z, postep, xp, zrobione: postep >= z.cel };
+  });
+  const akt = zadania.filter(z => z.aktywne), czysty = akt.length > 0 && akt.every(z => z.zrobione);
+  return { ...dzien, zadania, czysty, zaliczony: akt.some(z => z.zrobione), xp: zadania.reduce((s, z) => s + (z.xp || 0), 0) + (czysty ? 25 : 0) };
+}
+// Postęp zadania obok nazwy; zadania „zrobione / nie” bez liczby.
+export function kzPostep(z) {
+  const src = String(z.zrodlo || '');
+  if (src.startsWith('praca:') || src === 'sen') return kzLiczba(z.postep || 0) + ' / ' + kzLiczba(z.cel) + ' h';
+  if (src === 'kalorie') return (z.kcal ?? 0) + ' / ' + (z.kcal_cel ?? '?') + ' kcal';
+  if (src === 'plan') return (z.postep || 0) + ' / ' + z.cel;
+  return '';
+}
+// Na liście: zadania aktywne dziś + nieaktywne, które i tak dały punkty (premia, np. praca w sobotę).
+export const kzWidoczne = zadania => (zadania || []).filter(z => z.aktywne || z.xp > 0).map(z => z.aktywne ? z : { ...z, premia: true });
+// Co zyskało punkty od poprzedniego odświeżenia → animacja „+X”. Stoper: tylko pełne godziny (+10 za każdą).
+export function kzZyski(prev, next) {
+  if (!prev || !next) return [];
+  const out = [];
+  for (const z of next.zadania || []) {
+    const p = (prev.zadania || []).find(x => x.k === z.k); if (!p) continue;
+    const xp = String(z.zrodlo || '').startsWith('praca:') ? (Math.floor(z.postep || 0) - Math.floor(p.postep || 0)) * 10 : (z.xp || 0) - (p.xp || 0);
+    if (xp > 0) out.push({ k: z.k, xp });
+  }
+  return out;
+}
+export const KZ_KAMIENIE = [7, 30, 100];
+export const kzKamien = (przed, po) => [...KZ_KAMIENIE].reverse().find(m => przed < m && po >= m) ?? null;
+export const kzDni = n => n + ' ' + (n === 1 ? 'dzień' : 'dni');
+// Licznik w podsumowaniu dnia: t = część czasu animacji (0–1), wygaszanie wykładnicze – szybki start, miękki koniec.
+export const kzLicznik = (cel, t) => t >= 1 ? cel : Math.round(cel * (1 - 2 ** (-10 * Math.max(0, t))));
+export const kzPasek = s => s && s.prog > 0 ? Math.max(0, Math.min(1, s.w_poziomie / s.prog)) : 0;
+// Po otwarciu apki (kuznia_zamknij_zalegle) – podsumowanie ostatniego dnia, jeśli nie było już pokazane (np. po „Zakończ dzień”).
+export function kzDoPokazania(wyniki, widziane) {
+  const last = (wyniki || []).at(-1);
+  return last && (!widziane || last.date > widziane) ? last : null;
+}
+// Panel ☰: nowe własne zadanie (odhaczane ręcznie, zapis w kuznia_dni.reczne).
+export function kzNoweZadanie(nazwa, lista = []) {
+  const n = String(nazwa || '').trim(); if (!n) return null;
+  return { k: itemKey(n, lista.map(z => [z.k])), nazwa: n, zrodlo: 'reczne', cel: 1, xp: 10, stat: 'Wiedza' };
+}
+const KZ_DNI = ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd'];
+export function kzDniTekst(dni) {
+  if (!Array.isArray(dni) || dni.length === 7) return 'codziennie';
+  if (!dni.length) return 'nigdy';
+  const s = [...dni].sort((a, b) => a - b);
+  if (s.join() === '1,2,3,4,5') return 'pn–pt';
+  return s.map(d => KZ_DNI[d - 1]).join(', ');
+}
+// Przed zapisem do settings.kuznia_zadania: XP 0–100, cel > 0, wszystkie dni = bez pola „dni”.
+export function kzZadaniaZapis(lista) {
+  const ok = (n, lo, hi, d) => Number.isFinite(+n) && +n >= lo && +n <= hi ? +n : d;
+  return (lista || []).map(z => {
+    const t = { ...z, cel: ok(z.cel, 0.01, 1000, 1) };
+    if ('xp' in t) t.xp = Math.min(100, Math.max(0, Math.round(+t.xp) || 0));
+    if (Array.isArray(t.dni)) { t.dni = [...new Set(t.dni)].filter(d => d >= 1 && d <= 7).sort((a, b) => a - b); if (t.dni.length === 7) delete t.dni; }
+    return t;
+  });
+}
+// Statystyki postaci (0–99) w 4 obszarach – kolejność na ekranie.
+export const KZ_STATY = [['Ciało', ['Siła', 'Zwinność', 'Zdrowie']], ['Praca', ['Pracowitość']], ['Głowa', ['Wiedza', 'Dyscyplina']], ['Duch i relacje', ['Duch', 'Relacje']]];
