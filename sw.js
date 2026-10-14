@@ -1,6 +1,6 @@
 // Prosty cache powłoki apki; dane zawsze z sieci (Supabase).
-const CACHE = 'dzien-v26';
-const SHELL = ['./', './index.html', './lib.js', './spizarnia.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
+const CACHE = 'dzien-v27';
+const SHELL = ['./', './index.html', './lib.js', './spizarnia.js', './push.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
@@ -22,5 +22,14 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
     const c = cs.find(x => x.url.startsWith(self.registration.scope));
     return c ? c.focus() : self.clients.openWindow('./');
+  }));
+});
+// Powiadomienie z serwera (Web Push: koniec godziny pracy, koniec przerwy) – działa też przy zablokowanym telefonie.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Dzień', {
+    body: d.body || '', tag: d.tag || 'praca', renotify: true, requireInteraction: true,
+    icon: './icon-192.png', badge: './icon-192.png', data: { url: d.url || './' },
   }));
 });
