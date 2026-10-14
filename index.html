@@ -78,6 +78,7 @@ nav button.on{color:var(--acc-ink)}
 .sp{display:grid;grid-template-columns:1fr auto;column-gap:12px;row-gap:2px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
 .sp:last-child{border-bottom:0}
 .sp .nm{min-width:0}
+.sp .q{color:var(--muted)}
 .sp .ln{grid-column:1/-1;color:var(--muted);font-size:14px}
 .sp .sps{font-size:13px;font-weight:600;color:var(--warn-ink);white-space:nowrap}
 .sp .sps.brak{color:var(--bad-ink)}
@@ -1098,7 +1099,7 @@ function renderPantry() {
   $('#spBuy').classList.toggle('hidden', !on); $('#spAll').classList.toggle('hidden', !on); $('#spOneTitle').classList.toggle('hidden', !on);
   $('#spTalk').textContent = on ? 'Powiedz Claude, co kupiłeś' : 'Powiedz Claude, co dopisać';
   if (!on) return;
-  const row = s => el('div', { class: 'sp' }, el('span', { class: 'nm' }, s.product.name), el('span', { class: 'sps ' + s.state }, STAN[s.state]), el('span', { class: 'ln' }, stateLine(s)));
+  const row = s => el('div', { class: 'sp' }, el('span', { class: 'nm' }, s.product.name, s.product.usual_qty ? el('span', { class: 'q' }, ' · ' + s.product.usual_qty) : ''), el('span', { class: 'sps ' + s.state }, STAN[s.state]), el('span', { class: 'ln' }, stateLine(s)));
   const buy = toBuy(products, purchases, today);
   $('#spBuyList').replaceChildren(...(buy.length ? buy.map(row) : [el('div', { class: 'muted' }, 'Nic się nie kończy. Kupione rzeczy powiedz Claude – lista sama się przeliczy.')]));
   const all = pantry(products, purchases, today), cats = [...new Set(all.map(s => s.product.category || 'inne'))];
