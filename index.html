@@ -2407,6 +2407,11 @@ function renderKzPanel() {
   const dodaj = () => { const t = kzNoweZadanie(nowe.value, lista); if (!t) return toast('Wpisz nazwę zadania'); zapisz([...lista, t], 'Dodane – odhaczasz je w oknie Kuźni'); };
   nowe.addEventListener('keydown', e => { if (e.key === 'Enter') dodaj(); });
   const b = cfg.boss, bossOn = !!b;
+  // Przypomnienia Kuźni (wysyła serwer, tor B3): wyłącznik i dwie godziny HH:MM w settings.kuznia_przypomnienia_godziny.
+  const przyOn = cfg.kuznia_przypomnienia !== false, pg = { seria: '15:00', zostalo: '18:00', ...(cfg.kuznia_przypomnienia_godziny || {}) };
+  const godz = (k, label) => { const f = el('input', { type: 'time', 'aria-label': label }); f.value = pg[k];
+    f.addEventListener('change', () => { if (!/^\d{2}:\d{2}$/.test(f.value)) { f.value = pg[k]; return toast('Wpisz godzinę, np. 18:00'); } saveSettings({ kuznia_przypomnienia_godziny: { ...pg, [k]: f.value } }, st).then(renderKzPanel); });
+    return el('label', { class: 'goal' }, el('span', {}, label), f); };
   const bossSave = patch => saveSettings({ boss: { ...b, ...patch } }, st).then(() => { renderKzPanel(); loadKuznia().then(renderKuznia); });
   const bossNazwa = el('input', { type: 'text', 'aria-label': 'Nazwa bossa', onchange: () => { const n = bossNazwa.value.trim(); if (!n) { bossNazwa.value = b.nazwa || ''; return toast('Wpisz nazwę'); } bossSave({ nazwa: n }); } });
   if (bossOn) bossNazwa.value = b.nazwa || '';
@@ -2430,7 +2435,8 @@ function renderKzPanel() {
     sw(bossOn, 'Boss tygodnia', () => saveSettings({ boss: bossOn ? null : { nazwa: 'Strażnik 20 godzin', zrodlo: 'praca:getmed', cel: 20 } }, st).then(() => { renderKzPanel(); loadKuznia().then(renderKuznia); })),
     ...bossBody,
     el('h3', {}, 'Przypomnienia'),
-    sw(cfg.kuznia_przypomnienia !== false, 'Przypomnienia 18:00 i 21:30 (gdy seria zagrożona)', () => saveSettings({ kuznia_przypomnienia: cfg.kuznia_przypomnienia === false }, st).then(renderKzPanel)));
+    sw(przyOn, 'Przypomnienia na telefon', () => saveSettings({ kuznia_przypomnienia: !przyOn }, st).then(renderKzPanel)),
+    ...(przyOn ? [godz('zostalo', 'Co zostało z zadań dnia'), godz('seria', 'Seria zagrożona (tylko gdy dzień niezaliczony)')] : []));
 }
 const kzPanelOpen = new Set();
 $('#pKzSec').addEventListener('toggle', e => { if (e.target.open) renderKzPanel(); });
