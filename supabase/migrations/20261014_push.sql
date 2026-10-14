@@ -3,7 +3,7 @@
 -- i przez pg_net woła edge function `push-wyslij`, która wysyła Web Push.
 -- Sekrety (klucz prywatny VAPID, sekret wywołań) są tylko w vault – repo apki jest publiczne.
 
-create extension if not exists pg_net;
+create extension if not exists pg_net with schema extensions;  -- funkcje i tak w schemacie net
 create extension if not exists pg_cron;
 
 -- Subskrypcje powiadomień (jedno urządzenie/przeglądarka = jeden wiersz).
