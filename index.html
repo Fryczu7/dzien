@@ -75,6 +75,16 @@ nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:9px
 nav button.on{color:var(--acc-ink)}
 .tabs2{display:flex;gap:6px;margin-bottom:10px}
 .tabs2 button{flex:1}
+.sp{display:grid;grid-template-columns:1fr auto;column-gap:12px;row-gap:2px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.sp:last-child{border-bottom:0}
+.sp .nm{min-width:0}
+.sp .ln{grid-column:1/-1;color:var(--muted);font-size:14px}
+.sp .sps{font-size:13px;font-weight:600;color:var(--warn-ink);white-space:nowrap}
+.sp .sps.brak{color:var(--bad-ink)}
+.sp .sps.mam,.sp .sps.nieznany{color:var(--muted);font-weight:400}
+#spAll>summary{gap:8px}#spAll>summary .muted{font-weight:400}
+.spcat{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:14px 0 0}
+.spcat:first-child{margin-top:4px}
 .hidden{display:none!important}
 #toast{position:fixed;left:50%;bottom:90px;max-width:calc(100vw - 32px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 #toast.show{opacity:1}
@@ -567,12 +577,19 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 <!-- ZAKUPY: dwie listy do kupienia -->
 <section id="v-zakupy" class="hidden">
   <div class="tabs2"><button id="tZ" aria-pressed="true">Dla mnie</button><button class="ghost" id="tS" aria-pressed="false">Spiżarnia</button></div>
+  <!-- Spiżarnia: stałe produkty; apka sama liczy, co się pewnie kończy (spizarnia.js). Zakupy wpisuje Claude z rozmowy. -->
+  <div class="card hidden" id="spBuy">
+    <h2>Do kupienia</h2>
+    <div id="spBuyList"></div>
+  </div>
   <div class="card">
+    <h2 class="hidden" id="spOneTitle">Jednorazowe</h2>
     <div class="row"><input id="iNew" placeholder="Dodaj produkt" aria-label="Produkt"><input id="iQty" placeholder="ilość" aria-label="Ilość" style="max-width:90px"><button id="iAdd" aria-label="Dodaj">+</button></div>
   </div>
   <div class="card"><div id="items"></div></div>
   <div id="iHint"></div>
-  <a class="talk ghost-talk narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener">Powiedz Claude, co dopisać</a>
+  <details class="card hidden" id="spAll"><summary>Wszystkie produkty <span class="muted" id="spAllN"></span></summary><div id="spAllList"></div></details>
+  <a class="talk ghost-talk narrowonly" href="https://claude.ai/projects" target="_blank" rel="noopener" id="spTalk">Powiedz Claude, co dopisać</a>
 </section>
 
 <!-- TRENING: plany z postępem i ostatnie treningi; serie zapisuje Claude z rozmowy -->
@@ -671,6 +688,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 <script src="vendor/supabase.js"></script>
 <script type="module">
 import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, WORK_LIMIT_MS, BREAK_MIN_MS, BREAK_MAX_MS, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline } from './lib.js';
+import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
 const $ = s => document.querySelector(s);
@@ -690,6 +708,7 @@ window.addEventListener('online', () => setOffline(false));
 window.addEventListener('offline', () => setOffline(true));
 let cur = ymd(new Date());
 let followToday = true; // czy patrzymy na „dziś” – wtedy po północy apka sama przeskakuje na nowy dzień
+let products = [], purchases = [];
 let day = null, rules = [], items = [], goals = [], weights = [], meals = [];
 let menu = null; const menuBusy = new Set(), menuOpen = new Set(); // menuOpen = posiłki rozwinięte przez „Zmień”
  // menu na oglądany dzień (tabela menu) i „Zjadłem” w toku (bez podwójnego wpisu)
@@ -740,7 +759,7 @@ async function loadHistory() {
 }
 async function loadStatic() {
   const today = ymd(new Date());
-  const [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo] = await Promise.all([
+  const [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo, spP, spZ] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
@@ -755,8 +774,11 @@ async function loadStatic() {
     sb.from('praca').select('*').gte('date', weekStart(today)).order('started_at'),
     sb.from('praca').select('*').is('ended_at', null), // chodzący stoper, nawet sprzed tego tygodnia
     sb.from('modlitwy').select('*').order('sort').order('created_at'),
+    sb.from('products').select('*').order('sort').order('name'),
+    sb.from('purchases').select('product_id,date').order('date', { ascending: false }).limit(3000),
   ]);
-  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo].find(x => x.error); if (bad) failLoad(bad.error);
+  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo, spP, spZ].find(x => x.error); if (bad) failLoad(bad.error);
+  products = spP.data ?? products; purchases = spZ.data ?? purchases;
   if (pr.data && prRun.data) workRows = [...pr.data, ...prRun.data.filter(x => !pr.data.some(y => y.id === x.id))];
   prayers = mo.data ?? prayers;
   if (pd.data && pp.data) props = [...pd.data, ...pp.data];
@@ -1067,6 +1089,21 @@ function renderItems() {
   if (!list.length) $('#items').append(el('div', { class: 'muted' }, 'Pusto.'));
   const doneIds = list.filter(i => i.done).map(i => i.id), hint = $('#iHint'); hint.replaceChildren();
   if (doneIds.length) hint.append(el('button', { class: 'ghost small', onclick: async () => { const { error } = await sb.from('items').delete().in('id', doneIds); if (error) return fail(error); items = items.filter(i => !doneIds.includes(i.id)); renderItems(); toast('Kupione usunięte z listy'); } }, 'Kupione (' + doneIds.length + ') – usuń z listy'));
+  renderPantry();
+}
+// Spiżarnia: „Do kupienia” = produkty, którym minęło ≥ 80% zwykłego odstępu; „Wszystkie produkty” tylko do podglądu.
+// Bez odhaczania – zakup wpisuje Claude z rozmowy, a lista sama się odświeża.
+function renderPantry() {
+  const on = itemKind === 'spizarnia' && products.length > 0, today = ymd(new Date());
+  $('#spBuy').classList.toggle('hidden', !on); $('#spAll').classList.toggle('hidden', !on); $('#spOneTitle').classList.toggle('hidden', !on);
+  $('#spTalk').textContent = on ? 'Powiedz Claude, co kupiłeś' : 'Powiedz Claude, co dopisać';
+  if (!on) return;
+  const row = s => el('div', { class: 'sp' }, el('span', { class: 'nm' }, s.product.name), el('span', { class: 'sps ' + s.state }, STAN[s.state]), el('span', { class: 'ln' }, stateLine(s)));
+  const buy = toBuy(products, purchases, today);
+  $('#spBuyList').replaceChildren(...(buy.length ? buy.map(row) : [el('div', { class: 'muted' }, 'Nic się nie kończy. Kupione rzeczy powiedz Claude – lista sama się przeliczy.')]));
+  const all = pantry(products, purchases, today), cats = [...new Set(all.map(s => s.product.category || 'inne'))];
+  $('#spAllN').textContent = all.length;
+  $('#spAllList').replaceChildren(...cats.flatMap(c => [el('div', { class: 'spcat' }, c), ...all.filter(s => (s.product.category || 'inne') === c).map(row)]));
 }
 // ---------- Asystent ----------
 // Propozycje: tytuł, „dlaczego” od razu pod spodem, szczegóły po dotknięciu; decyzja Biorę / Nie / Napisz do Claude.
