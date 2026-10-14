@@ -47,14 +47,15 @@ async function sendToUser(userId: string, title: string, body: string) {
   await Promise.all((subs ?? []).map(async s => {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload,
-        { TTL: 600, urgency: 'high', topic: 'praca' });
+        // Bez nagłówka Topic: Apple (iPhone) odrzuca go kodem 400 BadWebPushTopic.
+        { TTL: 600, urgency: 'high' });
       sent++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
       if (code === 404 || code === 410) {
         await admin.from('push_subscriptions').delete().eq('id', s.id);
         removed++;
-      } else errors.push(String(code ?? '') + ' ' + String((e as Error).message ?? e).slice(0, 200));
+      } else errors.push(String(code ?? '') + ' ' + String((e as { body?: string }).body ?? (e as Error).message ?? e).slice(0, 300));
     }
   }));
   return { subs: subs?.length ?? 0, sent, removed, errors };
