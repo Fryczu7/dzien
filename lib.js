@@ -380,13 +380,13 @@ export function workBreakCfg(v) {
   return c;
 }
 // Dźwięki (Web Audio, bez plików): [id, nazwa, tony]; ton = [Hz, start s, długość s, głośność, kształt, Hz na końcu (opcjonalnie)].
-// Pierwsze w listach: w stylu „Systemu” z Solo Leveling (syntezowane, bez nagrań z anime). 'wlasny' = plik wgrany w panelu.
+// Pierwsze w listach: w klimacie Kuźni (syntezowane, bez nagrań z anime; nazwy bez Solo Leveling – spec Kuźni). 'wlasny' = plik wgrany w panelu.
 export const SOUNDS_STOP = [
-  ['system-okno', 'System: nowe okno', [[1319, 0, .12, .3, 'sine'], [1661, .07, .12, .3, 'sine'], [1976, .14, .12, .3, 'sine'], [2637, .21, 1.6, .32, 'sine'], [2650, .21, 1.6, .12, 'triangle'], [1319, .21, 1.4, .18, 'sine']]],
-  ['system-zadanie', 'System: zadanie ukończone', [[440, 0, .16, .45, 'triangle'], [554, .14, .16, .45, 'triangle'], [659, .28, .16, .45, 'triangle'], [880, .42, 1.8, .45, 'triangle'], [1319, .42, 1.8, .22, 'sine'], [220, .42, 1.8, .3, 'sine']]],
+  ['system-okno', 'Kuźnia: nowe okno', [[1319, 0, .12, .3, 'sine'], [1661, .07, .12, .3, 'sine'], [1976, .14, .12, .3, 'sine'], [2637, .21, 1.6, .32, 'sine'], [2650, .21, 1.6, .12, 'triangle'], [1319, .21, 1.4, .18, 'sine']]],
+  ['system-zadanie', 'Kuźnia: zadanie ukończone', [[440, 0, .16, .45, 'triangle'], [554, .14, .16, .45, 'triangle'], [659, .28, .16, .45, 'triangle'], [880, .42, 1.8, .45, 'triangle'], [1319, .42, 1.8, .22, 'sine'], [220, .42, 1.8, .3, 'sine']]],
   ['level-up', 'Level up', [[300, 0, .5, .25, 'sawtooth', 1200], [523, .45, .15, .4, 'triangle'], [659, .58, .15, .4, 'triangle'], [784, .71, .15, .4, 'triangle'], [1047, .84, 1.6, .45, 'triangle'], [1568, .84, 1.6, .2, 'sine'], [523, .84, 1.6, .25, 'sine']]],
   ['brama', 'Brama się otwiera', [[55, 0, 2.6, .55, 'sine'], [82, 0, 2.4, .35, 'sine'], [110, .1, 2, .25, 'triangle', 165], [1760, 1.2, 1.4, .18, 'sine'], [2637, 1.35, 1.2, .12, 'sine']]],
-  ['powstan', 'Powstań (cień)', [[73, 0, .5, .6, 'sine'], [73, .6, .5, .6, 'sine'], [73, 1.2, .5, .6, 'sine'], [147, 1.8, 1.4, .4, 'triangle', 294], [587, 1.8, 1.6, .2, 'sine']]],
+  ['powstan', 'Kowadło', [[73, 0, .5, .6, 'sine'], [73, .6, .5, .6, 'sine'], [73, 1.2, .5, .6, 'sine'], [147, 1.8, 1.4, .4, 'triangle', 294], [587, 1.8, 1.6, .2, 'sine']]],
   ['trzy-tony', 'Trzy tony w dół ×2', [0, 1.6].flatMap(o => [[880, o, .3, .5, 'square'], [660, o + .35, .3, .5, 'square'], [440, o + .7, .6, .5, 'square']])],
   ['dzwonek', 'Dzwonek szkolny', Array.from({ length: 14 }, (_, i) => [i % 2 ? 784 : 988, i * .12, .11, .4, 'square'])],
   ['budzik', 'Budzik bip-bip', [0, .9, 1.8].flatMap(o => [0, .15, .3, .45].map(d => [1000, o + d, .1, .45, 'square']))],
@@ -397,9 +397,9 @@ export const SOUNDS_STOP = [
   ['uderzenia', 'Trzy mocne uderzenia', [0, 1.4].flatMap(o => [0, .35, .7].map(d => [523, o + d, .28, .6, 'triangle']))],
 ];
 export const SOUNDS_END = [
-  ['system-ping', 'System: ping', [[1760, 0, .5, .22, 'sine'], [2637, .18, .9, .2, 'sine'], [1760, .18, .9, .06, 'triangle']]],
-  ['mana', 'Mana odnowiona', [[1047, 0, .5, .2, 'sine'], [1319, .15, .5, .2, 'sine'], [1568, .3, .5, .2, 'sine'], [2093, .45, 1.4, .22, 'sine']]],
-  ['gotowosc', 'System: gotowość', [[659, 0, 2.2, .14, 'sine'], [988, .2, 2, .13, 'sine'], [1319, .4, 1.8, .12, 'sine'], [1976, .6, 1.6, .08, 'sine']]],
+  ['system-ping', 'Kuźnia: iskra', [[1760, 0, .5, .22, 'sine'], [2637, .18, .9, .2, 'sine'], [1760, .18, .9, .06, 'triangle']]],
+  ['mana', 'Żar odnowiony', [[1047, 0, .5, .2, 'sine'], [1319, .15, .5, .2, 'sine'], [1568, .3, .5, .2, 'sine'], [2093, .45, 1.4, .22, 'sine']]],
+  ['gotowosc', 'Kuźnia: gotowość', [[659, 0, 2.2, .14, 'sine'], [988, .2, 2, .13, 'sine'], [1319, .4, 1.8, .12, 'sine'], [1976, .6, 1.6, .08, 'sine']]],
   ['dwa-tony', 'Dwa tony w górę', [[523, 0, .9, .3, 'sine'], [784, .45, 1.3, .3, 'sine']]],
   ['dzwoneczek', 'Dzwoneczek', [[1568, 0, 1.2, .25, 'sine'], [2093, .25, 1.6, .2, 'sine']]],
   ['kalimba', 'Kalimba', [[659, 0, .6, .3, 'sine'], [784, .25, .6, .3, 'sine'], [988, .5, 1.2, .3, 'sine']]],
