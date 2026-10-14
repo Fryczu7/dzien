@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { workAutoStop, workChainStart, breakState, WORK_LIMIT_MS, workBreakCfg, WORK_BREAK_DEFAULT, SOUNDS_STOP, SOUNDS_END, soundTones, workTotals } from '../lib.js';
+import { workAutoStop, workChainStart, breakState, WORK_LIMIT_MS, workBreakCfg, WORK_BREAK_DEFAULT, SOUNDS_STOP, SOUNDS_END, soundTones, workTotals, workUntilBreak } from '../lib.js';
 
 const M = 60e3, T = s => Date.parse('2026-10-14T' + s + 'Z');
 const run = (start, kind = 'getmed') => ({ kind, started_at: '2026-10-14T' + start + 'Z', ended_at: null });
@@ -100,4 +100,16 @@ test('dźwięki: unikalne id, domyślne istnieją, nieznane id → pierwszy', ()
   assert.ok(SOUNDS_END.some(s => s[0] === WORK_BREAK_DEFAULT.sound_end));
   assert.equal(soundTones(SOUNDS_END, 'xyz'), SOUNDS_END[0][2]);
   for (const [, , tones] of [...SOUNDS_STOP, ...SOUNDS_END]) for (const t of tones) assert.ok(t[0] > 0 && t[2] > 0 && t[3] > 0 && t[3] <= 1);
+});
+
+test('workUntilBreak: ile do przerwy, liczone od startu łańcucha', () => {
+  const rows = [done('08:00:00', '08:20:00'), run('08:20:00', 'zlap')];
+  assert.equal(workUntilBreak(rows, T('08:30:00')), 30 * M);
+  assert.equal(workUntilBreak(rows, T('08:30:00'), WORK_LIMIT_MS, [brk('08:20:00', '08:20:00')]), 50 * M);
+  assert.equal(workUntilBreak([done('08:00:00', '08:10:00')], T('08:30:00')), null);
+});
+
+test('workBreakCfg: własny dźwięk zostaje', () => {
+  assert.equal(workBreakCfg({ sound_stop: 'wlasny', sound_end: 'wlasny' }).sound_stop, 'wlasny');
+  assert.equal(workBreakCfg({ sound_end: 'wlasny' }).sound_end, 'wlasny');
 });

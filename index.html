@@ -87,6 +87,7 @@ nav button.on{color:var(--acc-ink)}
 .spcat{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin:14px 0 0}
 .spcat:first-child{margin-top:4px}
 .hidden{display:none!important}
+.rail{display:none}
 #toast{position:fixed;left:50%;bottom:90px;max-width:calc(100vw - 32px);transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
 #toast.show{opacity:1}
 #toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:4px 4px 4px 14px}
@@ -289,6 +290,7 @@ body[data-off~="tab-jedzenie"] nav [data-v=jedzenie],body[data-off~="tab-zakupy"
 .snd .row{gap:8px}
 .snd select{flex:1}
 .snd .ghost{min-width:52px}
+.snd .small{margin-top:6px;min-height:40px;font-size:14px}
 #wToggle.stop{background:var(--bad);color:#fff}
 #wBreakEnd{margin-top:8px}
 .wbreak{text-align:center;margin:14px 0 0}
@@ -378,6 +380,11 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   #app:not(.hidden){display:flex;flex-direction:column;min-height:100dvh}
   header{order:0;position:static;width:100%;max-width:1200px;margin:0 auto;padding:16px 24px 8px;gap:10px}
   header h1{font-size:24px}
+  /* Pasek boczny z ☰ – zostaje przy przewijaniu; ☰ w nagłówku tylko na telefonie */
+  .rail{display:flex;position:fixed;left:0;top:0;bottom:0;width:64px;z-index:8;flex-direction:column;align-items:center;padding-top:14px;background:var(--bg);border-right:1px solid var(--line)}
+  body{padding-left:64px}
+  .wbar{left:64px}
+  header .menubtn{display:none}
   header .talk{display:flex;padding:0 20px;min-height:44px;margin-left:12px}
   nav{order:1;position:sticky;top:0;bottom:auto;background:var(--bg);border-top:0;border-bottom:1px solid var(--line);padding:0 max(24px,calc((100% - 1200px)/2 + 24px));justify-content:flex-start;gap:4px}
   nav button{flex:none;flex-direction:row;gap:8px;font-size:15px;padding:14px 16px 12px;border-bottom:2px solid transparent}
@@ -556,6 +563,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
       <p class="muted" id="wBreakTxt"></p>
     </div>
     <div class="clock" id="wClock" role="timer" aria-live="off">0:00:00</div>
+    <p class="muted hidden" id="wNext" style="text-align:center;margin:-2px 0 8px;font-variant-numeric:tabular-nums"></p>
     <p class="muted hidden" id="wHint" style="text-align:center;margin:0 0 6px"></p>
     <div class="wbtns"><button id="wPause" class="hidden">Przerwa</button><button id="wToggle">Start</button></div>
     <button id="wBreakEnd" class="ghost wide hidden">Koniec pracy na dziś</button>
@@ -708,6 +716,8 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
     <button class="ghost wide small" id="stSkip" style="margin-top:10px">Pomiń – zostaw jak jest</button>
   </div>
 </div>
+<!-- Pasek boczny (komputer): ☰ zostaje na ekranie przy przewijaniu -->
+<aside class="rail" aria-label="Pasek boczny"><button class="menubtn" id="menuRail" aria-label="Ustawienia" aria-controls="drawer" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></aside>
 <div class="wbar hidden" id="wBar"><span id="wBarTxt"></span><button id="wBarStop">Stop</button></div>
 <nav>
   <button data-v="dzis" class="on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>Dziś</button>
@@ -722,7 +732,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1612,10 +1622,12 @@ function drawer(open) {
   const d = $('#drawer');
   if (open) { renderDrawer(); if ($('#pWorkSec').open) renderWorkPanel(); }
   d.classList.toggle('on', open); $('#scrim').classList.toggle('on', open); d.inert = !open;
-  $('#menuOpen').setAttribute('aria-expanded', String(open));
-  if (open) $('#menuClose').focus(); else $('#menuOpen').focus();
+  $('#menuOpen').setAttribute('aria-expanded', String(open)); $('#menuRail').setAttribute('aria-expanded', String(open));
+  const back = getComputedStyle($('#menuRail')).display !== 'none' && $('#menuRail').offsetParent ? $('#menuRail') : $('#menuOpen');
+  if (open) $('#menuClose').focus(); else back.focus();
 }
 $('#menuOpen').onclick = () => drawer(true);
+$('#menuRail').onclick = () => drawer(true);
 $('#menuClose').onclick = () => drawer(false);
 $('#scrim').onclick = () => drawer(false);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#drawer').classList.contains('on')) drawer(false); });
@@ -1717,8 +1729,26 @@ function tones(list) {
     }
   } catch {}
 }
-const soundStop = id => tones(soundTones(SOUNDS_STOP, id || wb().sound_stop));
-const soundEnd = id => tones(soundTones(SOUNDS_END, id || wb().sound_end));
+// Własny dźwięk (wgrany w panelu): plik w kubełku „dzwieki” (<user_id>/stop albo /end), w pamięci jako AudioBuffer.
+const customBuf = {};
+async function loadCustom(key, force) {
+  if (customBuf[key] && !force) return customBuf[key];
+  try {
+    const { data, error } = await sb.storage.from('dzwieki').download(uid + '/' + key); if (error) throw error;
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    return (customBuf[key] = await actx.decodeAudioData(await data.arrayBuffer()));
+  } catch { return null; }
+}
+function playBuf(buf) {
+  try { actx.resume?.(); const s = actx.createBufferSource(), g = actx.createGain(); g.gain.value = 0.9; s.buffer = buf; s.connect(g).connect(actx.destination); s.start(); } catch {}
+}
+function playSound(list, key, id) {
+  if (id !== 'wlasny') return tones(soundTones(list, id));
+  if (customBuf[key] && actx) return playBuf(customBuf[key]);
+  tones(list[0][2]); loadCustom(key); // plik jeszcze się nie wczytał – tym razem dźwięk zastępczy
+}
+const soundStop = id => playSound(SOUNDS_STOP, 'stop', id || wb().sound_stop);
+const soundEnd = id => playSound(SOUNDS_END, 'end', id || wb().sound_end);
 // Powiadomienie z apki przez service worker, gdy apka nie jest na wierzchu (iOS: tylko apka z ekranu głównego, iOS 16.4+).
 // Pewne powiadomienie przy zablokowanym telefonie daje serwer (Web Push, moduł push.js) – ten sam tag, więc się nie dublują.
 function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); } catch {} }
@@ -1775,12 +1805,12 @@ function checkBreakSounds() {
   const since = Date.now() - Date.parse(b.started_at), key = b.id;
   if (b.auto && wHeard.stop !== key) {
     heard('stop', key);
-    if (since < 2 * 60e3) { soundStop(); notify('Przerwa ' + wb().break_min + '–' + wb().break_max + ' min', 'Godzina pracy (' + WL[b.kind] + ') zapisana. Wstań od komputera.'); }
+    if (since < 2 * 60e3) { soundStop(); notify('[SYSTEM] Zadanie ukończone', wb().limit_min + ' min skupienia: ' + WL[b.kind] + '. Czas regeneracji: ' + wb().break_min + '–' + wb().break_max + ' min. Wstań od komputera.'); }
   }
   const late = since - bMax();
   if (late >= 0 && wHeard.end !== key) {
     heard('end', key);
-    if (late < 2 * 60e3) { soundEnd(); notify('Koniec przerwy', 'Przerwa minęła – wracasz do ' + WL[b.kind || wKind] + '?'); }
+    if (late < 2 * 60e3) { soundEnd(); notify('[SYSTEM] Regeneracja zakończona', 'Siły odnowione. Następne zadanie: ' + WL[b.kind || wKind] + '. Wracasz?'); }
   }
 }
 // Przerwa zostawiona na ponad 2 h (np. koniec dnia bez kliknięcia) – zamknij ją na swoim końcu (start + max).
@@ -1799,21 +1829,28 @@ function renderPraca() {
   }) }, l)));
   $('#wBreak').classList.toggle('hidden', !brk);
   if (brk) {
-    $('#wBreakTitle').textContent = (ob.test ? 'Test: ' : '') + (ob.auto ? 'Przerwa ' + wb().break_min + '–' + wb().break_max + ' min' : 'Przerwa');
-    $('#wBreakTxt').textContent = brk.phase === 'koniec' ? 'Koniec przerwy – czas wracać.'
-      : ob.test ? 'Tak wygląda przerwa. Za 20 s zagra dźwięk końca przerwy.'
-      : ob.auto ? 'Godzina pracy zapisana. Wstań od komputera.' : 'Odejdź od komputera. Wróć, kiedy chcesz.';
+    // Teksty w stylu „Systemu” (Solo Leveling – kierunek wyglądu apki od 14.10).
+    $('#wBreakTitle').textContent = (ob.test ? 'Test · ' : '') + (brk.phase === 'koniec' ? 'Regeneracja zakończona' : ob.auto ? 'Zadanie ukończone' : 'Regeneracja');
+    $('#wBreakTxt').textContent = ob.test && brk.phase !== 'koniec' ? '[SYSTEM] To test. Nic nie klikaj – za chwilę zagra dźwięk końca przerwy.'
+      : brk.phase === 'koniec' ? '[SYSTEM] Siły odnowione. Następne zadanie czeka.'
+      : brk.phase === 'ok' ? '[SYSTEM] Regeneracja w toku. Możesz wrócić, gdy poczujesz gotowość.'
+      : ob.auto ? '[SYSTEM] ' + wb().limit_min + ' min skupienia zaliczone. Czas regeneracji: ' + wb().break_min + '–' + wb().break_max + ' min. Wstań od komputera.'
+      : '[SYSTEM] Regeneracja aktywna. Wstań, napij się wody, rozciągnij się.';
   }
   const clock = $('#wClock');
-  clock.textContent = brk ? fmtClock(brk.ms).replace(/^0:/, '') : fmtClock(t.runningMs);
+  // W pracy zegar pokazuje cały dzisiejszy czas tego projektu (po przerwie liczy dalej, zeruje się o północy);
+  // w przerwie – czas tej przerwy (od zera przy każdej). Pod spodem: ile zostało do przerwy.
+  clock.textContent = brk ? fmtClock(brk.ms).replace(/^0:/, '') : fmtClock(wKind ? t.day[wKind] || 0 : 0);
+  const left = run ? workUntilBreak(workRows, now, wLimit(), brkRows) : null;
+  $('#wNext').classList.toggle('hidden', left == null);
+  if (left != null) $('#wNext').textContent = 'do przerwy ' + fmtClock(left);
   clock.classList.toggle('run', !!run); clock.classList.toggle('brk', !!brk); clock.classList.toggle('end', brk?.phase === 'koniec');
   clock.setAttribute('aria-label', brk ? 'Przerwa trwa' : 'Czas pracy');
   const back = ob ? WL[wKind || ob.kind] || '' : '';
   const tg = $('#wToggle');
-  tg.textContent = run ? 'Stop' : brk ? 'Wracam' + (back ? ' – ' + back : '') : 'Start'; tg.classList.toggle('stop', !!run);
+  tg.textContent = run ? 'Stop' : ob?.test ? 'Zakończ test' : brk ? 'Wracam' + (back ? ' – ' + back : '') : 'Start'; tg.classList.toggle('stop', !!run);
   $('#wPause').classList.toggle('hidden', !run);
-  $('#wBreakEnd').classList.toggle('hidden', !brk);
-  $('#wBreakEnd').textContent = ob?.test ? 'Zakończ test' : 'Koniec pracy na dziś';
+  $('#wBreakEnd').classList.toggle('hidden', !brk || !!ob?.test);
   const long = run && t.runningMs > 10 * 3600e3, hint = $('#wHint');
   hint.classList.toggle('hidden', !long && !!(run || wKind || brk));
   hint.textContent = long ? 'Chodzi ponad 10 h – zapomniałeś wyłączyć? Zatrzymaj i powiedz Claude, o której skończyłeś.' : 'Wybierz wyżej, nad czym pracujesz.';
@@ -1826,7 +1863,7 @@ function renderPraca() {
   // Pasek na dole, gdy karty nie widać: chodzący stoper (Stop) albo przerwa (Wracam).
   const bar = !!(run || brk) && !wCardSeen;
   $('#wBar').classList.toggle('hidden', !bar); document.body.classList.toggle('wbar-on', bar);
-  if (run) $('#wBarTxt').textContent = WL[run.kind] + ' · ' + fmtClock(t.runningMs);
+  if (run) $('#wBarTxt').textContent = WL[run.kind] + ' · ' + fmtClock(t.day[run.kind] || 0);
   else if (brk) $('#wBarTxt').textContent = 'Przerwa · ' + fmtClock(brk.ms).replace(/^0:/, '');
   $('#wBarStop').textContent = run ? 'Stop' : 'Wracam'; $('#wBarStop').classList.toggle('back', !run);
 }
@@ -1858,9 +1895,11 @@ function testBreak() {
   audioUnlock(); drawer(false); show('dzis');
   if (workRows.some(r => !r.ended_at)) return toast('Najpierw zatrzymaj stoper – test pokazuje przerwę');
   wTest = { id: 'test-' + Date.now(), test: true, auto: true, kind: wKind || 'getmed', started_at: new Date().toISOString() };
-  soundStop(); notify('Test: przerwa', 'Tak przyjdzie powiadomienie po godzinie pracy.', true);
+  soundStop(); notify('[SYSTEM] Zadanie ukończone (test)', 'Tak przyjdzie powiadomienie po czasie pracy.', true);
   heard('stop', wTest.id); renderPraca(); $('#cardPraca').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+// Push z serwera przy otwartej apce (sw.js wysyła {type:'push'}) – od razu pokaż stan z bazy.
+navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.type === 'push') refresh(true); });
 // Pasek „GetMed 1:23:05 · Stop” tylko wtedy, gdy karty stopera nie widać na ekranie.
 new IntersectionObserver(es => { wCardSeen = es.some(e => e.isIntersecting); renderPraca(); }).observe($('#cardPraca'));
 // Co sekundę: limit pracy, dźwięki przerwy, licznik. W tle przeglądarka zwalnia zegar (do ~1/min), a telefon
@@ -1884,19 +1923,34 @@ async function renderWorkPanel() {
     if (key === 'break_max' && n < c.break_min) { f.value = c[key]; return toast('„Przerwa do” musi być co najmniej ' + c.break_min); }
     if (key === 'break_min' && n > c.break_max) { f.value = c[key]; return toast('„Przerwa od” może być najwyżej ' + c.break_max); }
     set({ [key]: n }); };
-  const pick = (label, list, key, play) => {
+  // Lista dźwięków + ▶ + „Wgraj własny” (plik audio do 1 MB, w kubełku „dzwieki” – tylko Twój folder).
+  const pick = (label, list, key, play, file) => {
+    const custom = !!c['custom_' + file];
     const s = el('select', { 'aria-label': label, onchange: () => { audioUnlock(); play(s.value); set({ [key]: s.value }); } },
-      ...list.map(([id, name]) => el('option', { value: id }, name)));
+      ...list.map(([id, name]) => el('option', { value: id }, name)), ...(custom ? [el('option', { value: 'wlasny' }, 'Własny plik')] : []));
     s.value = c[key];
+    const inp = el('input', { type: 'file', accept: 'audio/*', class: 'hidden', 'aria-label': 'Plik dźwięku: ' + label, onchange: async () => {
+      const f = inp.files[0]; inp.value = ''; if (!f) return;
+      if (f.size > 1048576) return toast('Plik za duży – najwyżej 1 MB (kilka sekund dźwięku)');
+      if (!/^audio\//.test(f.type)) return toast('To nie jest plik dźwiękowy');
+      audioUnlock(); st.textContent = 'Wgrywam…'; st.className = 'saved';
+      const { error } = await sb.storage.from('dzwieki').upload(uid + '/' + file, f, { upsert: true, contentType: f.type });
+      if (error) { st.textContent = 'Nie wgrano'; st.className = 'saved err'; return fail(error); }
+      const buf = await loadCustom(file, true);
+      if (!buf) { st.textContent = ''; return toast('Nie umiem odtworzyć tego pliku – spróbuj MP3 albo M4A'); }
+      playBuf(buf); set({ [key]: 'wlasny', ['custom_' + file]: true });
+    } });
     return el('div', { class: 'snd' }, el('span', {}, label), el('div', { class: 'row' }, s,
-      el('button', { class: 'ghost', 'aria-label': 'Posłuchaj: ' + label, onclick: () => { audioUnlock(); play(s.value); } }, '▶')));
+      el('button', { class: 'ghost', 'aria-label': 'Posłuchaj: ' + label, onclick: () => { audioUnlock(); play(s.value); } }, '▶')),
+      el('button', { class: 'ghost small', onclick: () => inp.click() }, custom ? 'Wgraj inny plik' : 'Wgraj własny dźwięk'), inp);
   };
   $('#pWork').replaceChildren(
     goalInput('Praca przed przerwą (min)', c.limit_min, num('limit_min', 1, 600)),
-    goalInput('Przerwa od (min)', c.break_min, num('break_min', 0, 240)),
-    goalInput('Przerwa do (min) – wtedy dźwięk „wracaj”', c.break_max, num('break_max', 1, 240)),
-    pick('Alarm po czasie pracy', SOUNDS_STOP, 'sound_stop', soundStop),
-    pick('Dźwięk końca przerwy', SOUNDS_END, 'sound_end', soundEnd));
+    goalInput('Najkrótsza przerwa (min)', c.break_min, num('break_min', 0, 240)),
+    goalInput('Najdłuższa przerwa (min) – potem dźwięk „wracaj”', c.break_max, num('break_max', 1, 240)),
+    pick('Alarm po czasie pracy', SOUNDS_STOP, 'sound_stop', soundStop, 'stop'),
+    pick('Dźwięk końca przerwy', SOUNDS_END, 'sound_end', soundEnd, 'end'));
+  for (const k of ['stop', 'end']) if (c['custom_' + k]) loadCustom(k);
   const ps = await notifyStatus();
   $('#pNotifyTxt').textContent = 'Powiadomienia: ' + PUSH_TXT[ps];
   $('#pNotifyHelp').textContent = ps === 'brak' ? 'Na iPhonie działają tylko w apce dodanej do ekranu głównego (Safari → Udostępnij → Do ekranu początkowego).'
@@ -1930,6 +1984,7 @@ async function refresh(force) {
   lastLoad = Date.now();
   cur = dayOnResume(cur, followToday, new Date());
   await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); // bez show(): nie przewija na górę
+  for (const k of ['stop', 'end']) if (wb()['custom_' + k] && !customBuf[k]) loadCustom(k);
   checkAutoStop(); checkBreakSounds(); // powrót z tła: godzina mogła minąć, gdy zegar stał
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') return flushText(); refresh(true); });
