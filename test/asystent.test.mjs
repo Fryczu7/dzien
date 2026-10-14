@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { streakDays, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, checkinMsg } from '../lib.js';
+import { streakDays, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, checkinMsg, claudeLink } from '../lib.js';
 
 // 2026-10-08 to czwartek; tydzień od poniedziałku 2026-10-05.
 const T = '2026-10-08';
@@ -116,5 +116,13 @@ test('checkinMsg: wiadomość do coacha z check-inu, z poleceniem zapisu odpowie
   assert.match(m, /Nastrój: 2\/5 \(słabo\)/);
   assert.match(m, /Co blokowało: telefon/);
   assert.doesNotMatch(m, /Doceniam/);
-  assert.match(m, /coach_evening_save\('2026-10-08'/);
+  assert.match(m, /coach_evening_save/);
+  assert.match(m, /2026-10-08/);
+  assert.doesNotMatch(m, /select|<odpowiedź>/);
+});
+
+test('claudeLink: tekst doklejony do adresu rozmowy (?q=), działa też z adresem, który ma już parametry', () => {
+  assert.equal(claudeLink('https://claude.ai/project/abc', 'Nastrój: 2/5'), 'https://claude.ai/project/abc?q=Nastr%C3%B3j%3A%202%2F5');
+  assert.equal(claudeLink('https://claude.ai/new?x=1', 'a b'), 'https://claude.ai/new?x=1&q=a%20b');
+  assert.equal(claudeLink('', 'a'), 'https://claude.ai/new?q=a');
 });

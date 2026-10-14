@@ -465,7 +465,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
         <label class="ask" for="doceniam">Za co się dziś doceniasz?</label>
         <textarea id="doceniam"></textarea>
         <button id="ciSend" class="wide">Wyślij coachowi</button>
-        <p class="muted" style="margin:8px 2px 0">Otworzy się rozmowa z Claude z gotową wiadomością – wklej i wyślij, coach odpowie od razu.</p>
+        <p class="muted" style="margin:8px 2px 0">Otworzy się rozmowa z Claude z wpisaną wiadomością – wyślij, coach odpowie od razu. Gdyby pole było puste: przytrzymaj i „Wklej” (tekst jest skopiowany).</p>
       </div>
       <div id="ciDone" class="hidden">
         <p id="ciSum" class="ci-sum"></p>
@@ -687,7 +687,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, WORK_LIMIT_MS, BREAK_MIN_MS, BREAK_MAX_MS, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, WORK_LIMIT_MS, BREAK_MIN_MS, BREAK_MAX_MS, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, claudeLink } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1137,10 +1137,10 @@ function propItem(p) {
   }
   return li;
 }
-// Wiadomość do Claude: kopiuje do schowka i otwiera czat projektu CEO w nowej karcie (wystarczy wkleić Ctrl+V / przytrzymać i Wklej).
+// Wiadomość do Claude: otwiera czat projektu CEO z tekstem w adresie (?q=) i dodatkowo kopiuje tekst (gdyby pole było puste – wkleić).
 function toClaude(text) {
   try { navigator.clipboard?.writeText(text); } catch {}
-  window.open(cfg.claude_url || 'https://claude.ai/projects', '_blank', 'noopener');
+  window.open(claudeLink(cfg.claude_url, text), '_blank', 'noopener');
 }
 // Plan dnia zawsze na dziś (nawet gdy na ekranie Dziś oglądasz inny dzień).
 async function todayPlan() {
@@ -1167,7 +1167,7 @@ async function decide(p, action, text) {
   const { error } = await sb.from('propozycje').update(patch).eq('id', p.id);
   if (error) { if (r.plan !== before) await saveTodayPlan(before); return fail(error); }
   Object.assign(p, patch); propUI.delete(p.id); renderAll();
-  const msg = action === 'nie' ? (patch.reply ? 'Skopiowane – wklej w czacie z Claude' : 'Odrzucone') : p.kind === 'pomysl' ? 'Zapisane – asystent weźmie to pod uwagę' : 'W planie na „Dziś”';
+  const msg = action === 'nie' ? (patch.reply ? 'Otwieram rozmowę – gdyby pole było puste, wklej' : 'Odrzucone') : p.kind === 'pomysl' ? 'Zapisane – asystent weźmie to pod uwagę' : 'W planie na „Dziś”';
   toast(msg, ['Cofnij', () => undo(p)]);
 }
 async function undo(p) {
@@ -1400,11 +1400,11 @@ $('#ciSend').onclick = async () => {
   if (!day.evening?.nastroj) return toast('Wybierz nastrój 1–5');
   flushText();
   const ev = checkinPatch(day.evening, { nastroj: day.evening.nastroj, blokada: $('#ciBlok').value, doceniam: $('#doceniam').value }, new Date());
-  toClaude(checkinMsg(cur, ev)); toast('Wiadomość skopiowana – wklej w rozmowie');
+  toClaude(checkinMsg(cur, ev)); toast('Otwieram rozmowę – gdyby pole było puste, wklej');
   if (await saveDay({ evening: ev })) { ciEditing = false; renderCheckin(); }
 };
 $('#ciEdit').onclick = () => { ciEditing = true; renderCheckin(); };
-$('#ciAgain').onclick = () => { toClaude(checkinMsg(cur, day.evening || {})); toast('Wiadomość skopiowana – wklej w rozmowie'); };
+$('#ciAgain').onclick = () => { toClaude(checkinMsg(cur, day.evening || {})); toast('Otwieram rozmowę – gdyby pole było puste, wklej'); };
 
 // Nadrabianie: jedno podsumowanie za lukę; „Pomiń” też zapisuje, żeby nie pytać drugi raz.
 $('#catchupOpen').onclick = () => $('#catchupForm').classList.toggle('hidden');

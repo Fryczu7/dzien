@@ -319,7 +319,7 @@ export function checkinMsg(date, ev) {
   const m = MOODS.find(([n]) => n === ev.nastroj), t = s => String(s || '').trim();
   return ['Check-in wieczorny (' + date + ').', 'Nastrój: ' + (m ? m[0] + '/5 (' + m[1] + ')' : '–'),
     t(ev.blokada) ? 'Co blokowało: ' + t(ev.blokada) : '', t(ev.doceniam) ? 'Doceniam się za: ' + t(ev.doceniam) : '',
-    'Odpowiedz mi teraz jako coach od mentalu – krótko i wprost. Potem zapisz tę odpowiedź w apce: select public.coach_evening_save(\'' + date + '\', \'<odpowiedź>\').']
+    'Odpowiedz mi teraz jako coach od mentalu – krótko i wprost. Na koniec zapisz swoją odpowiedź w apce Dzień na ten dzień (funkcja coach_evening_save).']
     .filter(Boolean).join('\n');
 }
 
@@ -444,3 +444,9 @@ export function parseHours(v) {
   return Number.isFinite(h) && h >= 0 && /^[\d.,]+$/.test(s) ? Math.round(h * 60) : null;
 }
 export const fmtHoursInput = min => String(Math.round(min / 6) / 10).replace('.', ',');
+
+// Link do rozmowy z Claude z gotowym tekstem (?q=). Jeśli Claude nie wpisze go sam, tekst i tak jest w schowku.
+export const claudeLink = (base, text) => {
+  const b = base || 'https://claude.ai/new';
+  return b + (b.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(text);
+};
