@@ -1224,10 +1224,14 @@ function renderDzis() {
 }
 // Liczniki: rehab x/5 i seria, dni z kaloriami ≥ celu i seria, treningi wobec minimum, leki, sen.
 const dniTxt = n => n + ' ' + (n === 1 ? 'dzień' : 'dni');
+function liczniki() {
+  const today = ymd(new Date()), days = histWithDay();
+  const dm = cur === today ? histMeals.filter(m => m.date !== today).concat(meals) : histMeals;
+  return counters({ days, meals: dm, catchups, workouts, today, kcalTarget: cfg.kcal_target });
+}
 function weekCells() {
   const today = ymd(new Date()), days = histWithDay(), ws = weekStats(days, catchups, today);
-  const dm = cur === today ? histMeals.filter(m => m.date !== today).concat(meals) : histMeals;
-  const c = counters({ days, meals: dm, catchups, workouts, today, kcalTarget: cfg.kcal_target });
+  const c = liczniki();
   const min = cfg.training_min ?? 3, sleepTxt = ws.sleepAvg != null ? String(ws.sleepAvg).replace('.', ',') + ' h' : '–';
   const streak = n => el('small', { class: n >= 2 ? 'on' : '' }, n ? 'seria ' + dniTxt(n) : 'zacznij serię dziś');
   return [
@@ -1771,11 +1775,11 @@ $('#ciSend').onclick = async () => {
   if (!day.evening?.nastroj) return toast('Wybierz nastrój 1–5');
   flushText();
   const ev = checkinPatch(day.evening, { nastroj: day.evening.nastroj, blokada: $('#ciBlok').value, doceniam: $('#doceniam').value }, new Date());
-  toClaude(checkinMsg(cur, ev)); toast('Otwieram rozmowę – gdyby pole było puste, wklej');
+  toClaude(checkinMsg(cur, ev, liczniki(), cfg.training_min ?? 3)); toast('Otwieram rozmowę – gdyby pole było puste, wklej');
   if (await saveDay({ evening: ev })) { ciEditing = false; renderCheckin(); }
 };
 $('#ciEdit').onclick = () => { ciEditing = true; renderCheckin(); };
-$('#ciAgain').onclick = () => { toClaude(checkinMsg(cur, day.evening || {})); toast('Otwieram rozmowę – gdyby pole było puste, wklej'); };
+$('#ciAgain').onclick = () => { toClaude(checkinMsg(cur, day.evening || {}, liczniki(), cfg.training_min ?? 3)); toast('Otwieram rozmowę – gdyby pole było puste, wklej'); };
 
 // Nadrabianie: jedno podsumowanie za lukę; „Pomiń” też zapisuje, żeby nie pytać drugi raz.
 $('#catchupOpen').onclick = () => $('#catchupForm').classList.toggle('hidden');

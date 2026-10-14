@@ -315,10 +315,11 @@ export const feedbackMsg = (prop, text) =>
 export const MOODS = [[1, 'fatalnie'], [2, 'słabo'], [3, 'OK'], [4, 'dobrze'], [5, 'świetnie']];
 
 // „Wyślij coachowi”: wiadomość do rozmowy z Claude, żeby coach odpowiedział od razu i zapisał odpowiedź w apce.
-export function checkinMsg(date, ev) {
+export function checkinMsg(date, ev, c = null, min = 3) {
   const m = MOODS.find(([n]) => n === ev.nastroj), t = s => String(s || '').trim();
   return ['Check-in wieczorny (' + date + ').', 'Nastrój: ' + (m ? m[0] + '/5 (' + m[1] + ')' : '–'),
     t(ev.blokada) ? 'Co blokowało: ' + t(ev.blokada) : '', t(ev.doceniam) ? 'Doceniam się za: ' + t(ev.doceniam) : '',
+    c ? 'Serie: rehab ' + c.rehabStreak + ' ' + (c.rehabStreak === 1 ? 'dzień' : 'dni') + ' z rzędu (' + c.rehabWeek + '/5 w tygodniu), kalorie na celu ' + c.kcalStreak + ' ' + (c.kcalStreak === 1 ? 'dzień' : 'dni') + ' z rzędu (' + c.kcalWeek + '/' + c.daysSoFar + ' dni w tygodniu), treningi ' + c.trainingWeek + '/' + min + '.' : '',
     'Odpowiedz mi teraz jako coach od mentalu – krótko i wprost. Na koniec zapisz swoją odpowiedź w apce Dzień na ten dzień (funkcja coach_evening_save).']
     .filter(Boolean).join('\n');
 }

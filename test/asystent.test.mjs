@@ -126,3 +126,10 @@ test('claudeLink: tekst doklejony do adresu rozmowy (?q=), działa też z adrese
   assert.equal(claudeLink('https://claude.ai/new?x=1', 'a b'), 'https://claude.ai/new?x=1&q=a%20b');
   assert.equal(claudeLink('', 'a'), 'https://claude.ai/new?q=a');
 });
+
+test('checkinMsg: z licznikami dopisuje serie (rehab, kalorie, treningi wobec minimum)', () => {
+  const c = { rehabWeek: 3, rehabStreak: 3, kcalWeek: 1, kcalStreak: 0, daysSoFar: 3, trainingWeek: 2 };
+  const m = checkinMsg('2026-10-14', { nastroj: 4 }, c, 3);
+  assert.match(m, /Serie: rehab 3 dni z rzędu \(3\/5 w tygodniu\), kalorie na celu 0 dni z rzędu \(1\/3 dni w tygodniu\), treningi 2\/3/);
+  assert.doesNotMatch(checkinMsg('2026-10-14', { nastroj: 4 }), /Serie/);
+});
