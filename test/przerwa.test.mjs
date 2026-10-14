@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { workAutoStop, workChainStart, breakState, WORK_LIMIT_MS } from '../lib.js';
+import { workAutoStop, workChainStart, breakState, WORK_LIMIT_MS, workBreakCfg, WORK_BREAK_DEFAULT, SOUNDS_STOP, SOUNDS_END, soundTones, workTotals } from '../lib.js';
 
 const M = 60e3, T = s => Date.parse('2026-10-14T' + s + 'Z');
 const run = (start, kind = 'getmed') => ({ kind, started_at: '2026-10-14T' + start + 'Z', ended_at: null });
@@ -60,4 +60,44 @@ test('breakState: fazy przerwy 5–15 min', () => {
   assert.equal(breakState(s, s + 14 * M + 59e3).phase, 'ok');
   assert.equal(breakState(s, s + 15 * M).phase, 'koniec');
   assert.equal(breakState(s, s - 1000).ms, 0);
+});
+
+const brk = (start, end = null) => ({ started_at: '2026-10-14T' + start + 'Z', ended_at: end && '2026-10-14T' + end + 'Z' });
+
+test('kliknięta przerwa (nawet 30 s) zaczyna nową godzinę', () => {
+  const rows = [done('08:00:00', '08:50:00'), run('08:50:30')];
+  const breaks = [brk('08:50:00', '08:50:30')];
+  assert.equal(workChainStart(rows, rows[1]), T('08:00:00'));            // bez przerwy w tabeli: łączy
+  assert.equal(workChainStart(rows, rows[1], 60e3, breaks), T('08:50:30')); // z przerwą: od nowa
+  assert.equal(workAutoStop(rows, T('09:10:00'), WORK_LIMIT_MS, breaks), null);
+  assert.equal(workAutoStop(rows, T('09:51:00'), WORK_LIMIT_MS, breaks), '2026-10-14T09:50:30.000Z');
+});
+
+test('przerwa sprzed łańcucha go nie urywa', () => {
+  const rows = [done('08:00:00', '08:30:00'), run('08:30:00', 'zlap')];
+  assert.equal(workChainStart(rows, rows[1], 60e3, [brk('07:40:00', '07:55:00')]), T('08:00:00'));
+});
+
+test('po zmianie na Złap Termin czas liczy się do Złap Termin, GetMed zostaje', () => {
+  const rows = [done('08:00:00', '08:35:00'), run('08:35:00', 'zlap')].map(r => ({ ...r, date: '2026-10-14' }));
+  const t = workTotals(rows, '2026-10-14', T('08:45:00'));
+  assert.equal(t.day.getmed, 35 * M);
+  assert.equal(t.day.zlap, 10 * M);
+  assert.equal(t.running.kind, 'zlap');
+});
+
+test('workBreakCfg: domyślne i naprawa złych wartości', () => {
+  assert.deepEqual(workBreakCfg(null), WORK_BREAK_DEFAULT);
+  assert.equal(workBreakCfg({ limit_min: 50 }).limit_min, 50);
+  assert.equal(workBreakCfg({ limit_min: 0 }).limit_min, 60);
+  assert.equal(workBreakCfg({ break_min: 10, break_max: 5 }).break_max, 15);
+  assert.equal(workBreakCfg({ sound_stop: 'nie-ma' }).sound_stop, 'trzy-tony');
+});
+
+test('dźwięki: unikalne id, domyślne istnieją, nieznane id → pierwszy', () => {
+  for (const L of [SOUNDS_STOP, SOUNDS_END]) assert.equal(new Set(L.map(s => s[0])).size, L.length);
+  assert.ok(SOUNDS_STOP.some(s => s[0] === WORK_BREAK_DEFAULT.sound_stop));
+  assert.ok(SOUNDS_END.some(s => s[0] === WORK_BREAK_DEFAULT.sound_end));
+  assert.equal(soundTones(SOUNDS_END, 'xyz'), SOUNDS_END[0][2]);
+  for (const [, , tones] of [...SOUNDS_STOP, ...SOUNDS_END]) for (const t of tones) assert.ok(t[0] > 0 && t[2] > 0 && t[3] > 0 && t[3] <= 1);
 });

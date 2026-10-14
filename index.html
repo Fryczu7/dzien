@@ -18,7 +18,7 @@
   --acc:#22c55e;--acc2:#16a34a;--acc-ink:#22c55e;--warn:#f59e0b;--warn-ink:#f59e0b;--bad:#dc2626;--bad-ink:#f87171;--blue:#60a5fa;
 }
 @media (prefers-color-scheme: light){
-  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc:#16a34a;--acc-ink:#166534;--bad-ink:#b91c1c;--warn-ink:#b45309;}
+  :root{--bg:#f4f5f7;--card:#ffffff;--card2:#f0f2f5;--line:#e1e4ea;--text:#14171c;--muted:#5f6878;--acc:#16a34a;--acc-ink:#166534;--bad-ink:#b91c1c;--warn-ink:#9a4108;}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -281,7 +281,14 @@ body[data-off~="tab-jedzenie"] nav [data-v=jedzenie],body[data-off~="tab-zakupy"
 .wkinds button.on{background:var(--acc);color:#06210f;border-color:var(--acc);font-weight:600}
 .clock{font-size:56px;font-weight:300;letter-spacing:-.02em;text-align:center;font-variant-numeric:tabular-nums;margin:14px 0 6px;line-height:1.1}
 .clock.run{color:var(--acc-ink)}
-#wToggle{margin-top:6px;font-size:18px}
+.wbtns{display:flex;gap:8px;margin-top:6px}
+.wbtns button{flex:1;min-height:52px;font-size:18px}
+#wPause{background:var(--card2);color:var(--warn-ink);border:1px solid var(--line)}
+.snd{margin-top:12px}
+.snd>span{display:block;font-size:14px;margin-bottom:4px}
+.snd .row{gap:8px}
+.snd select{flex:1}
+.snd .ghost{min-width:52px}
 #wToggle.stop{background:var(--bad);color:#fff}
 #wBreakEnd{margin-top:8px}
 .wbreak{text-align:center;margin:14px 0 0}
@@ -539,17 +546,18 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   </div>
 
   <!-- Stoper pracy: Michał wybiera, do czego leci czas; każdy Start/Stop zapisuje się w tabeli praca.
-       Po godzinie ciągłej pracy stoper sam staje i karta pokazuje przerwę 5–15 min z licznikiem i „Wracam”. -->
+       Po godzinie ciągłej pracy (ustawienia ☰) stoper sam staje i karta pokazuje przerwę z licznikiem i „Wracam”;
+       „Przerwa” – przerwa w dowolnej chwili. Przerwy są w tabeli przerwy (wspólne dla telefonu i komputera). -->
   <div class="card" id="cardPraca">
     <h2>Praca</h2>
     <div class="wkinds" id="wKinds" role="group" aria-label="Do czego leci czas"></div>
     <div class="wbreak hidden" id="wBreak" role="status" aria-live="polite">
-      <p class="wb-title">Przerwa 5–15 min</p>
+      <p class="wb-title" id="wBreakTitle">Przerwa</p>
       <p class="muted" id="wBreakTxt"></p>
     </div>
     <div class="clock" id="wClock" role="timer" aria-live="off">0:00:00</div>
     <p class="muted hidden" id="wHint" style="text-align:center;margin:0 0 6px"></p>
-    <button id="wToggle" class="wide">Start</button>
+    <div class="wbtns"><button id="wPause" class="hidden">Przerwa</button><button id="wToggle">Start</button></div>
     <button id="wBreakEnd" class="ghost wide hidden">Koniec pracy na dziś</button>
     <div id="wLines"></div>
   </div>
@@ -664,6 +672,13 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   <details class="psec"><summary>Na ekranie „Dziś” <span class="muted" id="pCardsN"></span></summary><div id="pCards"></div></details>
   <details class="psec"><summary>Zakładki <span class="muted" id="pTabsN"></span></summary><div id="pTabs"></div></details>
   <details class="psec"><summary>Cele</summary><div><div id="pGoals"></div><div class="saved" id="pGoalsSt"></div></div></details>
+  <details class="psec" id="pWorkSec"><summary>Stoper i przerwy</summary><div>
+    <div id="pWork"></div><div class="saved" id="pWorkSt"></div>
+    <p id="pNotifyTxt" style="margin:16px 0 2px;font-weight:600"></p>
+    <p class="muted" id="pNotifyHelp" style="margin:0 0 8px"></p>
+    <div class="row"><button class="ghost grow hidden" id="pNotifyOn">Włącz powiadomienia</button><button class="ghost grow hidden" id="pNotifyTest">Wyślij próbne</button></div>
+    <button class="wide" id="pWorkTest" style="margin-top:12px">Przetestuj przerwę (20 s)</button>
+  </div></details>
   <details class="psec"><summary>Rano – rzeczy do odhaczenia <span class="muted" id="pMorningN"></span></summary><div>
     <div id="pMorning"></div>
     <div class="addrow"><input id="pMorningNew" placeholder="Nowa rzecz, np. Witamina D" aria-label="Nowa rzecz poranna"><button id="pMorningAdd" aria-label="Dodaj">+</button></div>
@@ -707,7 +722,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, WORK_LIMIT_MS, BREAK_MIN_MS, BREAK_MAX_MS, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -732,7 +747,7 @@ let products = [], purchases = [];
 let day = null, rules = [], items = [], goals = [], weights = [], meals = [];
 let menu = null; const menuBusy = new Set(), menuOpen = new Set(); // menuOpen = posiłki rozwinięte przez „Zmień”
  // menu na oglądany dzień (tabela menu) i „Zjadłem” w toku (bez podwójnego wpisu)
-let workRows = [], prayers = []; // odcinki stopera (ten tydzień + chodzący), modlitwy
+let workRows = [], brkRows = [], prayers = []; // odcinki stopera (ten tydzień + chodzący), przerwy (24 h), modlitwy
 let workouts = [], plans = []; // treningi z seriami i plany (tylko odczyt)
 let coachRows = [], mealHist = [], qQuery = '', props = []; // props = propozycje asystenta (dziś + pomysły) // historia coacha, wszystkie posiłki (do „Szybko”), szukana fraza
 // Historia do zestawienia tygodnia i wykrywania luki: dni z ostatnich 14 dni, daty posiłków, nadrobienia.
@@ -779,7 +794,7 @@ async function loadHistory() {
 }
 async function loadStatic() {
   const today = ymd(new Date());
-  const [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo, spP, spZ] = await Promise.all([
+  const [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, brk, mo, spP, spZ] = await Promise.all([
     sb.from('rules').select('*').order('nr'),
     sb.from('items').select('*').order('done').order('urgent', { ascending: false }).order('sort'),
     sb.from('goals').select('*').order('id'),
@@ -793,12 +808,14 @@ async function loadStatic() {
     sb.from('propozycje').select('*').eq('kind', 'pomysl').order('created_at', { ascending: false }).limit(100),
     sb.from('praca').select('*').gte('date', weekStart(today)).order('started_at'),
     sb.from('praca').select('*').is('ended_at', null), // chodzący stoper, nawet sprzed tego tygodnia
+    sb.from('przerwy').select('*').gte('started_at', new Date(Date.now() - 24 * 3600e3).toISOString()).order('started_at'), // przerwy: łańcuch pracy i trwająca przerwa
     sb.from('modlitwy').select('*').order('sort').order('created_at'),
     sb.from('products').select('*').order('sort').order('name'),
     sb.from('purchases').select('product_id,date').order('date', { ascending: false }).limit(3000),
   ]);
-  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, mo, spP, spZ].find(x => x.error); if (bad) failLoad(bad.error);
+  const bad = [r, i, g, w, s, c, mh, wk, wp, pd, pp, pr, prRun, brk, mo, spP, spZ].find(x => x.error); if (bad) failLoad(bad.error);
   products = spP.data ?? products; purchases = spZ.data ?? purchases;
+  brkRows = brk.data ?? brkRows;
   if (pr.data && prRun.data) workRows = [...pr.data, ...prRun.data.filter(x => !pr.data.some(y => y.id === x.id))];
   prayers = mo.data ?? prayers;
   if (pd.data && pp.data) props = [...pd.data, ...pp.data];
@@ -1593,7 +1610,7 @@ function renderDrawer() {
 }
 function drawer(open) {
   const d = $('#drawer');
-  if (open) renderDrawer();
+  if (open) { renderDrawer(); if ($('#pWorkSec').open) renderWorkPanel(); }
   d.classList.toggle('on', open); $('#scrim').classList.toggle('on', open); d.inert = !open;
   $('#menuOpen').setAttribute('aria-expanded', String(open));
   if (open) $('#menuClose').focus(); else $('#menuOpen').focus();
@@ -1662,16 +1679,21 @@ let wKind = null;
 try { const v = JSON.parse(localStorage.getItem('wKind') || 'null'); if (v?.date === ymd(new Date())) wKind = v.kind; } catch {}
 const keepKind = k => { wKind = k; try { localStorage.setItem('wKind', JSON.stringify({ date: ymd(new Date()), kind: k })); } catch {} };
 let wBusy = false, wCardSeen = false;
-// Podgląd lokalny: ?limit=20&przerwa=30 skraca godzinę pracy i 15 min przerwy do sekund (na produkcji ignorowane).
+// Ustawienia stopera z bazy (settings.work_break). Podgląd lokalny: ?limit=20&przerwa=30 skraca godzinę pracy
+// i koniec przerwy do sekund (na produkcji ignorowane).
 const qs = new URLSearchParams(location.search), devHost = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-const WLIMIT = devHost && +qs.get('limit') ? +qs.get('limit') * 1000 : WORK_LIMIT_MS;
-const BMAX = devHost && +qs.get('przerwa') ? +qs.get('przerwa') * 1000 : BREAK_MAX_MS, BMIN = BMAX * BREAK_MIN_MS / BREAK_MAX_MS;
-// Przerwa po automatycznym stopie: { at: ms końca odcinka, kind, chimed } – w localStorage, żeby przetrwała odświeżenie.
-// Karta przerwy znika po 2 h (wtedy to już nie przerwa, tylko koniec pracy).
+const wb = () => workBreakCfg(cfg.work_break);
+const wLimit = () => devHost && +qs.get('limit') ? +qs.get('limit') * 1000 : wb().limit_min * 60e3;
+const bMax = () => wTest ? 20e3 : devHost && +qs.get('przerwa') ? +qs.get('przerwa') * 1000 : wb().break_max * 60e3;
+const bMin = () => wTest ? 7e3 : devHost && +qs.get('przerwa') ? +qs.get('przerwa') * 1000 * wb().break_min / wb().break_max : wb().break_min * 60e3;
+// Przerwy z bazy (tabela przerwy, ostatnie 24 h) – ta sama przerwa na telefonie i komputerze.
+// Trwająca = ended_at null. Karta przerwy znika po 2 h (wtedy to już koniec pracy, nie przerwa).
 const BREAK_SHOW_MS = 2 * 3600e3;
-let wBreak = null;
-try { const v = JSON.parse(localStorage.getItem('wBreak') || 'null'); if (v && Date.now() - v.at < BREAK_SHOW_MS) wBreak = v; } catch {}
-const setBreak = b => { wBreak = b; try { b ? localStorage.setItem('wBreak', JSON.stringify(b)) : localStorage.removeItem('wBreak'); } catch {} };
+let wTest = null; // test z panelu: przerwa na niby (20 s), nic nie zapisuje się w bazie
+const openBreak = () => wTest || brkRows.find(b => !b.ended_at) || null;
+// Które przerwy już zagrały na TYM urządzeniu (żeby alarm nie grał przy każdym odświeżeniu).
+let wHeard = {}; try { wHeard = JSON.parse(localStorage.getItem('wHeard') || '{}'); } catch {}
+const heard = (key, id) => { wHeard[key] = id; try { localStorage.setItem('wHeard', JSON.stringify(wHeard)); } catch {} };
 
 // Dźwięk z Web Audio (bez plików). Przeglądarka pozwala grać dopiero po dotknięciu – odblokowujemy przy pierwszym kliknięciu.
 let actx = null;
@@ -1687,83 +1709,111 @@ function tones(list) {
   if (!actx) return;
   try {
     actx.resume?.(); const t0 = actx.currentTime + 0.05;
-    for (const [f, at, dur, vol, type] of list) {
+    for (const [f, at, dur, vol, type, f2] of list) {
       const o = actx.createOscillator(), g = actx.createGain();
-      o.type = type; o.frequency.value = f;
+      o.type = type; o.frequency.setValueAtTime(f, t0 + at); if (f2) o.frequency.linearRampToValueAtTime(f2, t0 + at + dur);
       g.gain.setValueAtTime(0.0001, t0 + at); g.gain.exponentialRampToValueAtTime(vol, t0 + at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + dur);
       o.connect(g).connect(actx.destination); o.start(t0 + at); o.stop(t0 + at + dur + 0.05);
     }
   } catch {}
 }
-// Stop: wyraźne trzy tony w dół, dwa razy. Koniec przerwy: dwa łagodne tony w górę.
-const soundStop = () => tones([0, 1.6].flatMap(o => [[880, o, .3, .6, 'square'], [660, o + .35, .3, .6, 'square'], [440, o + .7, .6, .6, 'square']]));
-const soundSoft = () => tones([[523, 0, .9, .3, 'sine'], [784, .45, 1.3, .3, 'sine']]);
-// Powiadomienie systemowe przez service worker (Android i iOS wymagają SW; iOS tylko apka z ekranu głównego, iOS 16.4+).
+const soundStop = id => tones(soundTones(SOUNDS_STOP, id || wb().sound_stop));
+const soundEnd = id => tones(soundTones(SOUNDS_END, id || wb().sound_end));
+// Powiadomienie z apki przez service worker, gdy apka nie jest na wierzchu (iOS: tylko apka z ekranu głównego, iOS 16.4+).
+// Pewne powiadomienie przy zablokowanym telefonie daje serwer (Web Push, moduł push.js) – ten sam tag, więc się nie dublują.
 function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); } catch {} }
-async function notify(title, body) {
+async function notify(title, body, force) {
   try {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    if (document.visibilityState === 'visible' && document.hasFocus()) return; // patrzy na apkę – wystarczy karta i dźwięk
+    if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+    if (!force && document.visibilityState === 'visible' && document.hasFocus()) return false; // patrzy na apkę – wystarczy karta i dźwięk
     const reg = await navigator.serviceWorker?.getRegistration();
-    const o = { body, tag: 'praca', renotify: true, requireInteraction: true, icon: 'icon-192.png' };
+    const o = { body, tag: 'praca', requireInteraction: !force, icon: 'icon-192.png' };
     reg ? await reg.showNotification(title, o) : new Notification(title, o);
-  } catch {}
+    return true;
+  } catch { return false; }
 }
+// Moduł powiadomień z serwera (push.js) – jeśli go jeszcze nie ma, panel pokazuje powiadomienia z samej apki.
+const pushMod = () => import('./push.js').catch(() => null);
 
 async function workStart(kind) {
+  const b = openBreak(); if (b && !b.test && !await breakClose(b)) return false;
+  wTest = null;
   const row = { date: ymd(new Date()), kind, started_at: new Date().toISOString() };
   const { data, error } = await sb.from('praca').insert(row).select().single();
   if (error) { fail(error); await refresh(true); return false; }
-  workRows.push(data); setBreak(null); return true;
+  workRows.push(data); return true;
 }
-// ended_at podany = automatyczny stop (koniec na 60. minucie). Tylko chodzący wiersz – drugie urządzenie nie nadpisze końca.
+// ended_at podany = automatyczny stop (koniec na 60. minucie). Tylko chodzący wiersz – drugie urządzenie albo serwer nie nadpisze końca.
 async function workStop(r, ended_at = new Date().toISOString()) {
   const { error } = await sb.from('praca').update({ ended_at }).eq('id', r.id).is('ended_at', null);
   if (error) { fail(error); return false; }
   r.ended_at = ended_at; return true;
 }
+// Nowa przerwa w bazie. Jedna trwająca na osobę (indeks w bazie): gdy serwer albo drugie urządzenie już ją założyło – bierzemy tamtą.
+async function breakOpen(started_at, kind, auto) {
+  const { data, error } = await sb.from('przerwy').insert({ started_at, kind, auto }).select().single();
+  if (error) { if (error.code !== '23505') fail(error); await refresh(true); return; }
+  brkRows.push(data);
+}
+async function breakClose(b, ended_at = new Date().toISOString()) {
+  const { error } = await sb.from('przerwy').update({ ended_at }).eq('id', b.id).is('ended_at', null);
+  if (error) { fail(error); return false; }
+  b.ended_at = ended_at; return true;
+}
 async function workAction(fn) { if (wBusy) return; wBusy = true; try { await fn(); } finally { wBusy = false; renderPraca(); } }
-// Godzina minęła → zamknij odcinek na start + 60 min (także po powrocie z tła), przerwa, dźwięk, powiadomienie.
+// Limit minął → zamknij odcinek na start + limit (także po powrocie z tła) i otwórz przerwę od tej chwili.
 async function checkAutoStop() {
   if (wBusy) return;
-  const end = workAutoStop(workRows, Date.now(), WLIMIT); if (!end) return;
+  const end = workAutoStop(workRows, Date.now(), wLimit(), brkRows); if (!end) return;
   const run = workRows.find(r => !r.ended_at);
-  await workAction(async () => {
-    if (!await workStop(run, end)) return;
-    const at = Date.parse(end); if (Date.now() - at < BREAK_SHOW_MS) setBreak({ at, kind: run.kind, chimed: false }); // po > 2 h nie ma już „przerwy”
-    if (Date.now() - at < 5 * 60e3) soundStop(); // po długim powrocie z tła już nie grać – karta mówi sama
-    notify('Przerwa 5–15 min', 'Godzina pracy (' + WL[run.kind] + ') zapisana. Wstań od komputera.');
-  });
+  await workAction(async () => { if (await workStop(run, end)) await breakOpen(end, run.kind, true); });
 }
-// Koniec przerwy (15 min): łagodny dźwięk raz; po powrocie z tła po czasie – bez dźwięku.
-function checkBreakEnd() {
-  if (!wBreak || wBreak.chimed) return;
-  const late = Date.now() - wBreak.at - BMAX; if (late < 0) return;
-  if (late < 2 * 60e3) { soundSoft(); notify('Koniec przerwy', 'Minęło 15 min – wracasz do ' + WL[wBreak.kind] + '?'); }
-  setBreak({ ...wBreak, chimed: true });
+// Dźwięki przerwy: alarm, gdy przerwa sama się zaczęła (najwyżej 2 min temu), łagodny, gdy minął jej koniec (5–15 min).
+// Działa tak samo, czy przerwę otworzyła ta apka, drugie urządzenie, czy serwer. Spóźnione (po powrocie z tła) – bez dźwięku.
+function checkBreakSounds() {
+  const b = openBreak(); if (!b) return;
+  const since = Date.now() - Date.parse(b.started_at), key = b.id;
+  if (b.auto && wHeard.stop !== key) {
+    heard('stop', key);
+    if (since < 2 * 60e3) { soundStop(); notify('Przerwa ' + wb().break_min + '–' + wb().break_max + ' min', 'Godzina pracy (' + WL[b.kind] + ') zapisana. Wstań od komputera.'); }
+  }
+  const late = since - bMax();
+  if (late >= 0 && wHeard.end !== key) {
+    heard('end', key);
+    if (late < 2 * 60e3) { soundEnd(); notify('Koniec przerwy', 'Przerwa minęła – wracasz do ' + WL[b.kind || wKind] + '?'); }
+  }
+}
+// Przerwa zostawiona na ponad 2 h (np. koniec dnia bez kliknięcia) – zamknij ją na swoim końcu (start + max).
+function closeStaleBreak() {
+  const b = brkRows.find(x => !x.ended_at);
+  if (b && Date.now() - Date.parse(b.started_at) >= BREAK_SHOW_MS && !wBusy)
+    workAction(() => breakClose(b, new Date(Date.parse(b.started_at) + wb().break_max * 60e3).toISOString()));
 }
 function renderPraca() {
-  const today = ymd(new Date()), now = Date.now(), t = workTotals(workRows, today, now), run = t.running;
+  const today = ymd(new Date()), now = Date.now(), t = workTotals(workRows, today, now), run = t.running, ob = run ? null : openBreak();
   if (run) wKind = run.kind;
-  if (wBreak && now - wBreak.at >= BREAK_SHOW_MS) setBreak(null);
-  const brk = !run && wBreak ? breakState(wBreak.at, now, BMIN, BMAX) : null;
+  const brk = ob ? breakState(Date.parse(ob.started_at), now, bMin(), bMax()) : null;
   $('#wKinds').replaceChildren(...WORK.map(([k, l]) => el('button', { class: wKind === k ? 'on' : '', 'aria-pressed': String(wKind === k), onclick: () => workAction(async () => {
     if (run && run.kind !== k) { if (await workStop(run)) { keepKind(k); await workStart(k); } }
     else keepKind(k);
   }) }, l)));
   $('#wBreak').classList.toggle('hidden', !brk);
   if (brk) {
-    const left = Math.ceil((BMIN - brk.ms) / 60e3);
-    $('#wBreakTxt').textContent = brk.phase === 'krotka' ? 'Godzina pracy zapisana. Wstań od komputera – jeszcze min. ' + left + ' min.'
-      : brk.phase === 'ok' ? 'Możesz wracać, kiedy chcesz.' : 'Minęło 15 min – czas wracać.';
+    $('#wBreakTitle').textContent = (ob.test ? 'Test: ' : '') + (ob.auto ? 'Przerwa ' + wb().break_min + '–' + wb().break_max + ' min' : 'Przerwa');
+    $('#wBreakTxt').textContent = brk.phase === 'koniec' ? 'Koniec przerwy – czas wracać.'
+      : ob.test ? 'Tak wygląda przerwa. Za 20 s zagra dźwięk końca przerwy.'
+      : ob.auto ? 'Godzina pracy zapisana. Wstań od komputera.' : 'Odejdź od komputera. Wróć, kiedy chcesz.';
   }
   const clock = $('#wClock');
   clock.textContent = brk ? fmtClock(brk.ms).replace(/^0:/, '') : fmtClock(t.runningMs);
   clock.classList.toggle('run', !!run); clock.classList.toggle('brk', !!brk); clock.classList.toggle('end', brk?.phase === 'koniec');
   clock.setAttribute('aria-label', brk ? 'Przerwa trwa' : 'Czas pracy');
+  const back = ob ? WL[wKind || ob.kind] || '' : '';
   const tg = $('#wToggle');
-  tg.textContent = run ? 'Stop' : brk ? 'Wracam – ' + WL[wKind || wBreak.kind] : 'Start'; tg.classList.toggle('stop', !!run);
+  tg.textContent = run ? 'Stop' : brk ? 'Wracam' + (back ? ' – ' + back : '') : 'Start'; tg.classList.toggle('stop', !!run);
+  $('#wPause').classList.toggle('hidden', !run);
   $('#wBreakEnd').classList.toggle('hidden', !brk);
+  $('#wBreakEnd').textContent = ob?.test ? 'Zakończ test' : 'Koniec pracy na dziś';
   const long = run && t.runningMs > 10 * 3600e3, hint = $('#wHint');
   hint.classList.toggle('hidden', !long && !!(run || wKind || brk));
   hint.textContent = long ? 'Chodzi ponad 10 h – zapomniałeś wyłączyć? Zatrzymaj i powiedz Claude, o której skończyłeś.' : 'Wybierz wyżej, nad czym pracujesz.';
@@ -1782,23 +1832,90 @@ function renderPraca() {
 }
 // Start / Stop / Wracam (po przerwie: nowy odcinek w tym samym „do czego”, chyba że wybrał inne).
 async function toggleWork() {
+  if (wTest) { wTest = null; return toast('Test zakończony – nic się nie zapisało'); }
   audioUnlock(); const run = workTotals(workRows, ymd(new Date()), Date.now()).running;
   if (run) return void await workStop(run);
-  const kind = wKind || wBreak?.kind;
+  const kind = wKind || openBreak()?.kind;
   if (!kind) return toast('Najpierw wybierz: GetMed, Złap Termin albo Moje projekty');
   askNotify(); keepKind(kind); await workStart(kind);
 }
+// „Przerwa” w dowolnej chwili: odcinek zamyka się teraz, przerwa startuje (bez alarmu – sam kliknąłeś).
+async function pauseWork() {
+  audioUnlock(); const run = workTotals(workRows, ymd(new Date()), Date.now()).running; if (!run) return;
+  const now = new Date().toISOString();
+  if (await workStop(run, now)) await breakOpen(now, run.kind, false);
+}
 $('#wToggle').onclick = () => workAction(toggleWork);
+$('#wPause').onclick = () => workAction(pauseWork);
 $('#wBarStop').onclick = () => workAction(toggleWork);
-$('#wBreakEnd').onclick = () => { setBreak(null); renderPraca(); toast('Koniec pracy na dziś'); };
+$('#wBreakEnd').onclick = () => workAction(async () => {
+  const b = openBreak(); if (!b) return;
+  if (b.test) { wTest = null; return toast('Test zakończony – nic się nie zapisało'); }
+  if (await breakClose(b)) toast('Koniec pracy na dziś');
+});
+// Test z panelu: przerwa na niby – alarm od razu, łagodny dźwięk po 20 s, powiadomienie, bez zapisu w bazie.
+function testBreak() {
+  audioUnlock(); drawer(false); show('dzis');
+  if (workRows.some(r => !r.ended_at)) return toast('Najpierw zatrzymaj stoper – test pokazuje przerwę');
+  wTest = { id: 'test-' + Date.now(), test: true, auto: true, kind: wKind || 'getmed', started_at: new Date().toISOString() };
+  soundStop(); notify('Test: przerwa', 'Tak przyjdzie powiadomienie po godzinie pracy.', true);
+  heard('stop', wTest.id); renderPraca(); $('#cardPraca').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 // Pasek „GetMed 1:23:05 · Stop” tylko wtedy, gdy karty stopera nie widać na ekranie.
 new IntersectionObserver(es => { wCardSeen = es.some(e => e.isIntersecting); renderPraca(); }).observe($('#cardPraca'));
-// Co sekundę: limit godziny, koniec przerwy, licznik. W tle przeglądarka zwalnia zegar (do ~1/min), a telefon
-// zablokowany go zatrzymuje – wtedy stop liczy się przy powrocie (refresh → checkAutoStop) z końcem na 60. minucie.
+// Co sekundę: limit pracy, dźwięki przerwy, licznik. W tle przeglądarka zwalnia zegar (do ~1/min), a telefon
+// zablokowany go zatrzymuje – wtedy stop liczy się przy powrocie (refresh → checkAutoStop) z końcem na 60. minucie,
+// a powiadomienie na czas wysyła serwer.
 setInterval(() => {
   if (workRows.some(r => !r.ended_at)) { checkAutoStop(); renderPraca(); }
-  else if (wBreak) { checkBreakEnd(); renderPraca(); }
+  else if (openBreak()) { checkBreakSounds(); closeStaleBreak(); renderPraca(); }
 }, 1000);
+// Panel: stoper i przerwy – długość pracy, zakres przerwy, dźwięki z odsłuchem, powiadomienia, test.
+const PUSH_TXT = { wlaczone: 'włączone', wylaczone: 'wyłączone', zablokowane: 'zablokowane w ustawieniach telefonu', brak: 'niedostępne tutaj' };
+async function notifyStatus() {
+  const m = await pushMod(); if (m?.pushStatus) { try { return await m.pushStatus(); } catch {} }
+  if (!('Notification' in window)) return 'brak';
+  return Notification.permission === 'granted' ? 'wlaczone' : Notification.permission === 'denied' ? 'zablokowane' : 'wylaczone';
+}
+async function renderWorkPanel() {
+  const c = wb(), st = $('#pWorkSt');
+  const set = patch => saveSettings({ work_break: { ...c, ...patch } }, st).then(() => { renderWorkPanel(); renderPraca(); });
+  const num = (key, lo, hi) => (v, f) => { const n = parseInt(v, 10); if (!(n >= lo && n <= hi)) { f.value = c[key]; return toast('Wpisz liczbę od ' + lo + ' do ' + hi); }
+    if (key === 'break_max' && n < c.break_min) { f.value = c[key]; return toast('„Przerwa do” musi być co najmniej ' + c.break_min); }
+    if (key === 'break_min' && n > c.break_max) { f.value = c[key]; return toast('„Przerwa od” może być najwyżej ' + c.break_max); }
+    set({ [key]: n }); };
+  const pick = (label, list, key, play) => {
+    const s = el('select', { 'aria-label': label, onchange: () => { audioUnlock(); play(s.value); set({ [key]: s.value }); } },
+      ...list.map(([id, name]) => el('option', { value: id }, name)));
+    s.value = c[key];
+    return el('div', { class: 'snd' }, el('span', {}, label), el('div', { class: 'row' }, s,
+      el('button', { class: 'ghost', 'aria-label': 'Posłuchaj: ' + label, onclick: () => { audioUnlock(); play(s.value); } }, '▶')));
+  };
+  $('#pWork').replaceChildren(
+    goalInput('Praca przed przerwą (min)', c.limit_min, num('limit_min', 1, 600)),
+    goalInput('Przerwa od (min)', c.break_min, num('break_min', 0, 240)),
+    goalInput('Przerwa do (min) – wtedy dźwięk „wracaj”', c.break_max, num('break_max', 1, 240)),
+    pick('Alarm po czasie pracy', SOUNDS_STOP, 'sound_stop', soundStop),
+    pick('Dźwięk końca przerwy', SOUNDS_END, 'sound_end', soundEnd));
+  const ps = await notifyStatus();
+  $('#pNotifyTxt').textContent = 'Powiadomienia: ' + PUSH_TXT[ps];
+  $('#pNotifyHelp').textContent = ps === 'brak' ? 'Na iPhonie działają tylko w apce dodanej do ekranu głównego (Safari → Udostępnij → Do ekranu początkowego).'
+    : ps === 'zablokowane' ? 'Włącz je w Ustawieniach telefonu: Powiadomienia → Dzień → Zezwalaj na powiadomienia.' : '';
+  $('#pNotifyOn').classList.toggle('hidden', ps !== 'wylaczone');
+  $('#pNotifyTest').classList.toggle('hidden', ps !== 'wlaczone');
+}
+$('#pNotifyOn').onclick = async () => {
+  audioUnlock(); const m = await pushMod();
+  try { if (m?.pushEnable) await m.pushEnable(sb); else if ('Notification' in window) await Notification.requestPermission(); } catch (e) { fail(e); }
+  renderWorkPanel();
+};
+$('#pNotifyTest').onclick = async () => {
+  const m = await pushMod();
+  try { if (m?.pushTest) { await m.pushTest(sb); return toast('Wysłane – przyjdzie za chwilę'); } } catch (e) { return fail(e); }
+  toast(await notify('Próbne powiadomienie', 'Tak przyjdzie przerwa po godzinie pracy.', true) ? 'Wysłane' : 'Nie udało się – sprawdź zgodę w ustawieniach');
+};
+$('#pWorkTest').onclick = testBreak;
+$('#pWorkSec').addEventListener('toggle', e => { if (e.target.open) renderWorkPanel(); });
 function renderPrayers() {
   $('#prayers').replaceChildren(...(prayers.length ? prayers.map(m => el('details', { class: 'prayer' }, el('summary', {}, m.title), el('div', { class: 'prayer-txt' }, m.body)))
     : [el('p', { class: 'muted' }, 'Brak modlitw. Powiedz Claude: „dodaj modlitwę …”.')]));
@@ -1813,7 +1930,7 @@ async function refresh(force) {
   lastLoad = Date.now();
   cur = dayOnResume(cur, followToday, new Date());
   await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); // bez show(): nie przewija na górę
-  checkAutoStop(); checkBreakEnd(); // powrót z tła: godzina mogła minąć, gdy zegar stał
+  checkAutoStop(); checkBreakSounds(); // powrót z tła: godzina mogła minąć, gdy zegar stał
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') return flushText(); refresh(true); });
 window.addEventListener('focus', () => refresh(false));

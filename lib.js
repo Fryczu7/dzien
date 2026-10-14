@@ -341,25 +341,59 @@ export function workTotals(rows, today, now) {
 }
 // Przerwa co godzinę: po 60 min ciągłej pracy stoper sam staje, odcinek kończy się dokładnie na 60. minucie.
 // „Ciągła” = chodzący odcinek plus poprzednie, które przechodzą w siebie bez luki (zmiana „do czego” w trakcie).
+// Każda przerwa z tabeli przerwy (sama po godzinie albo kliknięta „Przerwa”, nawet 30-sekundowa) urywa łańcuch.
+// Ta sama zasada działa na serwerze (cron w bazie) – zmieniając ją tutaj, zmień też tam.
 export const WORK_LIMIT_MS = 60 * 60e3, WORK_JOIN_MS = 60e3, BREAK_MIN_MS = 5 * 60e3, BREAK_MAX_MS = 15 * 60e3;
-export function workChainStart(rows, run, joinMs = WORK_JOIN_MS) {
+export function workChainStart(rows, run, joinMs = WORK_JOIN_MS, breaks = []) {
   let start = Date.parse(run.started_at);
   const done = rows.filter(r => r !== run && r.ended_at).sort((a, b) => Date.parse(b.ended_at) - Date.parse(a.ended_at));
+  const cut = (from, to) => breaks.some(b => { const s = Date.parse(b.started_at); return s >= from - 1000 && s <= to; });
   for (const r of done) {
     const end = Date.parse(r.ended_at);
     if (end > start + joinMs) continue; // kończy się po starcie łańcucha – nie poprzednik
-    if (start - end > joinMs) break;    // luka = przerwa, łańcuch się urywa
+    if (start - end > joinMs || cut(end, start)) break; // luka albo przerwa = łańcuch się urywa
     start = Math.min(start, Date.parse(r.started_at));
   }
   return start;
 }
 // Kiedy zamknąć chodzący odcinek: ISO końca (start łańcucha + limit, nie „teraz” – działa też po powrocie z tła) albo null.
-export function workAutoStop(rows, now, limitMs = WORK_LIMIT_MS) {
+export function workAutoStop(rows, now, limitMs = WORK_LIMIT_MS, breaks = []) {
   const run = rows.find(r => !r.ended_at);
   if (!run) return null;
-  const end = Math.max(Date.parse(run.started_at), workChainStart(rows, run) + limitMs);
+  const end = Math.max(Date.parse(run.started_at), workChainStart(rows, run, WORK_JOIN_MS, breaks) + limitMs);
   return now >= end ? new Date(end).toISOString() : null;
 }
+// Ustawienia stopera (settings.work_break) z wartościami domyślnymi; złe liczby → domyślne.
+export const WORK_BREAK_DEFAULT = { limit_min: 60, break_min: 5, break_max: 15, sound_stop: 'trzy-tony', sound_end: 'dwa-tony' };
+export function workBreakCfg(v) {
+  const c = { ...WORK_BREAK_DEFAULT, ...(v || {}) }, ok = (n, lo, hi) => Number.isFinite(n) && n >= lo && n <= hi;
+  if (!ok(c.limit_min, 1, 600)) c.limit_min = WORK_BREAK_DEFAULT.limit_min;
+  if (!ok(c.break_min, 0, 240)) c.break_min = WORK_BREAK_DEFAULT.break_min;
+  if (!ok(c.break_max, 1, 240) || c.break_max < c.break_min) c.break_max = Math.max(WORK_BREAK_DEFAULT.break_max, c.break_min);
+  if (!SOUNDS_STOP.some(s => s[0] === c.sound_stop)) c.sound_stop = WORK_BREAK_DEFAULT.sound_stop;
+  if (!SOUNDS_END.some(s => s[0] === c.sound_end)) c.sound_end = WORK_BREAK_DEFAULT.sound_end;
+  return c;
+}
+// Dźwięki (Web Audio, bez plików): [id, nazwa, tony]; ton = [Hz, start s, długość s, głośność, kształt, Hz na końcu (opcjonalnie)].
+export const SOUNDS_STOP = [
+  ['trzy-tony', 'Trzy tony w dół ×2', [0, 1.6].flatMap(o => [[880, o, .3, .5, 'square'], [660, o + .35, .3, .5, 'square'], [440, o + .7, .6, .5, 'square']])],
+  ['dzwonek', 'Dzwonek szkolny', Array.from({ length: 14 }, (_, i) => [i % 2 ? 784 : 988, i * .12, .11, .4, 'square'])],
+  ['budzik', 'Budzik bip-bip', [0, .9, 1.8].flatMap(o => [0, .15, .3, .45].map(d => [1000, o + d, .1, .45, 'square']))],
+  ['gong', 'Gong', [[220, 0, 3, .5, 'sine'], [330, 0, 2.6, .3, 'sine'], [440, 0, 2.2, .25, 'sine'], [220, 1.6, 2.5, .4, 'sine']]],
+  ['fanfara', 'Fanfara w górę', [[523, 0, .18, .4, 'triangle'], [659, .2, .18, .4, 'triangle'], [784, .4, .18, .4, 'triangle'], [1047, .6, .8, .45, 'triangle'], [784, .95, .15, .35, 'triangle'], [1047, 1.15, 1, .45, 'triangle']]],
+  ['syrena', 'Syrena', [[600, 0, .8, .35, 'sawtooth', 1200], [1200, .8, .8, .35, 'sawtooth', 600], [600, 1.6, .8, .35, 'sawtooth', 1200]]],
+  ['ping-pong', 'Ping-pong', Array.from({ length: 8 }, (_, i) => [i % 2 ? 880 : 1318, i * .22, .2, .45, 'sine'])],
+  ['uderzenia', 'Trzy mocne uderzenia', [0, 1.4].flatMap(o => [0, .35, .7].map(d => [523, o + d, .28, .6, 'triangle']))],
+];
+export const SOUNDS_END = [
+  ['dwa-tony', 'Dwa tony w górę', [[523, 0, .9, .3, 'sine'], [784, .45, 1.3, .3, 'sine']]],
+  ['dzwoneczek', 'Dzwoneczek', [[1568, 0, 1.2, .25, 'sine'], [2093, .25, 1.6, .2, 'sine']]],
+  ['kalimba', 'Kalimba', [[659, 0, .6, .3, 'sine'], [784, .25, .6, .3, 'sine'], [988, .5, 1.2, .3, 'sine']]],
+  ['miekki-gong', 'Miękki gong', [[196, 0, 3, .35, 'sine'], [294, 0, 2.6, .2, 'sine']]],
+  ['ptaszek', 'Ptaszek', [[2000, 0, .15, .15, 'sine', 3000], [2200, .25, .15, .15, 'sine', 3200], [2000, .6, .15, .15, 'sine', 3000]]],
+  ['akord', 'Akord', [[523, 0, 2, .18, 'sine'], [659, .05, 2, .16, 'sine'], [784, .1, 2, .15, 'sine']]],
+];
+export const soundTones = (list, id) => (list.find(s => s[0] === id) || list[0])[2];
 // Licznik przerwy: ile trwa i w jakiej fazie (krótka < 5 min, ok 5–15, koniec ≥ 15).
 export function breakState(startMs, now, minMs = BREAK_MIN_MS, maxMs = BREAK_MAX_MS) {
   const ms = Math.max(0, now - startMs);
