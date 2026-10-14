@@ -522,3 +522,27 @@ export const claudeLink = (base, text) => {
   const b = base || 'https://claude.ai/new';
   return b + (b.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(text);
 };
+
+// ---------- Przegląd pamięci (okno nad apką) ----------
+// Pozycje do pokazania: nowe, z pokaz_od ≤ dziś, od najstarszej. Daty jako tekst RRRR-MM-DD.
+export const przegladDoPokazania = (rows, today) => (rows || [])
+  .filter(r => r && r.status === 'nowe' && r.pokaz_od && r.pokaz_od <= today)
+  .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+// „Później” = { date, t }: okno wraca następnego dnia albo przy ponownym uruchomieniu apki po 2 h.
+export const PRZEGLAD_PRZERWA_MS = 2 * 3600e3;
+export function przegladPozniej(later, today, now, coldStart) {
+  if (!later || !later.date) return false; // nie odłożone
+  if (later.date !== today) return false;  // nowy dzień – pokaż
+  if (coldStart && now - (+later.t || 0) >= PRZEGLAD_PRZERWA_MS) return false;
+  return true;
+}
+// Czy otworzyć okno teraz: są pozycje, nie odłożone, nikt nie pisze, nie jest otwarte inne okno.
+export const przegladOtworzyc = ({ count, odlozone, pisze, inneOkno }) => count > 0 && !odlozone && !pisze && !inneOkno;
+// Przyciski zależnie od rodzaju; „Tak” tylko, gdy jest co wykonać.
+export function przegladPrzyciski(p) {
+  if (p.rodzaj === 'poprawka') return [['ok', 'OK'], ['cofnij', 'Cofnij'], ['napisz', 'Napisz do Claude']];
+  const akcja = Array.isArray(p.akcja) ? p.akcja : [];
+  return [...(akcja.length ? [['tak', 'Tak, zrób to']] : []), ['zostaw', 'Zostaw'], ['napisz', 'Napisz do Claude']];
+}
+// Wynik funkcji przeglad_decyzja: 'ok' i 'już zdecydowane' / 'brak pozycji' = pozycja zamknięta, idziemy dalej.
+export const przegladDalej = wynik => ['ok', 'już zdecydowane', 'brak pozycji'].includes(wynik);

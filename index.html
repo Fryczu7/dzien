@@ -257,6 +257,38 @@ details[open]>summary::after{transform:rotate(-135deg)}
 .start .lead{color:var(--muted);margin:0 0 16px}
 .start-nav{display:flex;gap:8px;margin-top:22px}
 .start-nav button{flex:1;min-height:48px}
+/* Przegląd pamięci: okno nad apką, jedna pozycja naraz (wątpliwości i poprawki asystenta nocnego) */
+.pg{position:fixed;inset:0;z-index:45;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+.pg-in{max-width:560px;min-height:100%;margin:0 auto;display:flex;flex-direction:column}
+.pg-top{display:flex;align-items:center;gap:12px}
+.pg-num{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pg-bar{flex:1;height:6px;border-radius:3px;background:var(--card2);overflow:hidden}
+.pg-bar i{display:block;height:100%;background:var(--acc);border-radius:3px;transform-origin:left;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.pg-top .ghost{flex:none}
+.pg-lead{color:var(--muted);font-size:14px;margin:10px 0 0}
+.pg-body{margin-top:26px}
+.pg-card{animation:pgIn .32s cubic-bezier(.16,1,.3,1)}
+@keyframes pgIn{from{opacity:.35;transform:translateX(14px)}}
+@media (prefers-reduced-motion: reduce){.pg-card{animation:none}.pg-bar i{transition:none}}
+.pg-kind{display:inline-block;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600}
+.pg-kind.wat{background:color-mix(in srgb,var(--warn) 16%,var(--card2));color:var(--warn-ink)}
+.pg-kind.pop{background:color-mix(in srgb,var(--acc) 16%,var(--card2));color:var(--acc-ink)}
+.pg h2{font-size:26px;line-height:1.2;margin:12px 0 20px;text-wrap:balance;overflow-wrap:anywhere}
+.pg h2:focus{outline:none}
+.pg-sec{margin:0 0 18px}
+.pg-sec h3{font-size:14px;font-weight:600;color:var(--muted);margin:0 0 4px}
+.pg-sec p{margin:0;font-size:17px;line-height:1.5;max-width:65ch;white-space:pre-wrap;overflow-wrap:anywhere}
+.pg-sec.pg-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.pg-act{margin-top:auto;padding-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pg-act>:first-child{grid-column:1/-1}
+.pg-act button{min-height:52px}
+.pg-act textarea{grid-column:1/-1;min-height:96px}
+.pg-err{grid-column:1/-1;margin:2px 0 0;color:var(--bad-ink);font-size:14px;min-height:20px}
+.pg ::selection{background:color-mix(in srgb,var(--acc) 35%,transparent)}
+body.pg-on{overflow:hidden}
+body.pg-on .wbar{z-index:46;left:0;bottom:0;padding-bottom:calc(6px + env(safe-area-inset-bottom))} /* stoper widać i działa nad oknem */
+body.pg-on.wbar-on .pg{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+@media (min-width:1000px){.pg{padding-top:9vh}.pg-in{min-height:0}} /* komputer: przyciski pod treścią, nie na dole ekranu */
 .sw{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;background:none;color:var(--text);border-radius:0;padding:6px 2px;font-weight:500;text-align:left;border-bottom:1px solid var(--line)}
 .sw:last-child{border-bottom:0}
 .sw .t{flex:1;min-width:0}
@@ -717,6 +749,15 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
     <button class="ghost wide small" id="stSkip" style="margin-top:10px">Pomiń – zostaw jak jest</button>
   </div>
 </div>
+<!-- Przegląd pamięci: wyskakuje sam, gdy asystent nocny zostawił wątpliwości albo poprawki (public.przeglad) -->
+<div class="pg hidden" id="pg" role="dialog" aria-modal="true" aria-labelledby="pgT">
+  <div class="pg-in">
+    <div class="pg-top"><span class="pg-num" id="pgNum"></span><div class="pg-bar" aria-hidden="true"><i id="pgBar"></i></div><button class="ghost small" id="pgLater">Później</button></div>
+    <p class="pg-lead">Asystent przejrzał pamięć. Przeklikaj – po ostatniej wracasz do apki.</p>
+    <div class="pg-body" id="pgBody"></div>
+    <div class="pg-act" id="pgAct"></div>
+  </div>
+</div>
 <!-- Pasek boczny (komputer): ☰ zostaje na ekranie przy przewijaniu -->
 <aside class="rail" aria-label="Pasek boczny"><button class="menubtn" id="menuRail" aria-label="Ustawienia" aria-controls="drawer" aria-expanded="false"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></aside>
 <div class="wbar hidden" id="wBar"><span id="wBarTxt"></span><button id="wBarStop">Stop</button></div>
@@ -733,7 +774,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1446,7 +1487,7 @@ function show(v) {
 }
 // Strzałki ← → zmieniają dzień, cyfry 1–6 zakładki (poza polami tekstowymi).
 document.addEventListener('keydown', e => {
-  if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,textarea,select') || $('#app').classList.contains('hidden')) return;
+  if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,textarea,select') || $('#app').classList.contains('hidden') || pgQ) return;
   if (/^[1-6]$/.test(e.key)) { const v = visibleViews(VIEWS, offList())[+e.key - 1]; return v ? show(v) : undefined; } // 1–6 = widoczne zakładki
   if (e.key === 'ArrowLeft') shift(-1); else if (e.key === 'ArrowRight' && cur < ymd(new Date())) shift(1);
 });
@@ -1541,9 +1582,10 @@ async function start() {
   if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
   uid = session.user.id;
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  await Promise.all([loadDay(), loadStatic(), loadHistory()]); lastLoad = Date.now();
+  await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad()]); lastLoad = Date.now();
   renderAll(); show(view);
   if (cfgState === 'nowy' || (cfgState === 'jest' && !cfg.onboarded)) startOpen(); // pierwsze wejście nowej osoby; przy błędzie wczytania – nie
+  pgCheck(); // przegląd pamięci – po starcie, nie nad oknem startu
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
 $('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
@@ -1976,6 +2018,82 @@ function renderPrayers() {
     : [el('p', { class: 'muted' }, 'Brak modlitw. Powiedz Claude: „dodaj modlitwę …”.')]));
 }
 
+// ---------- Przegląd pamięci ----------
+// Asystent nocny zapisuje wątpliwości i swoje poprawki w public.przeglad. Apka sama pokazuje je w oknie nad ekranem,
+// jedna po drugiej; decyzja idzie przez funkcję przeglad_decyzja. „Później” chowa okno (localStorage, z datą).
+let pgRows = [], pgQ = null, pgI = 0, pgBusy = null, pgErr = '', pgPisz = null, pgFirst = true;
+async function loadPrzeglad() {
+  const { data, error } = await sb.from('przeglad').select('*').eq('status', 'nowe').lte('pokaz_od', ymd(new Date())).order('created_at');
+  if (error) return console.error(error); // przy błędzie zostaje to, co było – okno nie jest pilne
+  pgRows = data;
+}
+const pgLaterGet = () => { try { return JSON.parse(localStorage.getItem('pgLater') || 'null'); } catch { return null; } };
+const pgBehind = () => ['header', 'main', '.rail', 'nav'].forEach(s => { const e = $('#app ' + s); if (e) e.inert = !!pgQ; });
+function pgCheck() {
+  if (pgQ) return; // już otwarte – nowe pozycje dojdą przy następnym otwarciu
+  const today = ymd(new Date()), list = przegladDoPokazania(pgRows, today);
+  const odlozone = przegladPozniej(pgLaterGet(), today, Date.now(), pgFirst); pgFirst = false; // „uruchomienie apki” liczy się tylko przy pierwszym sprawdzeniu
+  const pisze = !!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]');
+  const inneOkno = $('#app').classList.contains('hidden') || !$('#start').classList.contains('hidden') || $('#drawer').classList.contains('on');
+  if (!przegladOtworzyc({ count: list.length, odlozone, pisze, inneOkno })) return;
+  pgQ = list; pgI = 0; pgErr = ''; pgPisz = null; pgBusy = null;
+  $('#pg').classList.remove('hidden'); document.body.classList.add('pg-on'); pgBehind();
+  pgRender(true);
+}
+function pgClose(msg) {
+  pgQ = null; pgPisz = null; $('#pg').classList.add('hidden'); document.body.classList.remove('pg-on'); pgBehind();
+  if (msg) toast(msg); // bez przewijania – wraca dokładnie ten widok, który był pod spodem
+}
+const pgSec = (title, text, cls = '') => el('section', { class: 'pg-sec ' + cls }, el('h3', {}, title), el('p', {}, text));
+// card = nowa pozycja (przebudowa treści i animacja); bez tego odświeżają się tylko przyciski.
+function pgRender(card) {
+  const p = pgQ[pgI], n = pgQ.length, pop = p.rodzaj === 'poprawka', btns = przegladPrzyciski(p);
+  if (card) {
+    $('#pgNum').textContent = (pgI + 1) + ' z ' + n; $('#pgBar').style.transform = 'scaleX(' + (pgI + 1) / n + ')';
+    const tak = btns.some(b => b[0] === 'tak');
+    $('#pgBody').replaceChildren(el('div', { class: 'pg-card' },
+      el('span', { class: 'pg-kind ' + (pop ? 'pop' : 'wat') }, pop ? 'Poprawiłem sam' : 'Do sprawdzenia'),
+      el('h2', { id: 'pgT', tabindex: '-1' }, p.tytul),
+      p.co_nie_gra ? pgSec('Co nie gra', p.co_nie_gra) : '',
+      p.propozycja ? pgSec(pop ? 'Co zmieniłem' : tak ? 'Co zrobię po „Tak”' : 'Propozycja', p.propozycja, 'pg-box') : ''));
+    $('#pg').scrollTop = 0; $('#pgT').focus({ preventScroll: true });
+  }
+  const err = el('p', { class: 'pg-err', role: 'alert' }, pgErr);
+  if (pgPisz === null) {
+    $('#pgAct').replaceChildren(...btns.map(([k, label], i) => el('button', { class: i ? 'ghost' : '', ...dis(pgBusy),
+      onclick: () => { if (k !== 'napisz') return pgDecide(k); pgPisz = ''; pgErr = ''; pgRender(); $('#pgTxt').focus(); } },
+      pgBusy === k ? 'Zapisuję…' : label)), err);
+  } else {
+    const f = el('textarea', { id: 'pgTxt', placeholder: 'Co mam zrobić zamiast? Asystent zrobi to w nocy.', 'aria-label': 'Wiadomość do Claude o tej pozycji', ...dis(pgBusy) });
+    f.value = pgPisz; f.addEventListener('input', () => { pgPisz = f.value; });
+    $('#pgAct').replaceChildren(f,
+      el('button', { class: 'ghost', ...dis(pgBusy), onclick: () => { pgPisz = null; pgErr = ''; pgRender(); } }, 'Anuluj'),
+      el('button', { ...dis(pgBusy), onclick: () => pgDecide('napisz', pgPisz) }, pgBusy ? 'Zapisuję…' : 'Wyślij'), err);
+  }
+}
+async function pgDecide(k, text) {
+  if (pgBusy || !pgQ) return;
+  const p = pgQ[pgI];
+  if (k === 'napisz' && !text?.trim()) { pgErr = 'Napisz, co mam zrobić – pole jest puste.'; return pgRender(); }
+  pgBusy = k; pgErr = ''; pgRender();
+  const { data, error } = await sb.rpc('przeglad_decyzja', { p_id: p.id, p_decyzja: k, p_odpowiedz: k === 'napisz' ? text.trim() : null });
+  pgBusy = null;
+  if (error || !przegladDalej(data)) { // przycisk wraca, pozycja zostaje – można spróbować jeszcze raz
+    pgErr = !navigator.onLine ? 'Nie zapisano – brak sieci. Spróbuj jeszcze raz.' : 'Nie zapisano: ' + (error?.message || data);
+    pgRender(); if (pgPisz !== null) $('#pgTxt').focus(); return;
+  }
+  pgRows = pgRows.filter(r => r.id !== p.id); pgPisz = null;
+  if (++pgI >= pgQ.length) return pgClose('Przegląd zrobiony');
+  pgRender(true);
+}
+$('#pgLater').onclick = () => { try { localStorage.setItem('pgLater', JSON.stringify({ date: ymd(new Date()), t: Date.now() })); } catch {} pgClose(); };
+document.addEventListener('keydown', e => {
+  if (!pgQ || e.key !== 'Escape' || pgBusy) return;
+  if (pgPisz !== null) { pgPisz = null; pgErr = ''; pgRender(); } else $('#pgLater').click();
+});
+// Okno nie wyskakuje w trakcie pisania – sprawdzamy jeszcze raz, gdy kursor wyjdzie z pola.
+document.addEventListener('focusout', e => { if (!pgQ && e.target.matches?.('input,textarea,select')) setTimeout(pgCheck, 400); });
+
 // Odświeżenie danych: po powrocie do apki, po kliknięciu w okno (na komputerze Claude bywa w drugim oknie obok)
 // i co minutę, gdy apka jest widoczna – żeby kalorie zapisane przez Claude pojawiały się same. Nie w trakcie pisania.
 let lastLoad = 0;
@@ -1984,7 +2102,7 @@ async function refresh(force) {
   if (!force && (Date.now() - lastLoad < 15000 || document.activeElement?.matches('input,textarea'))) return;
   lastLoad = Date.now();
   cur = dayOnResume(cur, followToday, new Date());
-  await Promise.all([loadDay(), loadStatic(), loadHistory()]); renderAll(); // bez show(): nie przewija na górę
+  await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad()]); renderAll(); pgCheck(); // bez show(): nie przewija na górę
   for (const k of ['stop', 'end']) if (wb()['custom_' + k] && !customBuf[k]) loadCustom(k);
   checkAutoStop(); checkBreakSounds(); // powrót z tła: godzina mogła minąć, gdy zegar stał
 }
