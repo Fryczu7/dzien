@@ -3,6 +3,8 @@
 //  1) z bazy (pg_net, praca_tick): nagłówek x-push-secret + { user_id, title, body }
 //  2) z apki (pushTest): Authorization: Bearer <JWT użytkownika> + { test: true } – próbne na własne urządzenia
 //  3) jednorazowo z bazy: x-push-secret + { init: true } – generuje klucze VAPID i zapisuje do vault
+// Opcjonalnie w 1): tag (domyślnie 'praca'; przypomnienia Kuźni: 'kuznia', żeby nie zastępowały alarmu stopera)
+// i ttl w sekundach (domyślnie 600, 60–86400).
 // Sekrety (klucz prywatny VAPID, sekret wywołań) czyta z vault przez RPC push_config (tylko service_role).
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -35,20 +37,20 @@ function same(a: string, b: string) {
   return d === 0;
 }
 
-async function sendToUser(userId: string, title: string, body: string) {
+async function sendToUser(userId: string, title: string, body: string, tag = 'praca', ttl = 600) {
   const c = await config();
   if (!c.public || !c.private) throw new Error('brak kluczy VAPID');
   webpush.setVapidDetails('https://fryczu7.github.io/dzien/', c.public, c.private);
   const { data: subs, error } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('user_id', userId);
   if (error) throw new Error(error.message);
-  const payload = JSON.stringify({ title, body, tag: 'praca', url: './' });
+  const payload = JSON.stringify({ title, body, tag, url: './' });
   let sent = 0, removed = 0;
   const errors: string[] = [];
   await Promise.all((subs ?? []).map(async s => {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload,
         // Bez nagłówka Topic: Apple (iPhone) odrzuca go kodem 400 BadWebPushTopic.
-        { TTL: 600, urgency: 'high' });
+        { TTL: ttl, urgency: 'high' });
       sent++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
@@ -81,7 +83,9 @@ Deno.serve(async req => {
         return json({ ok: true, created: data });
       }
       if (typeof input.user_id !== 'string') return json({ error: 'user_id' }, 400);
-      const r = await sendToUser(input.user_id, String(input.title ?? 'Dzień'), String(input.body ?? ''));
+      const tag = typeof input.tag === 'string' && input.tag ? input.tag : 'praca';
+      const ttl = Math.min(86400, Math.max(60, Number(input.ttl) || 600));
+      const r = await sendToUser(input.user_id, String(input.title ?? 'Dzień'), String(input.body ?? ''), tag, ttl);
       return json({ ok: true, ...r });
     }
 
