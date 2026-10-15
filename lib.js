@@ -439,14 +439,16 @@ export const nowMins = d => d.getHours() * 60 + d.getMinutes();
 // Posiłek bez wyboru znika 2 h po swojej porze (decyzja Michała 14.10); na minionym dniu od razu.
 // now = minuty od północy dla dziś, 'miniony' dla wcześniejszego dnia, null = nic nie chowamy.
 export const MENU_HIDE_AFTER = 120;
-export const slotGone = (s, now) => !menuChosen(s) && !s.eaten && (now === 'miniony' || (typeof now === 'number' && now >= minsOf(s.time) + MENU_HIDE_AFTER));
+// pending = „Powiem Claude”: zjedzone inaczej, kalorie dopisze Claude (menu_zjedzone) – traktujemy jak zamknięte.
+const slotClosed = s => !!(s.eaten || s.pending);
+export const slotGone = (s, now) => !menuChosen(s) && !slotClosed(s) && (now === 'miniony' || (typeof now === 'number' && now >= minsOf(s.time) + MENU_HIDE_AFTER));
 // Suma dnia z menu: stałe + wybrane opcje (albo „coś innego”); „open” = widoczne posiłki jeszcze bez wyboru.
 export function menuTotals(menu, now = null) {
   const out = { kcal: 0, protein: 0, open: [] };
   if (!menu) return out;
   const add = x => { out.kcal += Number(x.kcal) || 0; out.protein += Number(x.protein) || 0; };
   for (const x of menu.stale || []) add(x);
-  for (const s of menu.slots || []) { const o = s.inne || menuChosen(s); if (o) add(o); else if (!slotGone(s, now)) out.open.push(s.label || s.slot); }
+  for (const s of menu.slots || []) { if (s.pending && !s.eaten) continue; const o = s.inne || menuChosen(s); if (o) add(o); else if (!slotGone(s, now)) out.open.push(s.label || s.slot); }
   return out;
 }
 // Co z menu jeszcze przed Tobą: wybrane, niezjedzone posiłki + niezjedzone stałe (do „zjedzone + zostało w planie”).
@@ -455,11 +457,18 @@ export function menuLeft(menu) {
   if (!menu) return out;
   const add = x => { out.kcal += Number(x.kcal) || 0; out.protein += Number(x.protein) || 0; };
   for (const x of menu.stale || []) if (!x.eaten) add(x);
-  for (const s of menu.slots || []) { const o = menuChosen(s); if (o && !s.eaten) add(o); }
+  for (const s of menu.slots || []) { const o = menuChosen(s); if (o && !slotClosed(s)) add(o); }
   return out;
 }
 // „Wybierz menu →” na Dziś: któryś widoczny posiłek nie ma wyboru (zjedzony albo miniony nie wisi).
-export const menuNeedsChoice = (menu, now = null) => !!menu && (menu.slots || []).some(s => !menuChosen(s) && !s.eaten && !slotGone(s, now));
+export const menuNeedsChoice = (menu, now = null) => !!menu && (menu.slots || []).some(s => !menuChosen(s) && !slotClosed(s) && !slotGone(s, now));
+// Podpowiedzi „Jadłem coś innego”: tylko to, co Michał naprawdę jadł (bez szablonów z ustawień), najczęstsze na górze, max 5.
+// Bez szukania – tylko posiłki z podobnej pory (±3 h od pory posiłku w menu), żeby przy śniadaniu nie było obiadu; szukanie – cała historia.
+export function otherSuggestions(hist, q, slotTime = null) {
+  const near = r => { if (!slotTime || !r.time) return false; const [h, m] = String(r.time).split(':').map(Number); return Math.abs(h * 60 + m - minsOf(slotTime)) <= 180; };
+  const rows = !q && slotTime ? hist.filter(near) : hist;
+  return quickFromHistory(rows, []).filter(x => x.n > 0 && matchesQuery(x.name, q)).slice(0, 5);
+}
 // Wybór opcji: nowa tablica slots (zmienia tylko ten posiłek); zjedzonego nie zmieniamy → null.
 export function chooseOption(slots, si, oi) {
   const s = slots?.[si];

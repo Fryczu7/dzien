@@ -1000,7 +1000,7 @@ body.kz-on{overflow:hidden}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, otherSuggestions } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1079,7 +1079,7 @@ async function loadStatic() {
     sb.from('weights').select('*').order('date'),
     sb.from('settings').select('*').maybeSingle(),
     sb.from('coach').select('*').order('date', { ascending: false }).limit(60), // noc + trener codziennie, podsumowania rzadziej
-    sb.from('meals').select('name,kcal,protein').not('kcal', 'is', null).order('created_at', { ascending: false }).limit(2000),
+    sb.from('meals').select('name,kcal,protein,time').not('kcal', 'is', null).order('created_at', { ascending: false }).limit(2000),
     sb.from('workouts').select('*, workout_sets(*)').order('date', { ascending: false, nullsFirst: false }).limit(200),
     sb.from('workout_plans').select('*').order('name'),
     sb.from('propozycje').select('*').eq('kind', 'dzien').eq('date', today).order('created_at'),
@@ -1287,8 +1287,7 @@ let menuOther = null; // { si, q } – otwarte pole „Jadłem coś innego”
 const menuNow = () => { const t = ymd(new Date()); return !menu ? null : menu.date === t ? nowMins(new Date()) : menu.date < t ? 'miniony' : null; };
 const toggleMore = e => { const r = e.currentTarget.closest('.mfix'); r.classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(r.classList.contains('open'))); };
 function otherSugg(si) {
-  const q = menuOther?.q || '', all = quickFromHistory(mealHist, cfg.quick_meals || []);
-  return all.filter(x => matchesQuery(x.name, q)).slice(0, 5)
+  return otherSuggestions(mealHist, menuOther?.q || '', menu?.slots?.[si]?.time)
     .map(x => el('button', { class: 'msug', onclick: () => eatOtherMenu(si, x) }, el('span', { class: 'n' }, x.name), el('span', { class: 'm' }, kg(x))));
 }
 function otherForm(si, x) {
@@ -1299,10 +1298,10 @@ function otherForm(si, x) {
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') eatOtherMenu(si, { name: inp.value }); if (e.key === 'Escape') { menuOther = null; renderMenu(); } });
   return el('div', { class: 'mother' }, inp, sug,
     el('div', { class: 'row' },
-      el('button', { class: 'grow', ...dis(menuBusy.has('slot' + si)), onclick: () => eatOtherMenu(si, { name: inp.value }) }, 'Zapisz'),
-      el('button', { class: 'ghost grow', onclick: () => { toClaude(menuOtherMsg(menu.date, x.slot, x.label) + inp.value.trim()); menuOther = null; renderMenu(); } }, 'Powiedz Claude'),
+      // „Powiem Claude”: jednym dotknięciem zamyka posiłek (bez wpisywania); kalorie dopisze Claude, gdy mu powiesz. Wpisany tekst idzie od razu do Claude.
+      el('button', { class: 'grow', ...dis(menuBusy.has('slot' + si)), onclick: () => { const t = inp.value.trim(); pendMenu(si, true); if (t) toClaude(menuOtherMsg(menu.date, x.slot, x.label) + t); } }, 'Powiem Claude'),
       el('button', { class: 'ghost', onclick: () => { menuOther = null; renderMenu(); } }, 'Anuluj')),
-    el('p', { class: 'muted mhint' }, 'Z podpowiedzi – z kaloriami. Wpisane ręcznie – bez kalorii, policzy Claude.'));
+    el('p', { class: 'muted mhint' }, 'Dotknij podpowiedzi – zapisze z kaloriami. Albo „Powiem Claude” – posiłek się zamknie, a kalorie dopisze Claude.'));
 }
 function renderMenu() {
   const card = $('#menuCard'); card.classList.toggle('hidden', !menu);
@@ -1311,6 +1310,10 @@ function renderMenu() {
   $('#menuNote').classList.toggle('hidden', !menu.note); $('#menuNote').textContent = menu.note || '';
   $('#menuList').replaceChildren(...menuTimeline(menu).filter(({ x }) => !slotGone(x, now)).map(({ kind, i, x }) => {
     const busy = menuBusy.has(kind + i), ch = menuChosen(x), head = el('div', { class: 'mhead' }, el('span', { class: 'mtime' }, x.time || ''), el('b', {}, x.label || x.slot));
+    if (x.pending && !x.eaten) return el('div', { class: 'mslot' }, head, el('div', { class: 'mdone' },
+      el('span', { class: 'box on', 'aria-hidden': 'true' }, '✓'),
+      el('span', { class: 'grow' }, 'Coś innego', el('span', { class: 'm' }, 'kalorie dopisze Claude, gdy mu powiesz')),
+      el('button', { class: 'ghost small', ...dis(busy), onclick: () => pendMenu(i, false) }, 'Cofnij')));
     if (x.eaten) {
       const what = x.inne || ch || {};
       return el('div', { class: 'mslot' }, head, el('div', { class: 'mdone' },
@@ -1381,6 +1384,13 @@ async function eatMenu(kind, i) {
     if (cur === date) { meals.push(data); mealDates.add(date); } if (data.kcal) mealHist.unshift(data);
     renderJedzenie(); renderDzis(); toast('Zjedzone: ' + data.name, ['Cofnij', () => uneatMenu(kind, i)]);
   } finally { menuBusy.delete(key); renderMenu(); }
+}
+// „Powiem Claude” (on) / „Cofnij” (off): znacznik pending w posiłku menu, bez wpisu do meals.
+async function pendMenu(si, on) {
+  const key = 'slot' + si; if (menuBusy.has(key)) return;
+  menuBusy.add(key); menuOther = null;
+  try { await saveMenu({ slots: menu.slots.map((y, j) => { if (j !== si) return y; const { pending, ...rest } = y; return on ? { ...rest, pending: 'claude' } : rest; }) }); }
+  finally { menuBusy.delete(key); renderMenu(); }
 }
 // „Jadłem coś innego”: wpis do meals (z podpowiedzi – z kaloriami, ręcznie – bez), potem posiłek w menu zamknięty; błąd menu = wpis cofnięty.
 async function eatOtherMenu(si, item) {
