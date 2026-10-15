@@ -1,2 +1,6 @@
 # Notatki przekazania – tylko lokalnie (zawierają dane prywatne)
 HANDOFF.md
+
+# Podgląd: zrzuty wynikowe i dane testowe (mogą zawierać dane prywatne)
+tools/podglad/zrzuty/
+tools/podglad/dane-*.json

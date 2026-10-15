@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Dzień – podgląd na atrapie</title>
+<!-- Ręczny podgląd apki na atrapie bazy (np. w panelu przeglądarki Claude):
+     http://localhost:5173/tools/podglad/podglad.html
+     Czysta strona: prawdziwa apka nigdy tu nie ruszyła, więc nie ma starych timerów z prawdziwym klientem.
+     Kolejność: atrapa (blokuje *.supabase.co) → asercja → kod apki bez vendor/supabase.js. -->
+<script>
+  // Service Worker apki przeładowuje stronę przy aktualizacji i zdjąłby atrapę – tu go nie rejestrujemy.
+  Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { register: async () => ({}), getRegistration: async () => undefined, addEventListener() {}, controller: null, ready: new Promise(() => {}) } });
+</script>
+<script src="atrapa-bazy.js"></script>
+<script>
+(async () => {
+  if (!window.__atrapa) { document.body.textContent = 'Atrapa nieaktywna – przerwane.'; throw new Error('atrapa nieaktywna'); }
+  const html = await (await fetch('../../index.html', { cache: 'no-store' })).text();
+  const WCZYTANIE = '<script src="vendor/supabase.js"><' + '/script>'; // rozbite, żeby nie zamknąć tego skryptu
+  if (!html.includes(WCZYTANIE)) { document.body.textContent = 'Nie znalazłem w index.html wczytania vendor/supabase.js – zaktualizuj podglad.html.'; return; }
+  const strona = html
+    .replace('<head>', '<head><base href="../../">')
+    .replace(WCZYTANIE, ''); // window.supabase daje już atrapa
+  document.open(); document.write(strona); document.close();
+})();
+</script>
