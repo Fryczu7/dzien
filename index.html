@@ -678,7 +678,7 @@ body.kz-on{overflow:hidden}
   <button class="ghost go menugo hidden" id="menuGo"></button>
   <!-- Obserwacje z niedzieli: widoczne, dopóki Michał nie kliknie „Przeczytane” -->
   <div id="obsCard" class="card coach obs hidden">
-    <h2 id="obsTitle">Czego się nauczyłem w tym tygodniu</h2>
+    <h2 id="obsTitle">Wskazówki na ten tydzień</h2>
     <ol id="obsItems" class="coach-items"></ol>
     <details id="obsRep"><summary>Całe podsumowanie</summary><div id="obsRepTxt" class="report"></div></details>
     <div class="row"><button id="obsOk" class="grow">Przeczytane ✓</button></div>
@@ -1569,7 +1569,7 @@ function renderAsystent(focusId) {
   $('#cWork').replaceChildren(...(work.length ? [el('h3', { class: 'sect' }, 'W nocy zrobiłem' + (noc.date === today ? '' : ' (' + dm(noc.date) + ')')), ...work.map(w => el('details', { class: 'card' }, el('summary', {}, w.title + (w.goal_id ? ' · ' + w.goal_id : '')), el('div', { class: 'work' }, w.content || '')))] : []));
   $('#aIdeasList').replaceChildren(...(sp.ideas.length ? sp.ideas.map(propItem) : [el('li', { class: 'muted' }, 'Na razie brak nowych pomysłów.')]));
   const sums = ['tydzien', 'miesiac', 'obserwacje'].map(k => coachRows.find(c => c.kind === k)).filter(Boolean);
-  $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, ({ tydzien: 'Podsumowanie tygodnia', miesiac: 'Podsumowanie miesiąca', obserwacje: 'Czego się nauczyłem' })[c.kind] + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
+  $('#cSummary').replaceChildren(...sums.map(c => el('details', { class: 'card' }, el('summary', {}, ({ tydzien: 'Podsumowanie tygodnia', miesiac: 'Podsumowanie miesiąca', obserwacje: 'Wskazówki na tydzień' })[c.kind] + ' · ' + dm(c.date)), el('div', { class: 'report' }, c.morning + '\n\n' + c.report))));
   $('#cReport').classList.toggle('hidden', !noc?.report); $('#cReportTxt').textContent = noc?.report || '';
   const last = weights[weights.length - 1];
   $('#goals').replaceChildren(...goals.map(g => {
@@ -1672,7 +1672,7 @@ function renderTrening() {
 function renderObs() {
   const o = coachRows.find(c => c.kind === 'obserwacje'), show = !!o && !o.accepted_at, op = parseCoach(o?.morning);
   $('#obsCard').classList.toggle('hidden', !show); if (!show) return;
-  $('#obsTitle').textContent = 'Czego się nauczyłem w tym tygodniu · ' + dShort(o.date);
+  $('#obsTitle').textContent = 'Wskazówki na ten tydzień · ' + dShort(o.date);
   $('#obsItems').replaceChildren(...coachList(op.items));
   $('#obsRep').classList.toggle('hidden', !o.report); $('#obsRepTxt').textContent = o.report || '';
 }
