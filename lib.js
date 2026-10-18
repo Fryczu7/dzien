@@ -631,3 +631,14 @@ export function kzZadaniaZapis(lista) {
 }
 // Statystyki postaci (0–99) w 4 obszarach – kolejność na ekranie.
 export const KZ_STATY = [['Ciało', ['Siła', 'Zwinność', 'Zdrowie']], ['Praca', ['Pracowitość']], ['Głowa', ['Wiedza', 'Dyscyplina']], ['Duch i relacje', ['Duch', 'Relacje']]];
+
+// Dźwięki Kuźni (Web Audio, format jak SOUNDS_*): iskra przy „+XP”, uderzenie młota przy podsumowaniu dnia.
+// dzien = czysty dzień (młot + dzwoniąca stal), braki = głuchy, niższy, poziom = awans albo pokonany boss (młot + fanfara).
+export const KZ_DZWIEKI = {
+  xp: [[1568, 0, .09, .16, 'triangle'], [2349, .05, .2, .12, 'sine'], [3136, .05, .14, .05, 'sine']],
+  dzien: [[110, 0, .35, .4, 'sine', 70], [880, 0, .9, .16, 'triangle'], [1320, .02, 1.1, .11, 'sine'], [1760, .04, .8, .05, 'sine']],
+  braki: [[98, 0, .5, .35, 'sine', 62], [440, 0, .7, .1, 'triangle'], [415, .15, .8, .07, 'sine']],
+  poziom: [[110, 0, .35, .4, 'sine', 70], [523, .12, .15, .22, 'triangle'], [659, .24, .15, .22, 'triangle'], [784, .36, .15, .22, 'triangle'], [1047, .48, 1.2, .26, 'triangle'], [1568, .48, 1.2, .1, 'sine']],
+};
+export const kzDzwiekDnia = p => !p ? null : p.poziom_w_gore || p.boss?.pokonany ? 'poziom' : p.czysty ? 'dzien' : 'braki';
+export const kzDzwiekiWlaczone = cfg => cfg?.ui?.kz_dzwieki !== false;

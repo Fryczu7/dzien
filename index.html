@@ -1000,7 +1000,7 @@ body.kz-on{overflow:hidden}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, otherSuggestions } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -2376,10 +2376,18 @@ function kzBossRender() {
   $('#kzBossTxt').textContent = hp <= 0 ? 'Pokonany – +200 XP przy zamknięciu niedzieli.' : 'Boss tygodnia (sezon ' + (kz.stan?.sezon?.nr ?? 1) + '): każda godzina zabiera 1 punkt życia. Pokonany do niedzieli = +200 XP.';
 }
 // Animacja „+X” przy zadaniu, które właśnie zyskało punkty (też przy pełnej godzinie stopera) i cios w bossa.
+// Dźwięki Kuźni (wyłącznik: ☰ → Kuźnia). Przeglądarka gra dopiero po pierwszym dotknięciu – podsumowanie pokazane
+// przy otwarciu apki zagra wtedy przy pierwszym dotknięciu ekranu.
+function kzGraj(k) {
+  if (!k || !kzDzwiekiWlaczone(cfg)) return;
+  if (actx) return tones(KZ_DZWIEKI[k]);
+  document.addEventListener('pointerdown', () => setTimeout(() => tones(KZ_DZWIEKI[k]), 0), { once: true });
+}
 function kzZyskiPokaz(live) {
   const zy = kz.lastDate === cur ? kzZyski(kz.last, live) : [];
   kz.last = live; kz.lastDate = cur;
   if (!zy.length) return;
+  if (actx) kzGraj('xp'); // iskra tylko, gdy dźwięk już odblokowany (bez kolejki „+XP” na później)
   const win = $('#kzWin');
   for (const { k, xp } of zy) {
     const r = win.querySelector('[data-k="' + k + '"]'); if (!r) continue;
@@ -2477,7 +2485,7 @@ function kzPodsumowanie(p) {
   $('#kzOvRepair').classList.toggle('hidden', !lost); $('#kzOvRepair').textContent = 'Przywróć serię ' + kzDni(p.seria_utracona) + ' – 9,99 zł · wkrótce';
   $('#kzOv .kz-ov-in').classList.toggle('bad', bad && !p.zaliczony);
   $('#kzOv').classList.remove('hidden'); document.body.classList.add('kz-on'); kzOvOpen = true;
-  kzOgien(p.poziom_w_gore || boss?.pokonany ? 30 : 16);
+  kzOgien(p.poziom_w_gore || boss?.pokonany ? 30 : 16); kzGraj(kzDzwiekDnia(p));
   ['header', 'main', '.rail', 'nav', '#pg'].forEach(sel => { const e = $('#app ' + sel); if (e) e.inert = true; });
   $('#kzOvOk').focus();
   // Licznik XP: od 0 do wyniku w ok. 1 s; potem pulsuje seria.
@@ -2572,6 +2580,9 @@ function renderKzPanel() {
     el('h3', {}, 'Boss tygodnia'),
     sw(bossOn, 'Boss tygodnia', () => saveSettings({ boss: bossOn ? null : { nazwa: 'Strażnik 20 godzin', zrodlo: 'praca:getmed', cel: 20 } }, st).then(() => { renderKzPanel(); loadKuznia().then(renderKuznia); })),
     ...bossBody,
+    el('h3', {}, 'Dźwięki'),
+    sw(kzDzwiekiWlaczone(cfg), 'Dźwięki Kuźni – iskra przy „+XP”, młot przy podsumowaniu dnia', () => { const on = !kzDzwiekiWlaczone(cfg); audioUnlock();
+      saveSettings({ ui: { ...(cfg.ui || {}), kz_dzwieki: on } }, st).then(ok => { renderKzPanel(); if (ok && on) tones(KZ_DZWIEKI.dzien); }); }),
     el('h3', {}, 'Przypomnienia'),
     sw(przyOn, 'Przypomnienia na telefon', () => saveSettings({ kuznia_przypomnienia: !przyOn }, st).then(renderKzPanel)),
     ...(przyOn ? [godz('zostalo', 'Co zostało z zadań dnia'), godz('seria', 'Seria zagrożona (tylko gdy dzień niezaliczony)')] : []));
