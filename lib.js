@@ -642,3 +642,16 @@ export const KZ_DZWIEKI = {
 };
 export const kzDzwiekDnia = p => !p ? null : p.poziom_w_gore || p.boss?.pokonany ? 'poziom' : p.czysty ? 'dzien' : 'braki';
 export const kzDzwiekiWlaczone = cfg => cfg?.ui?.kz_dzwieki !== false;
+
+// Kalorie dziś: „Dobite / Nie” (days.kcal_ok) – wiersz pod liczbą w zakładce Jedzenie.
+// 'pytaj' = dzień nierozliczony (posiłki < 90% celu, brak odpowiedzi); dziś dopiero od KCAL_PYTAJ_OD, bo rano nie ma czego rozliczać.
+// 'dobite' / 'niedobite' = odpowiedź już jest (zwinięty wiersz z cofnięciem), 'ukryj' = nic nie pokazuj.
+export const KCAL_PYTAJ_OD = 17;
+export function kalorieRozliczenie({ zjedzone, cel, ok, dzien, dzis, godzina }) {
+  if (dzien > dzis) return 'ukryj';
+  if (ok === true) return 'dobite';
+  if (ok === false) return 'niedobite';
+  if (cel > 0 && zjedzone >= 0.9 * cel) return 'ukryj';
+  if (dzien === dzis && godzina < KCAL_PYTAJ_OD) return 'ukryj';
+  return 'pytaj';
+}

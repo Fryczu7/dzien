@@ -95,6 +95,12 @@ nav button.on{color:var(--acc-ink)}
 #toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:4px 4px 4px 14px}
 .toast-act{background:transparent;color:var(--bg);text-decoration:underline;text-underline-offset:3px;min-height:44px;padding:0 12px}
 .bezkcal{color:var(--bad-ink);font-size:14px}
+.kd-row{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap}
+.kd-row .kd-q{font-weight:600;color:var(--text)}
+.kd-row .kd-done{color:var(--gold);font-weight:600}
+.kd-row .kd-no{color:var(--muted);font-weight:600}
+.kd-row button{min-width:88px}
+.kd-row button.kd-undo{min-width:0}
 .login{max-width:380px;margin:60px auto;padding:0 16px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 /* Ekran „Dziś” do patrzenia */
@@ -817,6 +823,8 @@ body.kz-on{overflow:hidden}
     <div class="row" style="margin-top:8px"><span class="big" id="protSum">0</span><span class="muted grow">/ <span id="protT">–</span> g białka</span></div>
     <div class="bar"><i id="protBar" style="width:0;background:var(--blue)"></i></div>
     <div class="muted" id="left" style="margin-top:6px"></div>
+    <!-- Kalorie dziś: „Dobite / Nie” (days.kcal_ok) – tylko gdy dzień nierozliczony; po odpowiedzi zwinięty z „Cofnij”. Logika: kalorieRozliczenie w lib.js. -->
+    <div class="row kd-row hidden" id="kcalOk"></div>
   </div>
   <!-- Menu na dziś (pod liczbą „ile zjadłem” – decyzja Michała 14.10): układa automat o 5:00 (tabela menu); Michał wybiera opcję i klika „Zjadłem” (wpis do meals). Brak wiersza = karty nie ma. -->
   <div class="card hidden" id="menuCard">
@@ -1000,7 +1008,7 @@ body.kz-on{overflow:hidden}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, kalorieRozliczenie, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1271,12 +1279,32 @@ function renderJedzenie() {
   $('#kcalSum').textContent = k; $('#protSum').textContent = p; $('#kcalT').textContent = kt; $('#protT').textContent = pt;
   $('#kcalBar').style.width = Math.min(100, k / kt * 100) + '%'; $('#protBar').style.width = Math.min(100, p / pt * 100) + '%';
   const bez = meals.filter(m => m.kcal == null).length;
-  $('#left').textContent = (k >= kt && p >= pt ? 'Cel dnia zrobiony.' : 'Zostało: ' + Math.max(0, kt - k) + ' kcal i ' + Math.max(0, pt - p) + ' g białka.')
+  $('#left').textContent = (day?.kcal_ok === true ? '' : k >= kt && p >= pt ? 'Cel dnia zrobiony.' : 'Zostało: ' + Math.max(0, kt - k) + ' kcal i ' + Math.max(0, pt - p) + ' g białka.')
     + (bez ? ' Bez kalorii: ' + bez + ' – powiedz Claude, policzy.' : '');
   const ml = $('#meals');
   ml.replaceChildren(...meals.map(m => el('div', { class: 'item' }, el('span', { class: 'muted', style: 'width:44px' }, m.time || ''), el('span', { class: 'grow' }, m.name), m.kcal == null ? el('span', { class: 'bezkcal' }, 'do policzenia') : el('span', { class: 'muted' }, m.kcal + ' / ' + (m.protein ?? '?') + ' g'), el('button', { class: 'x', 'aria-label': 'Usuń', onclick: async () => { if (!confirm('Usunąć „' + m.name + '”?')) return; const { error } = await sb.from('meals').delete().eq('id', m.id); if (error) return fail(error); meals = meals.filter(x => x.id !== m.id); await unlinkMenuMeal(m.id); renderJedzenie(); renderDzis(); } }, '×'))));
   if (!meals.length) ml.append(el('div', { class: 'muted' }, 'Nic jeszcze nie wpisane.'));
-  renderQuick(); renderMenu();
+  renderKcalOk(k, kt); renderQuick(); renderMenu();
+}
+// Kalorie dziś: jedno dotknięcie zamiast pisania „dobite” do Claude (trener liczy z tego dni dobite, Kuźnia zalicza kalorie).
+function renderKcalOk(k, kt) {
+  const now = new Date(), stan = kalorieRozliczenie({ zjedzone: k, cel: kt, ok: day?.kcal_ok ?? null, dzien: cur, dzis: ymd(now), godzina: now.getHours() });
+  const box = $('#kcalOk'); box.classList.toggle('hidden', stan === 'ukryj');
+  const kiedy = cur === ymd(now) ? 'dziś' : 'tego dnia';
+  if (stan === 'pytaj') box.replaceChildren(el('span', { class: 'grow kd-q' }, 'Kalorie ' + kiedy + ':'),
+    el('button', { class: 'small', onclick: () => setKcalOk(true) }, 'Dobite'),
+    el('button', { class: 'small ghost', onclick: () => setKcalOk(false) }, 'Nie'));
+  else if (stan !== 'ukryj') box.replaceChildren(
+    el('span', { class: 'grow ' + (stan === 'dobite' ? 'kd-done' : 'kd-no') }, stan === 'dobite' ? 'Kalorie dobite ✓' : 'Kalorie ' + kiedy + ': nie dobite'),
+    el('button', { class: 'small ghost kd-undo', onclick: () => setKcalOk(null) }, 'Cofnij'));
+}
+async function setKcalOk(ok) {
+  const before = day?.kcal_ok ?? null, d = cur;
+  day = { ...day, kcal_ok: ok }; renderJedzenie();
+  const { error } = await sb.rpc('kalorie_dobite', { p_date: d, p_ok: ok });
+  if (error && cur === d) { day = { ...day, kcal_ok: before }; renderJedzenie(); }
+  if (error) return fail(error);
+  renderDzis(); // Kuźnia: „kalorie” zaliczone przy dobite – świeży stan z bazy
 }
 // ---------- Menu na dziś ----------
 // Posiłki po godzinach: 3 opcje (dotknięcie = wybór i skład) albo jedna ustalona z góry; „Zjadłem” i „Jadłem coś innego”.
