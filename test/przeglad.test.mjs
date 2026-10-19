@@ -12,6 +12,11 @@ test('do pokazania: tylko nowe, od dziś wstecz, od najstarszej', () => {
   assert.deepEqual(przegladDoPokazania(null, '2026-10-14'), []);
 });
 
+test('do pokazania: bez poprawek asystenta – tylko wątpliwości', () => {
+  const rows = [{ ...r('w', '2026-10-19', '1'), rodzaj: 'watpliwosc' }, { ...r('p', '2026-10-19', '2'), rodzaj: 'poprawka' }];
+  assert.deepEqual(przegladDoPokazania(rows, '2026-10-19').map(x => x.id), ['w']);
+});
+
 test('„Później”: ten sam dzień schowane, nowy dzień pokazuje', () => {
   const t = Date.parse('2026-10-14T10:00:00Z');
   assert.equal(przegladPozniej(null, '2026-10-14', t, true), false);

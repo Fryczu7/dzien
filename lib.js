@@ -536,7 +536,7 @@ export const claudeLink = (base, text) => {
 // ---------- Przegląd pamięci (okno nad apką) ----------
 // Pozycje do pokazania: nowe, z pokaz_od ≤ dziś, od najstarszej. Daty jako tekst RRRR-MM-DD.
 export const przegladDoPokazania = (rows, today) => (rows || [])
-  .filter(r => r && r.status === 'nowe' && r.pokaz_od && r.pokaz_od <= today)
+  .filter(r => r && r.status === 'nowe' && r.rodzaj !== 'poprawka' && r.pokaz_od && r.pokaz_od <= today) // poprawki asystenta Michał nie ogląda (decyzja 19.10)
   .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
 // „Później” = { date, t }: okno wraca następnego dnia albo przy ponownym uruchomieniu apki po 2 h.
 export const PRZEGLAD_PRZERWA_MS = 2 * 3600e3;
