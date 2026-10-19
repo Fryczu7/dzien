@@ -1,5 +1,5 @@
 // Prosty cache powłoki apki; dane zawsze z sieci (Supabase).
-const CACHE = 'dzien-v39';
+const CACHE = 'dzien-v40';
 const SHELL = ['./', './index.html', './lib.js', './spizarnia.js', './push.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png',
   ...['sora-latin-400', 'sora-latin-ext-400', 'sora-latin-600', 'sora-latin-ext-600', 'chakra-petch-latin-700', 'chakra-petch-latin-ext-700', 'cinzel-latin-800', 'cinzel-latin-ext-800', 'jetbrains-mono-latin-500', 'jetbrains-mono-latin-ext-500', 'jetbrains-mono-latin-700', 'jetbrains-mono-latin-ext-700'].map(f => './fonts/' + f + '-normal.woff2')];
 self.addEventListener('install', e => {
@@ -17,12 +17,17 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
   );
 });
-// Kliknięcie w powiadomienie (przerwa w pracy) – pokaż otwartą apkę albo ją otwórz.
+// Kliknięcie w powiadomienie – pokaż otwartą apkę (focus) albo ją otwórz. Alarm stopera (tag „praca”) prowadzi
+// do karty Praca: otwarte okno dostaje {type:'praca'}, nowe otwiera się na …#praca. Przeglądarka nie pozwala apce
+// samej wyskoczyć na wierzch – dopiero kliknięcie w powiadomienie ją pokazuje.
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+  const praca = e.notification.tag === 'praca';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async cs => {
     const c = cs.find(x => x.url.startsWith(self.registration.scope));
-    return c ? c.focus() : self.clients.openWindow('./');
+    if (!c) return self.clients.openWindow(praca ? './#praca' : './');
+    const f = await c.focus().catch(() => c);
+    if (praca) (f || c).postMessage({ type: 'praca' });
   }));
 });
 // Powiadomienie z serwera (Web Push: koniec godziny pracy, koniec przerwy) – działa też przy zablokowanym telefonie.

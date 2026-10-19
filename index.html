@@ -503,6 +503,14 @@ button.ghost,.ghost-talk,.datebtn,.quick button,.wkinds button,.chips button,.mo
 #wToggle.stop,.wbar button{background:linear-gradient(180deg,#e0442f,#991b1b);color:#fff5ee}
 .wbar button.back{background:linear-gradient(180deg,#ff9b4f,#d9531a);color:var(--on-acc)}
 .wbar button.pause,#wPause{background:rgb(10 8 7/.45);color:var(--warn-ink);border:1px solid var(--edge)}
+/* Alarm „czas na przerwę” (19.10): stoper nie staje sam – wyraźny przycisk Przerwa w karcie i na pasku */
+.walarm{text-align:center;margin:14px 0 0;padding:12px;border:1px solid var(--acc);background:rgb(255 138 61/.1)}
+.walarm .wb-title{font-size:22px;font-weight:600;margin:0 0 4px;color:var(--acc-ink)}
+.walarm .muted{margin:0 0 10px;text-wrap:balance}
+.walarm .wbtns{margin-top:0}
+.walarm .wbtns button{font-size:16px;padding:10px 8px}
+#wAlarmBreak,.wbar button.pause.alarm{background:linear-gradient(180deg,#ff9b4f,#d9531a);color:var(--on-acc);border:0}
+#wAlarmMore{background:rgb(10 8 7/.45);color:var(--text);border:1px solid var(--edge);font-weight:500}
 .x,.menubtn,nav button,.sw,.kz-z,.toast-act,.datebtn{clip-path:none}
 .x,.menubtn{background:none}
 button:focus-visible,.talk:focus-visible{outline:2px solid #ffcf85;outline-offset:-4px}
@@ -796,14 +804,20 @@ body.kz-on{overflow:hidden}
   </div>
 
   <!-- Stoper pracy: Michał wybiera, do czego leci czas; każdy Start/Stop zapisuje się w tabeli praca.
-       Po godzinie ciągłej pracy (ustawienia ☰) stoper sam staje i karta pokazuje przerwę z licznikiem i „Wracam”;
-       „Przerwa” – przerwa w dowolnej chwili. Przerwy są w tabeli przerwy (wspólne dla telefonu i komputera). -->
+       Po godzinie ciągłej pracy (ustawienia ☰) stoper NIE staje sam (decyzja 19.10): dźwięk, powiadomienie i alarm
+       z „Przerwa” / „Pracuję dalej”; przerwa zaczyna się dopiero po kliknięciu. „Przerwa” działa też w dowolnej chwili.
+       Przerwy są w tabeli przerwy (wspólne dla telefonu i komputera). -->
   <div class="card" id="cardPraca">
     <h2>Praca</h2>
     <div class="wkinds" id="wKinds" role="group" aria-label="Do czego leci czas"></div>
     <div class="wbreak hidden" id="wBreak" role="status" aria-live="polite">
       <p class="wb-title" id="wBreakTitle">Przerwa</p>
       <p class="muted" id="wBreakTxt"></p>
+    </div>
+    <div class="walarm hidden" id="wAlarm" role="alert">
+      <p class="wb-title" id="wAlarmTitle">Minęła godzina pracy</p>
+      <p class="muted" id="wAlarmTxt"></p>
+      <div class="wbtns"><button id="wAlarmMore">Pracuję dalej</button><button id="wAlarmBreak">Przerwa</button></div>
     </div>
     <div class="clock" id="wClock" role="timer" aria-live="off">0:00:00</div>
     <p class="muted hidden" id="wNext" style="text-align:center;margin:-2px 0 8px;font-variant-numeric:tabular-nums"></p>
@@ -1008,7 +1022,7 @@ body.kz-on{overflow:hidden}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAutoStop, workUntilBreak, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, kalorieRozliczenie, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAlarm, workAlarmMsg, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, kalorieRozliczenie, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1856,6 +1870,7 @@ async function start() {
   if (cfgState === 'nowy' || (cfgState === 'jest' && !cfg.onboarded)) startOpen(); // pierwsze wejście nowej osoby; przy błędzie wczytania – nie
   await kzZalegle(); // Kuźnia: zamknięcie zaległych dni i podsumowanie ostatniego
   pgCheck(); // przegląd pamięci – po starcie, nie nad oknem startu
+  if (location.hash === '#praca') { history.replaceState(null, '', location.pathname + location.search); goPraca(); } // otwarte z powiadomienia
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
 $('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
@@ -2015,6 +2030,8 @@ let wBusy = false, wCardSeen = false;
 const qs = new URLSearchParams(location.search), devHost = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const wb = () => workBreakCfg(cfg.work_break);
 const wLimit = () => devHost && +qs.get('limit') ? +qs.get('limit') * 1000 : wb().limit_min * 60e3;
+const aEvery = () => devHost && +qs.get('co') ? +qs.get('co') * 1000 : undefined; // podgląd: ?co=10 – przypomnienie co 10 s
+const wAlarm = (now = Date.now()) => workAlarm(workRows, now, wLimit(), brkRows, aEvery());
 const bMax = () => wTest ? 20e3 : devHost && +qs.get('przerwa') ? +qs.get('przerwa') * 1000 : wb().break_max * 60e3;
 const bMin = () => wTest ? 7e3 : devHost && +qs.get('przerwa') ? +qs.get('przerwa') * 1000 * wb().break_min / wb().break_max : wb().break_min * 60e3;
 // Przerwy z bazy (tabela przerwy, ostatnie 24 h) – ta sama przerwa na telefonie i komputerze.
@@ -2084,15 +2101,19 @@ async function notify(title, body, force) {
 // Moduł powiadomień z serwera (push.js) – jeśli go jeszcze nie ma, panel pokazuje powiadomienia z samej apki.
 const pushMod = () => import('./push.js').catch(() => null);
 
-async function workStart(kind) {
+// prev = odcinek zamknięty przy zmianie „do czego” – nowy przejmuje „Pracuję dalej” i ostatni push (ten sam łańcuch,
+// więc alarm nie zaczyna się od nowa i serwer nie wysyła drugiego powiadomienia).
+async function workStart(kind, prev) {
   const b = openBreak(); if (b && !b.test && !await breakClose(b)) return false;
   wTest = null;
   const row = { date: ymd(new Date()), kind, started_at: new Date().toISOString() };
+  if (prev?.snooze_until) row.snooze_until = prev.snooze_until;
+  if (prev?.push_at) row.push_at = prev.push_at;
   const { data, error } = await sb.from('praca').insert(row).select().single();
   if (error) { fail(error); await refresh(true); return false; }
   workRows.push(data); return true;
 }
-// ended_at podany = automatyczny stop (koniec na 60. minucie). Tylko chodzący wiersz – drugie urządzenie albo serwer nie nadpisze końca.
+// Tylko chodzący wiersz – drugie urządzenie nie nadpisze końca.
 async function workStop(r, ended_at = new Date().toISOString()) {
   const { error } = await sb.from('praca').update({ ended_at }).eq('id', r.id).is('ended_at', null);
   if (error) { fail(error); return false; }
@@ -2110,13 +2131,30 @@ async function breakClose(b, ended_at = new Date().toISOString()) {
   b.ended_at = ended_at; return true;
 }
 async function workAction(fn) { if (wBusy) return; wBusy = true; try { await fn(); } finally { wBusy = false; renderPraca(); } }
-// Limit minął → zamknij odcinek na start + limit (także po powrocie z tła) i otwórz przerwę od tej chwili.
-async function checkAutoStop() {
-  if (wBusy) return;
-  const end = workAutoStop(workRows, Date.now(), wLimit(), brkRows); if (!end) return;
-  const run = workRows.find(r => !r.ended_at);
-  await workAction(async () => { if (await workStop(run, end)) await breakOpen(end, run.kind, true); });
+// Alarm po czasie pracy (decyzja 19.10): stoper liczy dalej, gra dźwięk i wyskakuje powiadomienie – raz na slot
+// (pierwszy alarm, potem co 15 min, najwyżej 2 h) na tym urządzeniu. Spóźniony slot (powrót z tła po > 2 min) – bez dźwięku;
+// powiadomienie na czas wysyła serwer (praca_tick → push, ten sam tag „praca”, więc się nie dublują).
+function checkAlarm() {
+  const run = workRows.find(r => !r.ended_at), a = run && wAlarm(); if (!a?.due || a.quiet) return;
+  const key = a.start + ':' + a.at + ':' + a.slot; // start łańcucha, nie id odcinka – zmiana „do czego” nie gra drugi raz
+  if (wHeard.alarm === key) return;
+  heard('alarm', key);
+  if (Date.now() - a.slotAt >= 2 * 60e3) return;
+  soundStop();
+  const m = workAlarmMsg(wb().limit_min, Date.now() - a.start, WL[run.kind], a.slot);
+  notify(m.title, m.body);
 }
+// „Pracuję dalej”: alarm odłożony o pełną porcję (limit) od teraz – zapis w bazie, więc serwer i drugie urządzenie też czekają.
+async function snoozeWork() {
+  audioUnlock(); const run = workRows.find(r => !r.ended_at); if (!run) return;
+  const until = new Date(Date.now() + wLimit()).toISOString();
+  const { error } = await sb.from('praca').update({ snooze_until: until }).eq('id', run.id).is('ended_at', null);
+  if (error) return fail(error);
+  run.snooze_until = until; toast('Dobrze – przypomnę za ' + wb().limit_min + ' min');
+}
+// Kliknięcie w powiadomienie (sw.js) albo adres …#praca: zakładka Dziś, karta stopera na środku.
+// Bez płynnego przewijania: okno dopiero wraca z tła i animacja potrafi się nie wykonać.
+function goPraca() { show('dzis'); setTimeout(() => $('#cardPraca').scrollIntoView({ block: 'center' }), 50); }
 // Dźwięki przerwy: alarm, gdy przerwa sama się zaczęła (najwyżej 2 min temu), łagodny, gdy minął jej koniec (5–15 min).
 // Działa tak samo, czy przerwę otworzyła ta apka, drugie urządzenie, czy serwer. Spóźnione (po powrocie z tła) – bez dźwięku.
 function checkBreakSounds() {
@@ -2143,7 +2181,7 @@ function renderPraca() {
   if (run) wKind = run.kind;
   const brk = ob ? breakState(Date.parse(ob.started_at), now, bMin(), bMax()) : null;
   $('#wKinds').replaceChildren(...WORK.map(([k, l]) => el('button', { class: wKind === k ? 'on' : '', 'aria-pressed': String(wKind === k), onclick: () => workAction(async () => {
-    if (run && run.kind !== k) { if (await workStop(run)) { keepKind(k); await workStart(k); } }
+    if (run && run.kind !== k) { if (await workStop(run)) { keepKind(k); await workStart(k, run); } }
     else keepKind(k);
   }) }, l)));
   $('#wBreak').classList.toggle('hidden', !brk);
@@ -2160,15 +2198,21 @@ function renderPraca() {
   // W pracy zegar pokazuje cały dzisiejszy czas tego projektu (po przerwie liczy dalej, zeruje się o północy);
   // w przerwie – czas tej przerwy (od zera przy każdej). Pod spodem: ile zostało do przerwy.
   clock.textContent = brk ? fmtClock(brk.ms).replace(/^0:/, '') : fmtClock(wKind ? t.day[wKind] || 0 : 0);
-  const left = run ? workUntilBreak(workRows, now, wLimit(), brkRows) : null;
-  $('#wNext').classList.toggle('hidden', left == null);
-  if (left != null) $('#wNext').textContent = 'do przerwy ' + fmtClock(left);
+  const al = run ? wAlarm(now) : null, due = !!al?.due;
+  $('#wNext').classList.toggle('hidden', !al || due);
+  if (al && !due) $('#wNext').textContent = 'do przerwy ' + fmtClock(al.left);
+  $('#wAlarm').classList.toggle('hidden', !due);
+  if (due) {
+    const m = workAlarmMsg(wb().limit_min, now - al.start, WL[run.kind], al.slot);
+    $('#wAlarmTitle').textContent = m.title;
+    $('#wAlarmTxt').textContent = 'Stoper liczy dalej, dopóki nie klikniesz. „Pracuję dalej” przypomni za ' + wb().limit_min + ' min.';
+  }
   clock.classList.toggle('run', !!run); clock.classList.toggle('brk', !!brk); clock.classList.toggle('end', brk?.phase === 'koniec');
   clock.setAttribute('aria-label', brk ? 'Przerwa trwa' : 'Czas pracy');
   const back = ob ? WL[wKind || ob.kind] || '' : '';
   const tg = $('#wToggle');
   tg.textContent = run ? 'Stop' : ob?.test ? 'Zakończ test' : brk ? 'Wracam' + (back ? ' – ' + back : '') : 'Start'; tg.classList.toggle('stop', !!run);
-  $('#wPause').classList.toggle('hidden', !run);
+  $('#wPause').classList.toggle('hidden', !run || due); // przy alarmie „Przerwa” jest w ramce alarmu
   $('#wBreakEnd').classList.toggle('hidden', !brk || !!ob?.test);
   const long = run && t.runningMs > 10 * 3600e3, hint = $('#wHint');
   hint.classList.toggle('hidden', !long && !!(run || wKind || brk));
@@ -2182,10 +2226,10 @@ function renderPraca() {
   // Pasek na dole, gdy karty nie widać: chodzący stoper (Stop) albo przerwa (Wracam).
   const bar = !!(run || brk) && !wCardSeen;
   $('#wBar').classList.toggle('hidden', !bar); document.body.classList.toggle('wbar-on', bar);
-  if (run) $('#wBarTxt').textContent = WL[run.kind] + ' · ' + fmtClock(t.day[run.kind] || 0);
+  if (run) $('#wBarTxt').textContent = due ? 'Czas na przerwę' : WL[run.kind] + ' · ' + fmtClock(t.day[run.kind] || 0);
   else if (brk) $('#wBarTxt').textContent = 'Przerwa · ' + fmtClock(brk.ms).replace(/^0:/, '');
   $('#wBarStop').textContent = run ? 'Stop' : 'Wracam'; $('#wBarStop').classList.toggle('back', !run);
-  $('#wBarPause').classList.toggle('hidden', !run);
+  $('#wBarPause').classList.toggle('hidden', !run); $('#wBarPause').classList.toggle('alarm', due);
 }
 // Start / Stop / Wracam (po przerwie: nowy odcinek w tym samym „do czego”, chyba że wybrał inne).
 async function toggleWork() {
@@ -2206,6 +2250,8 @@ $('#wToggle').onclick = () => workAction(toggleWork);
 $('#wPause').onclick = () => workAction(pauseWork);
 $('#wBarStop').onclick = () => workAction(toggleWork);
 $('#wBarPause').onclick = () => workAction(pauseWork);
+$('#wAlarmBreak').onclick = () => workAction(pauseWork);
+$('#wAlarmMore').onclick = () => workAction(snoozeWork);
 $('#wBreakEnd').onclick = () => workAction(async () => {
   const b = openBreak(); if (!b) return;
   if (b.test) { wTest = null; return toast('Test zakończony – nic się nie zapisało'); }
@@ -2216,18 +2262,17 @@ function testBreak() {
   audioUnlock(); drawer(false); show('dzis');
   if (workRows.some(r => !r.ended_at)) return toast('Najpierw zatrzymaj stoper – test pokazuje przerwę');
   wTest = { id: 'test-' + Date.now(), test: true, auto: true, kind: wKind || 'getmed', started_at: new Date().toISOString() };
-  soundStop(); notify('[ KUŹNIA ] Zadanie ukończone (test)', 'Tak przyjdzie powiadomienie po czasie pracy.', true);
+  soundStop(); notify(workAlarmMsg(wb().limit_min, wLimit(), '', 0).title + ' (test)', 'Tak przyjdzie powiadomienie po czasie pracy. Kliknięcie otworzy apkę.', true);
   heard('stop', wTest.id); renderPraca(); $('#cardPraca').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 // Push z serwera przy otwartej apce (sw.js wysyła {type:'push'}) – od razu pokaż stan z bazy.
-navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.type === 'push') refresh(true); });
+navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.type === 'push') refresh(true); if (e.data?.type === 'praca') { goPraca(); refresh(true); } });
 // Pasek „GetMed 1:23:05 · Stop” tylko wtedy, gdy karty stopera nie widać na ekranie.
 new IntersectionObserver(es => { wCardSeen = es.some(e => e.isIntersecting); renderPraca(); }).observe($('#cardPraca'));
-// Co sekundę: limit pracy, dźwięki przerwy, licznik. W tle przeglądarka zwalnia zegar (do ~1/min), a telefon
-// zablokowany go zatrzymuje – wtedy stop liczy się przy powrocie (refresh → checkAutoStop) z końcem na 60. minucie,
-// a powiadomienie na czas wysyła serwer.
+// Co sekundę: alarm po czasie pracy, dźwięki przerwy, licznik. W tle przeglądarka zwalnia zegar (do ~1/min), a telefon
+// zablokowany go zatrzymuje – wtedy powiadomienie na czas wysyła serwer (praca_tick), a apka po powrocie pokazuje alarm.
 setInterval(() => {
-  if (workRows.some(r => !r.ended_at)) { checkAutoStop(); renderPraca(); kzTick(); }
+  if (workRows.some(r => !r.ended_at)) { checkAlarm(); renderPraca(); kzTick(); }
   else if (openBreak()) { checkBreakSounds(); closeStaleBreak(); renderPraca(); }
 }, 1000);
 // Panel: stoper i przerwy – długość pracy, zakres przerwy, dźwięki z odsłuchem, powiadomienia, test.
@@ -2704,7 +2749,7 @@ async function refresh(force) {
   cur = dayOnResume(cur, followToday, new Date());
   await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad(), loadKuznia()]); renderAll(); pgCheck(); // bez show(): nie przewija na górę
   for (const k of ['stop', 'end']) if (wb()['custom_' + k] && !customBuf[k]) loadCustom(k);
-  checkAutoStop(); checkBreakSounds(); // powrót z tła: godzina mogła minąć, gdy zegar stał
+  checkAlarm(); checkBreakSounds(); // powrót z tła: godzina mogła minąć, gdy zegar stał
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') return flushText(); refresh(true); });
 window.addEventListener('focus', () => refresh(false));

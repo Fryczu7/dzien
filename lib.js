@@ -340,11 +340,14 @@ export function workTotals(rows, today, now) {
   const running = rows.find(r => !r.ended_at) || null;
   return { day, week, running, runningMs: running ? msOf(running, now) : 0 };
 }
-// Przerwa co godzinę: po 60 min ciągłej pracy stoper sam staje, odcinek kończy się dokładnie na 60. minucie.
+// Przerwa co godzinę (decyzja Michała 19.10): po 60 min ciągłej pracy stoper NIE staje sam – gra dźwięk i przychodzi
+// powiadomienie; przerwę włącza dopiero kliknięcie „Przerwa”. Stoper liczy dalej, dopóki Michał nie kliknie.
 // „Ciągła” = chodzący odcinek plus poprzednie, które przechodzą w siebie bez luki (zmiana „do czego” w trakcie).
-// Każda przerwa z tabeli przerwy (sama po godzinie albo kliknięta „Przerwa”, nawet 30-sekundowa) urywa łańcuch.
-// Ta sama zasada działa na serwerze (cron w bazie) – zmieniając ją tutaj, zmień też tam.
+// Każda przerwa z tabeli przerwy (kliknięta „Przerwa”, nawet 30-sekundowa) urywa łańcuch.
+// Ta sama zasada działa na serwerze (praca_tick w bazie) – zmieniając ją tutaj, zmień też tam.
 export const WORK_LIMIT_MS = 60 * 60e3, WORK_JOIN_MS = 60e3, BREAK_MIN_MS = 5 * 60e3, BREAK_MAX_MS = 15 * 60e3;
+// Przypomnienie, gdy nikt nie kliknął: co 15 min, najwyżej przez 2 h od pierwszego alarmu (potem cisza – bez zalewania).
+export const ALARM_EVERY_MS = 15 * 60e3, ALARM_FOR_MS = 2 * 3600e3;
 export function workChainStart(rows, run, joinMs = WORK_JOIN_MS, breaks = []) {
   let start = Date.parse(run.started_at);
   const done = rows.filter(r => r !== run && r.ended_at).sort((a, b) => Date.parse(b.ended_at) - Date.parse(a.ended_at));
@@ -357,17 +360,28 @@ export function workChainStart(rows, run, joinMs = WORK_JOIN_MS, breaks = []) {
   }
   return start;
 }
-// Kiedy zamknąć chodzący odcinek: ISO końca (start łańcucha + limit, nie „teraz” – działa też po powrocie z tła) albo null.
-export function workAutoStop(rows, now, limitMs = WORK_LIMIT_MS, breaks = []) {
+// Alarm „czas na przerwę” w chodzącym łańcuchu. Bez chodzącego odcinka: null.
+// at = start łańcucha + limit, a po „Pracuję dalej” (praca.snooze_until) – ta chwila; nigdy przed startem odcinka.
+// Gdy due: slot = numer przypomnienia (0 = pierwszy alarm), slotAt = kiedy ten slot się zaczął,
+// quiet = minęły 2 h przypomnień (alarm dalej widać w apce, ale bez dźwięku i powiadomień).
+export function workAlarm(rows, now, limitMs = WORK_LIMIT_MS, breaks = [], everyMs = ALARM_EVERY_MS, forMs = ALARM_FOR_MS) {
   const run = rows.find(r => !r.ended_at);
   if (!run) return null;
-  const end = Math.max(Date.parse(run.started_at), workChainStart(rows, run, WORK_JOIN_MS, breaks) + limitMs);
-  return now >= end ? new Date(end).toISOString() : null;
+  const start = workChainStart(rows, run, WORK_JOIN_MS, breaks), snooze = run.snooze_until ? Date.parse(run.snooze_until) : 0;
+  const at = Math.max(Date.parse(run.started_at), start + limitMs, snooze || 0);
+  if (now < at) return { start, at, due: false, left: at - now, slot: null, slotAt: null, quiet: false };
+  const slot = Math.floor((now - at) / everyMs);
+  return { start, at, due: true, left: 0, slot, slotAt: at + slot * everyMs, quiet: slot * everyMs >= forMs };
 }
-// Ile zostało do przerwy (ms) w chodzącym łańcuchu – pod zegarem „do przerwy 0:12:30”. Bez chodzącego: null.
+// Ile zostało do alarmu (ms) – pod zegarem „do przerwy 0:12:30”; po alarmie 0. Bez chodzącego: null.
 export function workUntilBreak(rows, now, limitMs = WORK_LIMIT_MS, breaks = []) {
-  const run = rows.find(r => !r.ended_at);
-  return run ? Math.max(0, workChainStart(rows, run, WORK_JOIN_MS, breaks) + limitMs - now) : null;
+  const a = workAlarm(rows, now, limitMs, breaks);
+  return a ? a.left : null;
+}
+// Treść alarmu (apka i serwer mówią to samo – praca_tick w bazie ma kopię tych zdań).
+export function workAlarmMsg(limitMin, workedMs, label, slot) {
+  const title = slot ? 'Czas na przerwę – pracujesz już ' + fmtHM(workedMs) : limitMin === 60 ? 'Minęła godzina pracy' : 'Minęło ' + limitMin + ' min pracy';
+  return { title, body: 'Kliknij, żeby zrobić przerwę. Stoper liczy dalej' + (label ? ' (' + label + ')' : '') + '.' };
 }
 // Ustawienia stopera (settings.work_break) z wartościami domyślnymi; złe liczby → domyślne.
 export const WORK_BREAK_DEFAULT = { limit_min: 60, break_min: 5, break_max: 15, sound_stop: 'trzy-tony', sound_end: 'dwa-tony' };
