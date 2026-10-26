@@ -372,6 +372,19 @@ body.wbar-on{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 .mopt.on .n{font-weight:600}
 .mopt:disabled{opacity:1;cursor:default}
 .mdet{font-size:14px;color:var(--muted);margin:8px 2px 0;overflow-wrap:anywhere}
+.mopt-w{display:grid;gap:2px;align-content:start}
+.mprz{margin:0 2px}
+.mprz>summary{min-height:40px;gap:8px;font-size:14px;font-weight:600;color:var(--acc-ink)}
+.mprz>summary::after{margin-left:0;width:6px;height:6px}
+.mprz ol{margin:0 0 4px;padding-left:22px;font-size:14px;display:grid;gap:4px;overflow-wrap:anywhere}
+.mprop-btn{margin:2px 0 8px}
+.mprop{display:grid;gap:6px;margin:0 0 12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.mprop-h{margin:0;font-size:14px;color:var(--muted)}
+.mprop-h b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.mgone .mhead{margin-bottom:0}
+.mgone .mhead b{font-weight:500;color:var(--muted)}
+.mnext{justify-self:start;grid-column:1/-1;margin-top:2px}
+.mnext .muted{font-weight:400;margin-left:6px;font-variant-numeric:tabular-nums}
 .meat{width:100%;margin-top:10px}
 .mdone{display:flex;align-items:center;gap:10px;min-height:44px}
 .mdone .box{width:22px;height:22px;border-radius:7px;font-size:14px}
@@ -416,6 +429,7 @@ body[data-off~="tab-jedzenie"] #menuGo{display:none!important}
   .menugo{margin:0}
   .mopts{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mdet{width:calc((100% - 12px) / 3)}
+  .mopt-w{grid-row:span 2;grid-template-rows:subgrid;row-gap:2px} /* przyciski w rzędzie równej wysokości, „Jak zrobić” pod nimi */
   .wbar{bottom:0}
   body.wbar-on{padding-bottom:64px}
   #app:not(.hidden){display:flex;flex-direction:column;min-height:100dvh}
@@ -844,6 +858,9 @@ body.kz-on{overflow:hidden}
   <div class="card hidden" id="menuCard">
     <h2>Menu na dziś</h2>
     <p class="mnote hidden" id="menuNote"></p>
+    <!-- „Zaproponuj jedzenie” (26.10): na teraz, niezależnie od godzin – opcje z całego dnia pod to, czego brakuje do celu -->
+    <button class="ghost small mprop-btn hidden" id="menuPropBtn" aria-expanded="false" aria-controls="menuProp">Zaproponuj jedzenie</button>
+    <div class="mprop hidden" id="menuProp"></div>
     <div id="menuList"></div>
     <div id="menuStale"></div>
     <div class="msum" id="menuSum"></div>
@@ -1022,7 +1039,7 @@ body.kz-on{overflow:hidden}
 
 <script src="vendor/supabase.js"></script>
 <script type="module">
-import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAlarm, workAlarmMsg, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, kalorieRozliczenie, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions } from './lib.js';
+import { ymd, hoursBetween, isFuture, mealTime, ruleState, dayOnResume, addDays, weekStart, findGap, weekStats, partOfDay, missingToday, planWithoutToggles, parseCoach, quickFromHistory, matchesQuery, nextView, withWorkoutDays, trainingWeeks, progressSummary, sortWorkouts, exerciseProgress, progressFor, setCounts, fmtSet, fmtKg, trendLabel, counters, applyDecision, undoDecision, splitPropozycje, checkinPatch, eveningBrief, feedbackMsg, checkinMsg, MOODS, WORK, workTotals, workAlarm, workAlarmMsg, breakState, workBreakCfg, SOUNDS_STOP, SOUNDS_END, soundTones, fmtClock, fmtHM, workLine, workBrief, PANEL_CARDS, PANEL_TABS, visibleViews, itemKey, parseHours, fmtHoursInput, MENU_SRC, kalorieRozliczenie, menuChosen, menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, nowMins, slotGone, menuLeft, eatOther, menuOtherMsg, claudeLink, przegladDoPokazania, przegladPozniej, przegladOtworzyc, przegladPrzyciski, przegladDalej, kzNaZywo, kzPostep, kzWidoczne, kzZyski, kzKamien, kzDni, kzLicznik, kzPasek, kzDoPokazania, kzNoweZadanie, kzDniTekst, kzZadaniaZapis, KZ_STATY, KZ_DZWIEKI, kzDzwiekDnia, kzDzwiekiWlaczone, otherSuggestions, menuPage, menuRecipe, MENU_PAGE, menuLastSlot, menuSuggest, menuSlotForNow, chooseSuggested, menuNeed } from './lib.js';
 import { pantry, toBuy, stateLine, STAN } from './spizarnia.js';
 const sb = window.supabase.createClient('https://ywoqfvlnteejtzhqdpdd.supabase.co', 'sb_publishable_PqZkUBr4bwfeb90TWWylSw_gmH90JLU', { auth: { persistSession: true, autoRefreshToken: true } });
 
@@ -1326,6 +1343,10 @@ async function setKcalOk(ok) {
 const kg = x => (x.kcal ?? '?') + ' kcal · ' + (x.protein ?? '?') + ' g';
 const dis = on => on ? { disabled: '' } : {}; // el() ustawia każdy atrybut, więc disabled tylko gdy trzeba
 let menuOther = null; // { si, q } – otwarte pole „Jadłem coś innego”
+let menuProp = null; // { page } – otwarte „Zaproponuj jedzenie”
+const menuGoneOpen = new Set(); // minione posiłki rozwinięte ręcznie
+const menuPg = {}, menuPrz = new Set(); // strona opcji per posiłek („Zaproponuj coś innego”) i otwarte „Jak zrobić” – przeżywają przerysowanie
+const recipeEl = (k, steps) => { const d = el('details', { class: 'mprz', ontoggle: () => d.open ? menuPrz.add(k) : menuPrz.delete(k) }, el('summary', {}, 'Jak zrobić'), el('ol', {}, ...steps.map(t => el('li', {}, t)))); d.open = menuPrz.has(k); return d; };
 const menuNow = () => { const t = ymd(new Date()); return !menu ? null : menu.date === t ? nowMins(new Date()) : menu.date < t ? 'miniony' : null; };
 const toggleMore = e => { const r = e.currentTarget.closest('.mfix'); r.classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(r.classList.contains('open'))); };
 function otherSugg(si) {
@@ -1345,13 +1366,44 @@ function otherForm(si, x) {
       el('button', { class: 'ghost', onclick: () => { menuOther = null; renderMenu(); } }, 'Anuluj')),
     el('p', { class: 'muted mhint' }, 'Dotknij podpowiedzi – zapisze z kaloriami. Albo „Powiem Claude” – posiłek się zamknie, a kalorie dopisze Claude.'));
 }
+// „Zaproponuj jedzenie”: tylko dzisiejsze menu; wybór idzie do otwartego posiłku najbliżej teraz (wieczorem – kolacja).
+function renderMenuProp(now) {
+  const btn = $('#menuPropBtn'), box = $('#menuProp'), on = typeof now === 'number';
+  btn.classList.toggle('hidden', !on); if (!on) menuProp = null;
+  btn.setAttribute('aria-expanded', String(!!menuProp)); btn.textContent = menuProp ? 'Zamknij propozycje' : 'Zaproponuj jedzenie';
+  btn.onclick = () => { menuProp = menuProp ? null : { page: 0 }; renderMenu(); };
+  box.classList.toggle('hidden', !menuProp); if (!menuProp) return box.replaceChildren();
+  const ate = menu.date === cur ? meals : [], eaten = { kcal: ate.reduce((a, m) => a + (m.kcal || 0), 0), protein: ate.reduce((a, m) => a + (m.protein || 0), 0) };
+  const need = menuNeed(menu, eaten, { kcal: day.kcal_target || cfg.kcal_target, protein: day.protein_target || cfg.protein_target }, now);
+  const list = menuSuggest(menu, need.per), si = menuSlotForNow(menu, now), pg = menuPage({ options: list }, menuProp.page);
+  const tgt = menu.slots[si];
+  box.replaceChildren(
+    el('p', { class: 'mprop-h' }, need.kcal > 0 ? 'Do celu brakuje ' : 'Cel kalorii już zjedzony – ', need.kcal > 0 ? el('b', {}, need.kcal + ' kcal · ' + Math.max(0, need.protein) + ' g białka') : 'najlżejsze na górze', need.kcal > 0 ? ' (ze stałymi). ' : '. ', tgt ? 'Wybór trafi do: ' + (tgt.label || tgt.slot).toLowerCase() + '.' : 'Wszystkie posiłki zamknięte – zostaje „Szybko”.'),
+    ...pg.idx.map(k => { const { si: from, oi, o } = list[k], steps = menuRecipe(o), pk = 'p:' + menu.date + ':' + from + ':' + oi;
+      return el('div', { class: 'mopt-w' }, el('button', { class: 'mopt', ...(si < 0 ? { disabled: '' } : {}), onclick: () => chooseProp(si, o) },
+        el('span', { class: 'n' }, o.name), el('span', { class: 'm' }, kg(o)), el('span', { class: 'src' }, (menu.slots[from].label || menu.slots[from].slot).toLowerCase())),
+        steps.length ? recipeEl(pk, steps) : ''); }),
+    pg.pages > 1 ? el('button', { class: 'ghost small mnext', onclick: () => { menuProp.page = pg.page + 1; renderMenu(); } }, 'Zaproponuj coś innego', el('span', { class: 'muted' }, (pg.page + 1) + '/' + pg.pages)) : '');
+}
+async function chooseProp(si, o) {
+  if (si < 0 || menuBusy.has('slot' + si)) return;
+  const slots = chooseSuggested(menu.slots, si, o); if (!slots) return;
+  menuProp = null; menuOpen.delete(si); menuGoneOpen.add(si);
+  if (await saveMenu({ slots })) toast('Wybrane na ' + String(menu.slots[si].label || menu.slots[si].slot).toLowerCase() + ': ' + o.name);
+}
 function renderMenu() {
   const card = $('#menuCard'); card.classList.toggle('hidden', !menu);
   if (!menu) return;
   const now = menuNow();
   $('#menuNote').classList.toggle('hidden', !menu.note); $('#menuNote').textContent = menu.note || '';
-  $('#menuList').replaceChildren(...menuTimeline(menu).filter(({ x }) => !slotGone(x, now)).map(({ kind, i, x }) => {
+  renderMenuProp(now);
+  const L = menuLastSlot(menu);
+  $('#menuList').replaceChildren(...menuTimeline(menu).map(({ kind, i, x }) => {
     const busy = menuBusy.has(kind + i), ch = menuChosen(x), head = el('div', { class: 'mhead' }, el('span', { class: 'mtime' }, x.time || ''), el('b', {}, x.label || x.slot));
+    // Minione bez wyboru: zwinięte do jednej linii z „Pokaż” (ostatni posiłek dnia nigdy – decyzja 26.10).
+    const gone = slotGone(x, now, i === L), tg = () => { menuGoneOpen.has(i) ? menuGoneOpen.delete(i) : menuGoneOpen.add(i); renderMenu(); };
+    if (gone && !menuGoneOpen.has(i)) { head.append(el('span', { class: 'muted' }, 'minęło'), el('button', { class: 'ghost small', 'aria-expanded': 'false', onclick: tg }, 'Pokaż')); return el('div', { class: 'mslot mgone' }, head); }
+    if (gone) head.append(el('button', { class: 'ghost small', 'aria-expanded': 'true', onclick: tg }, 'Zwiń'));
     if (x.pending && !x.eaten) return el('div', { class: 'mslot' }, head, el('div', { class: 'mdone' },
       el('span', { class: 'box on', 'aria-hidden': 'true' }, '✓'),
       el('span', { class: 'grow' }, 'Coś innego', el('span', { class: 'm' }, 'kalorie dopisze Claude, gdy mu powiesz')),
@@ -1364,15 +1416,16 @@ function renderMenu() {
         el('button', { class: 'ghost small', ...dis(busy), onclick: () => uneatMenu(kind, i) }, 'Cofnij')));
     }
     // Po wyborze widać tylko wybraną opcję; „Zmień” pokazuje znowu wszystkie (ustalony z góry ma jedną – bez „Zmień”).
-    const many = (x.options || []).length > 1, all = !ch || menuOpen.has(i);
-    const opts = el('div', { class: 'mopts', role: 'radiogroup', 'aria-label': x.label || x.slot }, ...(x.options || []).map((o, oi) => {
-      const on = x.chosen === oi;
-      if (!all && !on) return '';
-      return el('button', { class: 'mopt' + (on ? ' on' : ''), role: 'radio', 'aria-checked': String(on), onclick: () => chooseMenu(i, oi) },
+    // Opcji bywa więcej niż 3: widać stronę po 3, „Zaproponuj coś innego” pokazuje kolejne (w kółko). Pod opcją z przepisem – zwinięte „Jak zrobić”.
+    const many = (x.options || []).length > 1, all = !ch || menuOpen.has(i), pk = menu.date + ':' + i, pg = menuPage(x, menuPg[pk] || 0);
+    const opts = el('div', { class: 'mopts', role: 'radiogroup', 'aria-label': x.label || x.slot }, ...(all ? pg.idx : [x.chosen]).map(oi => {
+      const o = x.options[oi], on = x.chosen === oi, steps = menuRecipe(o);
+      return el('div', { class: 'mopt-w' }, el('button', { class: 'mopt' + (on ? ' on' : ''), role: 'radio', 'aria-checked': String(on), onclick: () => chooseMenu(i, oi) },
         el('span', { class: 'n' }, o.name), el('span', { class: 'm' }, kg(o)),
-        el('span', { class: 'src' + (o.domyslne || x.ustalone ? ' dom' : '') }, (MENU_SRC[o.src] || o.src || '') + (o.domyslne ? ' · zwykle' : '')));
-    }));
-    if (ch && many) head.append(el('button', { class: 'ghost small', 'aria-expanded': String(all), onclick: () => { menuOpen.has(i) ? menuOpen.delete(i) : menuOpen.add(i); renderMenu(); } }, all ? 'Gotowe' : 'Zmień'));
+        el('span', { class: 'src' + (o.domyslne || x.ustalone ? ' dom' : '') }, (MENU_SRC[o.src] || o.src || '') + (o.domyslne ? ' · zwykle' : ''))),
+        steps.length ? recipeEl(pk + ':' + oi, steps) : '');
+    }), all && pg.pages > 1 ? el('button', { class: 'ghost small mnext', onclick: () => { menuPg[pk] = pg.page + 1; renderMenu(); } }, 'Zaproponuj coś innego', el('span', { class: 'muted' }, (pg.page + 1) + '/' + pg.pages)) : '');
+    if (ch && many) head.append(el('button', { class: 'ghost small', 'aria-expanded': String(all), onclick: () => { if (menuOpen.has(i)) menuOpen.delete(i); else { menuOpen.add(i); menuPg[pk] = Math.floor(x.chosen / MENU_PAGE); } renderMenu(); } }, all ? 'Gotowe' : 'Zmień'));
     const open = menuOther?.si === i;
     return el('div', { class: 'mslot' }, head, opts,
       ch?.detail ? el('p', { class: 'mdet' }, ch.detail) : '',

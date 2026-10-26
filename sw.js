@@ -1,5 +1,5 @@
 // Prosty cache powłoki apki; dane zawsze z sieci (Supabase).
-const CACHE = 'dzien-v40';
+const CACHE = 'dzien-v41';
 const SHELL = ['./', './index.html', './lib.js', './spizarnia.js', './push.js', './vendor/supabase.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png',
   ...['sora-latin-400', 'sora-latin-ext-400', 'sora-latin-600', 'sora-latin-ext-600', 'chakra-petch-latin-700', 'chakra-petch-latin-ext-700', 'cinzel-latin-800', 'cinzel-latin-ext-800', 'jetbrains-mono-latin-500', 'jetbrains-mono-latin-ext-500', 'jetbrains-mono-latin-700', 'jetbrains-mono-latin-ext-700'].map(f => './fonts/' + f + '-normal.woff2')];
 self.addEventListener('install', e => {

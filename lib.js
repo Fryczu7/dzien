@@ -455,14 +455,17 @@ export const nowMins = d => d.getHours() * 60 + d.getMinutes();
 export const MENU_HIDE_AFTER = 120;
 // pending = „Powiem Claude”: zjedzone inaczej, kalorie dopisze Claude (menu_zjedzone) – traktujemy jak zamknięte.
 const slotClosed = s => !!(s.eaten || s.pending);
-export const slotGone = (s, now) => !menuChosen(s) && !slotClosed(s) && (now === 'miniony' || (typeof now === 'number' && now >= minsOf(s.time) + MENU_HIDE_AFTER));
+// Ostatni posiłek dnia (po godzinie) nie znika do końca dnia (decyzja Michała 26.10: „kolacja zniknie, a ja jeszcze nie jadłem”).
+export const menuLastSlot = menu => (menu?.slots || []).reduce((b, s, i, a) => b < 0 || minsOf(s.time) >= minsOf(a[b].time) ? i : b, -1);
+export const slotGone = (s, now, last = false) => !(last && now !== 'miniony') && !menuChosen(s) && !slotClosed(s) && (now === 'miniony' || (typeof now === 'number' && now >= minsOf(s.time) + MENU_HIDE_AFTER));
 // Suma dnia z menu: stałe + wybrane opcje (albo „coś innego”); „open” = widoczne posiłki jeszcze bez wyboru.
 export function menuTotals(menu, now = null) {
   const out = { kcal: 0, protein: 0, open: [] };
   if (!menu) return out;
   const add = x => { out.kcal += Number(x.kcal) || 0; out.protein += Number(x.protein) || 0; };
   for (const x of menu.stale || []) add(x);
-  for (const s of menu.slots || []) { if (s.pending && !s.eaten) continue; const o = s.inne || menuChosen(s); if (o) add(o); else if (!slotGone(s, now)) out.open.push(s.label || s.slot); }
+  const L = menuLastSlot(menu);
+  (menu.slots || []).forEach((s, i) => { if (s.pending && !s.eaten) return; const o = s.inne || menuChosen(s); if (o) add(o); else if (!slotGone(s, now, i === L)) out.open.push(s.label || s.slot); });
   return out;
 }
 // Co z menu jeszcze przed Tobą: wybrane, niezjedzone posiłki + niezjedzone stałe (do „zjedzone + zostało w planie”).
@@ -475,13 +478,54 @@ export function menuLeft(menu) {
   return out;
 }
 // „Wybierz menu →” na Dziś: któryś widoczny posiłek nie ma wyboru (zjedzony albo miniony nie wisi).
-export const menuNeedsChoice = (menu, now = null) => !!menu && (menu.slots || []).some(s => !menuChosen(s) && !slotClosed(s) && !slotGone(s, now));
+export const menuNeedsChoice = (menu, now = null) => !!menu && (menu.slots || []).some((s, i) => !menuChosen(s) && !slotClosed(s) && !slotGone(s, now, i === menuLastSlot(menu)));
 // Podpowiedzi „Jadłem coś innego”: tylko to, co Michał naprawdę jadł (bez szablonów z ustawień), najczęstsze na górze, max 5.
 // Bez szukania – tylko posiłki z podobnej pory (±3 h od pory posiłku w menu), żeby przy śniadaniu nie było obiadu; szukanie – cała historia.
 export function otherSuggestions(hist, q, slotTime = null) {
   const near = r => { if (!slotTime || !r.time) return false; const [h, m] = String(r.time).split(':').map(Number); return Math.abs(h * 60 + m - minsOf(slotTime)) <= 180; };
   const rows = !q && slotTime ? hist.filter(near) : hist;
   return quickFromHistory(rows, []).filter(x => x.n > 0 && matchesQuery(x.name, q)).slice(0, 5);
+}
+// „Zaproponuj coś innego”: automat daje do ~8 opcji, widać po 3; strona p kręci się w kółko. idx = indeksy opcji do pokazania.
+export const MENU_PAGE = 3;
+export function menuPage(s, p = 0) {
+  const n = (s?.options || []).length, pages = Math.max(1, Math.ceil(n / MENU_PAGE)), page = ((p % pages) + pages) % pages;
+  const idx = []; for (let k = page * MENU_PAGE; k < Math.min(n, (page + 1) * MENU_PAGE); k++) idx.push(k);
+  return { idx, page, pages };
+}
+// „Jak zrobić”: przepis opcji jako lista kroków (tablica albo tekst z nowymi liniami); brak = [] (bez przycisku).
+export const menuRecipe = o => (Array.isArray(o?.przepis) ? o.przepis : typeof o?.przepis === 'string' ? o.przepis.split('\n') : [])
+  .map(x => String(x ?? '').trim()).filter(Boolean);
+// „Zaproponuj jedzenie” (na teraz, niezależnie od godzin): opcje ze wszystkich posiłków dnia bez dubli, najlepiej pasujące
+// do tego, czego brakuje do celu (need = { kcal, protein } na ten posiłek) na górze. Zwraca [{ si, oi, o }].
+export function menuSuggest(menu, need) {
+  const seen = new Set(), out = [];
+  (menu?.slots || []).forEach((s, si) => (s.options || []).forEach((o, oi) => { const k = String(o?.name || '').trim().toLowerCase(); if (k && !seen.has(k)) { seen.add(k); out.push({ si, oi, o }); } }));
+  const k = Math.max(300, Number(need?.kcal) || 0), p = Math.max(20, Number(need?.protein) || 0);
+  const score = o => Math.abs((Number(o.kcal) || 0) - k) / k + Math.abs((Number(o.protein) || 0) - p) / p;
+  return out.sort((a, b) => score(a.o) - score(b.o));
+}
+// Ile brakuje do celu: cel − zjedzone − niezjedzone stałe (shake itd. i tak będą); per = na jeden z otwartych, widocznych posiłków.
+export function menuNeed(menu, eaten, target, now) {
+  const left = { kcal: 0, protein: 0 }, L = menuLastSlot(menu);
+  for (const x of menu?.stale || []) if (!x.eaten) { left.kcal += Number(x.kcal) || 0; left.protein += Number(x.protein) || 0; }
+  const kcal = Math.round((Number(target?.kcal) || 0) - (Number(eaten?.kcal) || 0) - left.kcal), protein = Math.round((Number(target?.protein) || 0) - (Number(eaten?.protein) || 0) - left.protein);
+  const n = Math.max(1, (menu?.slots || []).filter((s, i) => !slotClosed(s) && !slotGone(s, now, i === L)).length);
+  return { kcal, protein, per: { kcal: Math.round(kcal / n), protein: Math.round(protein / n) } };
+}
+// Do którego posiłku zapisać wybór „na teraz”: otwarty (niezjedzony, bez „Powiem Claude”) najbliżej godziny now; brak = -1.
+export function menuSlotForNow(menu, now) {
+  let best = -1, d = Infinity;
+  (menu?.slots || []).forEach((s, i) => { if (slotClosed(s)) return; const x = Math.abs(minsOf(s.time) - now); if (x <= d) { best = i; d = x; } });
+  return best;
+}
+// Wybór propozycji w posiłku si: ta sama nazwa już jest w opcjach → wybór jej, inaczej dopisana kopia (bez znacznika „zwykle”).
+export function chooseSuggested(slots, si, o) {
+  const s = slots?.[si]; if (!s || slotClosed(s) || !o?.name) return null;
+  const k = String(o.name).trim().toLowerCase(), oi = (s.options || []).findIndex(x => String(x?.name || '').trim().toLowerCase() === k);
+  if (oi >= 0) return chooseOption(slots, si, oi);
+  const { domyslne, ...copy } = o;
+  return slots.map((x, i) => i === si ? { ...x, options: [...(x.options || []), copy], chosen: (x.options || []).length } : x);
 }
 // Wybór opcji: nowa tablica slots (zmienia tylko ten posiłek); zjedzonego nie zmieniamy → null.
 export function chooseOption(slots, si, oi) {

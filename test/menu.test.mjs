@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, menuChosen, slotGone, menuLeft, eatOther, menuOtherMsg, MENU_SRC } from '../lib.js';
+import { menuTotals, menuNeedsChoice, chooseOption, eatItem, uneatItem, menuTimeline, menuChosen, slotGone, menuLeft, eatOther, menuOtherMsg, MENU_SRC, menuPage, menuRecipe, MENU_PAGE, menuLastSlot, menuSuggest, menuSlotForNow, chooseSuggested, menuNeed } from '../lib.js';
 
 const opt = (name, kcal, protein, src) => ({ name, kcal, protein, src, detail: name + ' – skład' });
 const menu = () => ({
@@ -123,4 +123,68 @@ test('menuOtherMsg i etykieta „ustalone”', () => {
   assert.match(t, /menu_zjedzone\('2026-10-14', 'obiad', '<nazwa>', <kcal>, <białko>\)/);
   assert.match(t, /Zjadłem: $/);
   assert.equal(MENU_SRC.ustalone, 'ustalone');
+});
+
+test('menuPage: po 3 opcje, w kółko; 3 opcje = jedna strona', () => {
+  const s = n => ({ options: Array.from({ length: n }, (_, i) => ({ name: 'o' + i })) });
+  assert.equal(MENU_PAGE, 3);
+  assert.deepEqual(menuPage(s(3), 0), { idx: [0, 1, 2], page: 0, pages: 1 });
+  assert.deepEqual(menuPage(s(3), 5).idx, [0, 1, 2]);
+  assert.deepEqual(menuPage(s(7), 1), { idx: [3, 4, 5], page: 1, pages: 3 });
+  assert.deepEqual(menuPage(s(7), 2).idx, [6]);
+  assert.deepEqual(menuPage(s(7), 3).idx, [0, 1, 2]);
+  assert.deepEqual(menuPage(s(1), 1), { idx: [0], page: 0, pages: 1 });
+  assert.deepEqual(menuPage({}, 0), { idx: [], page: 0, pages: 1 });
+});
+
+test('menuRecipe: tablica albo tekst, puste kroki wypadają, brak = []', () => {
+  assert.deepEqual(menuRecipe({ przepis: ['Krok 1', ' ', 'Krok 2 '] }), ['Krok 1', 'Krok 2']);
+  assert.deepEqual(menuRecipe({ przepis: 'a\n\nb' }), ['a', 'b']);
+  assert.deepEqual(menuRecipe({ name: 'x', detail: 'y' }), []);
+  assert.deepEqual(menuRecipe(null), []);
+});
+
+test('ostatni posiłek dnia nie znika po godzinie (decyzja 26.10), wcześniejsze tak', () => {
+  const m = menu(), o23 = 23 * 60;
+  assert.equal(menuLastSlot(m), 2);
+  assert.equal(menuLastSlot({ slots: [] }), -1);
+  assert.equal(slotGone(m.slots[2], o23, true), false);
+  assert.equal(slotGone(m.slots[2], 'miniony', true), true, 'miniony dzień – bez zmian');
+  assert.deepEqual(menuTotals(m, o23).open, ['Kolacja']);
+  assert.equal(menuNeedsChoice(m, o23), true);
+  m.slots[2].chosen = 0; assert.equal(menuNeedsChoice(m, o23), false);
+});
+
+test('menuSuggest: bez dubli, najbliższe brakującym kaloriom i białku na górze', () => {
+  const m = menu(); m.slots[2].options.push(opt('Jajecznica', 550, 31, 'nowe'));
+  const r = menuSuggest(m, { kcal: 700, protein: 50 });
+  assert.equal(r.length, 9);
+  assert.deepEqual([r[0].si, r[0].oi, r[0].o.name], [1, 0, 'Kurczak z blachy']);
+  assert.equal(menuSuggest(m, { kcal: 450, protein: 26 })[0].o.name, 'Kanapki');
+  assert.equal(menuSuggest(m, { kcal: -500, protein: -10 })[0].o.name, 'Kanapki', 'cel przekroczony → najlżejsze');
+  assert.deepEqual(menuSuggest(null, { kcal: 1 }), []);
+});
+
+test('menuSlotForNow: otwarty posiłek najbliżej godziny; zamknięte pomija', () => {
+  const m = menu();
+  assert.equal(menuSlotForNow(m, 19 * 60 + 40), 2);
+  assert.equal(menuSlotForNow(m, 10 * 60), 0);
+  m.slots[2].eaten = true; assert.equal(menuSlotForNow(m, 21 * 60), 1);
+  m.slots[0].eaten = m.slots[1].pending = true; assert.equal(menuSlotForNow(m, 21 * 60), -1);
+});
+
+test('chooseSuggested: ta sama nazwa → wybór, inna → dopisana opcja i wybrana; zjedzony → null', () => {
+  const m = menu();
+  assert.equal(chooseSuggested(m.slots, 2, { name: 'kanapki ' })[2].chosen, 0);
+  const s = chooseSuggested(m.slots, 2, { ...opt('Kurczak z blachy', 700, 50, 'jak_ostatnio'), domyslne: true });
+  assert.equal(s[2].options.length, 4); assert.equal(s[2].chosen, 3); assert.equal(s[2].options[3].domyslne, undefined);
+  assert.equal(m.slots[2].options.length, 3, 'bez mutacji');
+  m.slots[2].eaten = true; assert.equal(chooseSuggested(m.slots, 2, { name: 'Kanapki' }), null);
+});
+
+test('menuNeed: cel − zjedzone − niezjedzone stałe, dzielone na otwarte posiłki', () => {
+  const m = menu(); // stałe 1335 / 64
+  assert.deepEqual(menuNeed(m, { kcal: 1000, protein: 40 }, { kcal: 3300, protein: 150 }, 10 * 60), { kcal: 965, protein: 46, per: { kcal: 322, protein: 15 } });
+  m.stale[0].eaten = true; m.slots[0].eaten = m.slots[1].eaten = true;
+  assert.deepEqual(menuNeed(m, { kcal: 2000, protein: 90 }, { kcal: 3300, protein: 150 }, 23 * 60), { kcal: 695, protein: 44, per: { kcal: 695, protein: 44 } });
 });
