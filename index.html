@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Dzień</title>
+<title>Statly</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dzień">
+<meta name="apple-mobile-web-app-title" content="Statly">
 <meta name="theme-color" content="#0b0a0a">
 <meta name="color-scheme" content="dark">
 <style>
@@ -652,7 +652,7 @@ body.kz-on{overflow:hidden}
 <body>
 <div id="offline" class="hidden">Brak sieci – pokazuję ostatni stan, zmiany nie zapiszą się.</div>
 <div id="login" class="login hidden">
-  <h1>Dzień</h1>
+  <h1>Statly</h1>
   <p class="muted">Zaloguj się albo załóż konto. Po założeniu potwierdź maila.</p>
   <div class="card">
     <input id="lemail" type="email" placeholder="email" autocomplete="username"><div style="height:8px"></div>
@@ -2373,7 +2373,7 @@ async function renderWorkPanel() {
   const ps = await notifyStatus();
   $('#pNotifyTxt').textContent = 'Powiadomienia: ' + PUSH_TXT[ps];
   $('#pNotifyHelp').textContent = ps === 'brak' ? 'Na iPhonie działają tylko w apce dodanej do ekranu głównego (Safari → Udostępnij → Do ekranu początkowego).'
-    : ps === 'zablokowane' ? 'Włącz je w Ustawieniach telefonu: Powiadomienia → Dzień → Zezwalaj na powiadomienia.' : '';
+    : ps === 'zablokowane' ? 'Włącz je w Ustawieniach telefonu: Powiadomienia → Statly → Zezwalaj na powiadomienia.' : '';
   $('#pNotifyOn').classList.toggle('hidden', ps !== 'wylaczone');
   $('#pNotifyTest').classList.toggle('hidden', ps !== 'wlaczone');
 }

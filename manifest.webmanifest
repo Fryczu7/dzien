@@ -1,6 +1,6 @@
 {
-  "name": "Michał – dzień",
-  "short_name": "Dzień",
+  "name": "Statly",
+  "short_name": "Statly",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
