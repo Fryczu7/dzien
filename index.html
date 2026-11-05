@@ -260,7 +260,9 @@ details[open]>summary::after{transform:rotate(-135deg)}
 /* Start dla nowej osoby: pełny ekran, 3 kroki */
 .start{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
 .start-in{max-width:520px;margin:0 auto}
-.start .steps{margin:0 0 18px}
+.start .steps{margin:0 0 8px}
+.st-krok{margin:0 0 18px;font-size:13px;color:var(--muted)}
+.st-plan{list-style:none;padding:0;margin:0 0 18px}.st-plan li{padding:10px 0;border-bottom:1px solid var(--line)}.st-plan li b{display:block;font-size:13px;font-weight:500;color:var(--muted)}
 .start h2{font-size:24px;margin:0 0 6px}
 .start .lead{color:var(--muted);margin:0 0 16px}
 .start-nav{display:flex;gap:8px;margin-top:22px}
@@ -609,6 +611,8 @@ body[data-off~="kuznia"] #kzWin{display:none!important}
 .kz-ov-xp .kz-lab{margin-top:6px}
 .kz-ov-seria{font:700 20px var(--f-num);color:var(--acc-ink);margin:14px 0 0}
 .kz-ov-seria.pulse{animation:kzPulse .7s ease 2}
+/* Strata tuż przed ceną naprawy (decyzja Michała 05.11: mocna wersja zasady „cena nigdy sama”) */
+.kz-ov-strata{font:700 26px/1.15 var(--f-num);color:var(--bad-ink);margin:16px 0 0}
 @keyframes kzPulse{50%{transform:scale(1.18)}}
 .kz-ov-kamien{font-family:var(--f-head);font-weight:800;color:var(--warn-ink);margin:8px 0 0;animation:kzPulse .8s ease 2}
 .kz-ov ul{text-align:left;margin:16px 0 0;padding:0;list-style:none;font-size:14.5px}
@@ -653,13 +657,26 @@ body.kz-on{overflow:hidden}
 <div id="offline" class="hidden">Brak sieci – pokazuję ostatni stan, zmiany nie zapiszą się.</div>
 <div id="login" class="login hidden">
   <h1>Statly</h1>
-  <p class="muted">Zaloguj się albo załóż konto. Po założeniu potwierdź maila.</p>
+  <p class="muted">Zaloguj się. Nowy? Najpierw ustawisz swój dzień, konto na końcu.</p>
   <div class="card">
     <input id="lemail" type="email" placeholder="email" autocomplete="username"><div style="height:8px"></div>
     <input id="lpass" type="password" placeholder="hasło" autocomplete="current-password"><div style="height:10px"></div>
-    <div class="row"><button class="grow" id="bLogin">Zaloguj</button><button class="ghost grow" id="bSignup">Załóż konto</button></div>
+    <div class="row"><button class="grow" id="bLogin">Zaloguj</button><button class="ghost grow" id="bSignup">Nowe konto</button></div>
     <button class="ghost small" id="bReset" style="margin-top:8px">Nie pamiętam hasła</button>
     <p id="lmsg" class="muted"></p>
+  </div>
+</div>
+
+<!-- Start dla nowej osoby: kroki ustawień, zapis na końcu (settings.onboarded = true). Bez konta (gość) ostatni krok = „Zapisz mój plan” (założenie konta). -->
+<div class="start hidden" id="start" role="dialog" aria-modal="true" aria-labelledby="stTitle">
+  <div class="start-in">
+    <div class="steps" id="stSteps" aria-hidden="true"></div>
+    <p class="st-krok" id="stKrok"></p>
+    <h2 id="stTitle"></h2>
+    <p class="lead" id="stLead"></p>
+    <div id="stBody"></div>
+    <div class="start-nav"><button class="ghost" id="stBack">Wstecz</button><button id="stNext">Dalej</button></div>
+    <button class="ghost wide small" id="stSkip" style="margin-top:10px">Pomiń – zostaw jak jest</button>
   </div>
 </div>
 
@@ -965,7 +982,7 @@ body.kz-on{overflow:hidden}
     <div id="pWork"></div><div class="saved" id="pWorkSt"></div>
     <p id="pNotifyTxt" style="margin:16px 0 2px;font-weight:600"></p>
     <p class="muted" id="pNotifyHelp" style="margin:0 0 8px"></p>
-    <div class="row"><button class="ghost grow hidden" id="pNotifyOn">Włącz powiadomienia</button><button class="ghost grow hidden" id="pNotifyTest">Wyślij próbne</button></div>
+    <div class="row"><button class="ghost grow hidden" id="pNotifyOn">Przypominaj o przerwie i serii</button><button class="ghost grow hidden" id="pNotifyTest">Wyślij próbne</button></div>
     <button class="wide" id="pWorkTest" style="margin-top:12px">Przetestuj przerwę (20 s)</button>
     <p class="muted" style="margin:6px 0 0">Test gra tylko przy otwartej apce. Przy zablokowanym telefonie prawdziwy alarm przychodzi jako powiadomienie z dźwiękiem telefonu – telefon nie pozwala stronom na własny dźwięk.</p>
   </div></details>
@@ -990,17 +1007,6 @@ body.kz-on{overflow:hidden}
   </div></details>
   <button class="ghost wide" id="pLogout" style="margin-top:24px">Wyloguj</button>
 </aside>
-<!-- Start dla nowej osoby: 3 kroki, zapis na końcu (settings.onboarded = true) -->
-<div class="start hidden" id="start" role="dialog" aria-modal="true" aria-labelledby="stTitle">
-  <div class="start-in">
-    <div class="steps" id="stSteps"><i></i><i></i><i></i><i></i></div>
-    <h2 id="stTitle"></h2>
-    <p class="lead" id="stLead"></p>
-    <div id="stBody"></div>
-    <div class="start-nav"><button class="ghost" id="stBack">Wstecz</button><button id="stNext">Dalej</button></div>
-    <button class="ghost wide small" id="stSkip" style="margin-top:10px">Pomiń – zostaw jak jest</button>
-  </div>
-</div>
 <!-- Przegląd pamięci: wyskakuje sam, gdy asystent nocny zostawił wątpliwości albo poprawki (public.przeglad) -->
 <div class="pg hidden" id="pg" role="dialog" aria-modal="true" aria-labelledby="pgT">
   <div class="pg-in">
@@ -1020,6 +1026,7 @@ body.kz-on{overflow:hidden}
     <ul id="kzOvLines"></ul>
     <p class="kz-ov-lvl hidden" id="kzOvLvl"></p>
     <p class="kz-ov-msg" id="kzOvMsg"></p>
+    <p class="kz-ov-strata hidden" id="kzOvStrata"></p>
     <div class="kz-ov-act"><button class="ghost hidden" id="kzOvRepair" disabled></button><button id="kzOvOk">Dalej</button></div>
   </div>
 </div>
@@ -1170,7 +1177,7 @@ function renderDzis() {
   // Brakuje: tylko dla dzisiaj, jedna linia zamiast pustych kart.
   const br = $('#brakuje'); br.classList.toggle('hidden', !isToday || !!day.closed);
   if (isToday) {
-    const miss = missingToday(day, meals, cfg, hour);
+    const lc = liczniki(), miss = missingToday(day, meals, cfg, hour, { rehab: lc.rehabStreak, kcal: lc.kcalStreak });
     br.className = 'brakuje' + (miss.length ? '' : ' ok');
     br.replaceChildren(...(miss.length ? [el('b', {}, 'Brakuje: '), miss.join(' · ')] : ['Na dziś wszystko jest.']));
   }
@@ -1838,7 +1845,13 @@ document.querySelector('main').addEventListener('touchend', e => {
 $('#coachNight').onclick = () => show('asystent'); $('#coachProps').onclick = () => show('asystent');
 $('#qSearch').oninput = e => { qQuery = e.target.value; renderQuick(); };
 // Ręczny wpis zostaje (decyzja Michała 6.10), choć zwykle kalorie liczy Claude.
-$('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; };
+$('#mAdd').onclick = async () => { await addMeal($('#mName').value.trim(), +$('#mKcal').value, +$('#mProt').value); $('#mName').value = $('#mKcal').value = $('#mProt').value = ''; mAddTxt(); };
+// Przycisk mówi wynik: „Dodaj – zostanie 750 kcal” (liczone na bieżąco z wpisanych kalorii).
+function mAddTxt() {
+  const kc = parseInt($('#mKcal').value, 10), kt = day?.kcal_target || cfg.kcal_target, k = meals.reduce((a, m) => a + (m.kcal || 0), 0);
+  $('#mAdd').textContent = kc > 0 && kt ? (k + kc >= kt ? 'Dodaj – cel kalorii zrobiony' : 'Dodaj – zostanie ' + (kt - k - kc) + ' kcal') : 'Dodaj';
+}
+$('#mKcal').addEventListener('input', mAddTxt);
 const shift = async n => { rulesOpen = false;
   const d = new Date(cur + 'T12:00:00'); d.setDate(d.getDate() + n);
   const next = ymd(d), today = ymd(new Date());
@@ -1915,18 +1928,26 @@ $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload();
 async function start() {
   setOffline(!navigator.onLine);
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); return; }
-  uid = session.user.id;
+  if (!session) {
+    $('#app').classList.add('hidden');
+    // Pierwsze wejście na tym urządzeniu: najpierw ustawienia (gość); logowanie, gdy ktoś już tu miał konto albo czeka zapisany plan.
+    if (localStorage.getItem(BYLO_KONTO) || localStorage.getItem(SZKIC)) $('#login').classList.remove('hidden'); else startOpen(true);
+    return;
+  }
+  uid = session.user.id; localStorage.setItem(BYLO_KONTO, '1');
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   await Promise.all([loadDay(), loadStatic(), loadHistory(), loadPrzeglad(), loadKuznia()]); lastLoad = Date.now();
   renderAll(); show(view);
-  if (cfgState === 'nowy' || (cfgState === 'jest' && !cfg.onboarded)) startOpen(); // pierwsze wejście nowej osoby; przy błędzie wczytania – nie
+  if (cfgState === 'nowy' || (cfgState === 'jest' && !cfg.onboarded)) { // pierwsze wejście nowej osoby; przy błędzie wczytania – nie
+    const szkic = JSON.parse(localStorage.getItem(SZKIC) || 'null');
+    if (szkic) { st = { ...szkic, kzOff: [] }; if (await startSave()) localStorage.removeItem(SZKIC); } else startOpen();
+  }
   await kzZalegle(); // Kuźnia: zamknięcie zaległych dni i podsumowanie ostatniego
   pgCheck(); // przegląd pamięci – po starcie, nie nad oknem startu
   if (location.hash === '#praca') { history.replaceState(null, '', location.pathname + location.search); goPraca(); } // otwarte z powiadomienia
 }
 $('#bLogin').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value }); $('#lmsg').textContent = error ? (error.message.includes('confirm') ? 'Najpierw potwierdź maila (link w skrzynce).' : 'Błąd: ' + error.message) : ''; if (!error) start(); };
-$('#bSignup').onclick = async () => { $('#lmsg').textContent = '…'; const { error } = await sb.auth.signUp({ email: $('#lemail').value.trim(), password: $('#lpass').value, options: { emailRedirectTo: location.origin + location.pathname } }); $('#lmsg').textContent = error ? 'Błąd: ' + error.message : 'Sprawdź maila i kliknij link potwierdzający, potem wróć tu i kliknij „Zaloguj”.'; };
+$('#bSignup').onclick = () => { $('#login').classList.add('hidden'); startOpen(true); }; // konto zakłada się w ostatnim kroku startu
 $('#bReset').onclick = async () => {
   const email = $('#lemail').value.trim(); if (!email) { $('#lmsg').textContent = 'Wpisz najpierw maila.'; return; }
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
@@ -2033,8 +2054,10 @@ $('#pMealAdd').onclick = () => {
 // ---------- Start dla nowej osoby ----------
 // 3 kroki: karty na Dziś → zakładki → cele. Szkic trzymamy lokalnie, zapis dopiero „Gotowe” (albo „Pomiń”).
 let st = null;
-function startOpen() {
-  st = { step: 0, off: [...offList()], kcal: cfg.kcal_target ?? 2500, prot: cfg.protein_target ?? 120, tmin: cfg.training_min ?? 3, pmax: cfg.plan_max ?? 3, kzOff: [], boss: cfg.boss?.cel ?? 20 };
+// guest = bez konta (zasady „najpierw daj, potem proś” i „efekt IKEA”): ustawienia najpierw, konto w ostatnim kroku „Zapisz mój plan”.
+const SZKIC = 'statly_szkic', BYLO_KONTO = 'statly_konto';
+function startOpen(guest = false) {
+  st = { guest, step: 0, off: [...offList()], kcal: cfg.kcal_target ?? 2500, prot: cfg.protein_target ?? 120, tmin: cfg.training_min ?? 3, pmax: cfg.plan_max ?? 3, kzOff: [], boss: cfg.boss?.cel ?? 20 };
   drawer(false); $('#start').classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderStart();
 }
 function startClose() { $('#start').classList.add('hidden'); document.body.style.overflow = ''; st = null; }
@@ -2049,24 +2072,58 @@ function renderStart() {
       ...(kz.dom || []).map(z => sw(!st.kzOff.includes(z.k), z.nazwa + ' · ' + kzDniTekst(z.dni), () => { st.kzOff = st.kzOff.includes(z.k) ? st.kzOff.filter(x => x !== z.k) : [...st.kzOff, z.k]; renderStart(); })),
       num('Boss tygodnia – godzin GetMed w tygodniu (0 = bez bossa)', 'boss', 'h')]],
   ];
+  // Gość: ostatni krok pokazuje gotowy plan z jego wyborów, a dopiero pod nim konto.
+  if (st.guest) S.push(['Twój plan jest gotowy', 'Zapisz go – na koniec tylko mail i hasło, a Statly zacznie liczyć Twój dzień.', () => {
+    const cards = PANEL_CARDS.filter(([k]) => !st.off.includes(k)).map(([, l]) => l), tabs = PANEL_TABS.filter(([k]) => !st.off.includes('tab-' + k)).map(([, l]) => l);
+    const f = (id, type, ph, ac) => { const i = el('input', { id, type, placeholder: ph, autocomplete: ac, 'aria-label': ph }); i.value = st[id] || ''; i.addEventListener('input', () => { st[id] = i.value; }); return i; };
+    return [el('ul', { class: 'st-plan' },
+        el('li', {}, el('b', {}, 'Na „Dziś”'), cards.join(' · ') || 'nic – sam plan dnia'),
+        el('li', {}, el('b', {}, 'Zakładki'), ['Dziś', ...tabs].join(' · ')),
+        el('li', {}, el('b', {}, 'Cele'), st.kcal + ' kcal · ' + st.prot + ' g białka · ' + st.tmin + ' treningi w tygodniu · max ' + st.pmax + ' rzeczy na dzień')),
+      f('stEmail', 'email', 'email', 'username'), el('div', { style: 'height:8px' }), f('stPass', 'password', 'hasło', 'new-password'),
+      el('p', { class: 'muted', id: 'stMsg' }, st.msg || '')];
+  }]);
   const [t, lead, body] = S[st.step];
   $('#stTitle').textContent = t; $('#stLead').textContent = lead; $('#stBody').replaceChildren(...body());
-  [...$('#stSteps').children].forEach((i, n) => i.classList.toggle('on', n <= st.step));
+  // Start nie od zera: pierwszy odcinek paska już zaliczony (konto albo samo otwarcie apki).
+  $('#stSteps').replaceChildren(...[null, ...S].map((_, n) => el('i', { class: n <= st.step + 1 ? 'on' : '' })));
+  $('#stKrok').textContent = (st.guest ? 'Statly otwarte ✓' : 'Konto założone ✓') + ' · krok ' + (st.step + 2) + ' z ' + (S.length + 1);
   $('#stBack').classList.toggle('hidden', st.step === 0);
-  $('#stNext').textContent = st.step === S.length - 1 ? 'Gotowe' : 'Dalej';
+  $('#stNext').textContent = st.step < S.length - 1 ? 'Dalej' : st.guest ? 'Zapisz mój plan' : 'Pokaż mój dzień';
+  $('#stSkip').textContent = st.guest ? 'Mam już konto – zaloguj' : 'Pomiń – zostaw jak jest';
+  st.last = S.length - 1;
 }
 $('#stBack').onclick = () => { st.step--; renderStart(); };
 $('#stNext').onclick = async () => {
-  if (st.step < 3) { st.step++; return renderStart(); }
+  if (st.step < st.last) { st.step++; return renderStart(); }
+  if (st.guest) return startSignup();
+  await startSave();
+};
+async function startSignup() {
+  const email = (st.stEmail || '').trim(), msg = t => { st.msg = t; $('#stMsg').textContent = t; };
+  if (!email || !st.stPass) return msg('Wpisz maila i hasło.');
+  msg('…');
+  const { data, error } = await sb.auth.signUp({ email, password: st.stPass, options: { emailRedirectTo: location.origin + location.pathname } });
+  if (error) return msg('Błąd: ' + error.message);
+  const { stEmail, stPass, msg: _m, guest, step, last, ...szkic } = st;
+  localStorage.setItem(SZKIC, JSON.stringify(szkic)); // plan czeka na tym urządzeniu do pierwszego logowania
+  if (data.session) return startClose(); // start() odpala onAuthStateChange (SIGNED_IN)
+  msg('Plan zapisany na tym telefonie. Sprawdź maila, kliknij link i zaloguj się – Statly od razu go ustawi.');
+}
+async function startSave() {
   const n = (v, a, b, d) => { const x = parseInt(v, 10); return x >= a && x <= b ? x : d; };
   // Kuźnia: wszystkie domyślne zadania = null (domyślne z bazy); boss z godzin GetMed, 0 = bez bossa.
   const bossH = n(st.boss, 0, 100, 20), kzZad = st.kzOff.length && kz.dom ? kzZadaniaZapis(kz.dom.filter(z => !st.kzOff.includes(z.k))) : cfg.kuznia_zadania ?? null;
   const ok = await saveSettings({ ui: { ...(cfg.ui || {}), off: st.off }, kcal_target: n(st.kcal, 1000, 6000, cfg.kcal_target ?? 2500), protein_target: n(st.prot, 30, 400, cfg.protein_target ?? 120), training_min: n(st.tmin, 0, 14, 3), plan_max: n(st.pmax, 1, 10, 3),
     kuznia_zadania: kzZad, boss: bossH ? { nazwa: 'Strażnik ' + bossH + ' godzin', zrodlo: cfg.boss?.zrodlo || 'praca:getmed', cel: bossH } : null, onboarded: true });
-  if (!ok) return;
+  if (!ok) return false;
   startClose(); applyOff(); renderAll(); loadKuznia().then(renderKuznia); toast('Gotowe – zmienisz to w ☰');
+  return true;
+}
+$('#stSkip').onclick = async () => {
+  if (st.guest) { startClose(); $('#login').classList.remove('hidden'); return $('#lemail').focus(); }
+  await saveSettings({ onboarded: true }); startClose();
 };
-$('#stSkip').onclick = async () => { await saveSettings({ onboarded: true }); startClose(); };
 
 $('#pLogout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
@@ -2481,7 +2538,7 @@ function renderKuznia() {
   $('#kzXpBar').style.transform = 'scaleX(' + kzPasek(s) + ')';
   const live = kzLive(), closed = !!live?.zamkniety;
   $('#kzZT').textContent = 'Zadania dnia' + (isToday ? '' : ' · ' + PL_DAYS[new Date(cur + 'T12:00:00').getDay()] + ' ' + dShort(cur));
-  $('#kzDzisXp').textContent = live ? '+' + live.xp + ' XP ' + (isToday ? 'dziś' : 'tego dnia') + (closed ? ' · dzień zamknięty' : live.czysty ? ' · czysty dzień' : live.zaliczony ? ' · dzień zaliczony' : ' · zrób jedno zadanie, żeby zaliczyć dzień') : '';
+  $('#kzDzisXp').textContent = live ? '+' + live.xp + ' XP ' + (isToday ? 'dziś' : 'tego dnia') + (closed ? ' · dzień zamknięty' : live.czysty ? ' · czysty dzień' : live.zaliczony ? ' · dzień zaliczony' : isToday && s.seria >= 2 ? ' · zrób jedno zadanie – inaczej ' + (s.tarcze > 0 ? 'zużyjesz tarczę na serię ' : 'przepada seria ') + kzDni(s.seria) : ' · zrób jedno zadanie, żeby zaliczyć dzień') : '';
   const rows = [];
   if (live?.zadanie_karne) rows.push(el('li', {}, el('button', { class: 'kz-z karne' + (live.karne_zrobione ? ' done' : ''), role: 'checkbox', 'aria-checked': String(!!live.karne_zrobione), 'data-k': '_karne',
     onclick: () => closed ? toast('Dzień już zamknięty') : kzKarne(!live.karne_zrobione) }, kzMark(live.karne_zrobione), el('span', { class: 'kz-n' }, 'Zadanie karne', el('small', {}, live.zadanie_karne)), el('span', { class: 'kz-pt' }, s.tryb === 'hard' ? 'albo −30 XP' : ''))));
@@ -2593,7 +2650,6 @@ function kzPodsumowanie(p) {
   $('#kzOvT').textContent = '[ KUŹNIA ] ' + (boss?.pokonany ? 'BOSS POKONANY' : p.czysty ? 'DZIEŃ WYKUTY' : 'DZIEŃ ZAKOŃCZONY') + ' · ' + kzDzien(p.date);
   if (p.tarcza_uzyta) lines.push('Tarcza uratowała serię. Nowa po 7 dniach serii.');
   const lost = !p.zaliczony && !p.tarcza_uzyta && p.seria === 0 && p.seria_utracona > 0;
-  if (lost) lines.push('Seria przepadła – było ' + kzDni(p.seria_utracona) + '.');
   if (p.kara_dyscyplina) lines.push('Niewykonane zadania: −' + p.kara_dyscyplina + ' Dyscypliny.');
   if (p.karne === 'zrobione') lines.push('Zadanie karne zaliczone.');
   if (p.karne === 'niezrobione') lines.push('Zadanie karne niezrobione' + ((kz.stan?.tryb || cfg.kuznia_tryb) === 'hard' ? ': −30 XP.' : '.'));
@@ -2608,7 +2664,9 @@ function kzPodsumowanie(p) {
   $('#kzOvLvl').classList.toggle('hidden', !p.poziom_w_gore); $('#kzOvLvl').textContent = p.poziom_w_gore ? 'POZIOM W GÓRĘ · ' + p.poziom + ' · ' + p.ranga : '';
   $('#kzOvMsg').textContent = p.komunikat || ''; $('#kzOvMsg').classList.toggle('bad', bad);
   // Płatna naprawa serii – w wersji 1 tylko pokazana (cena z symulatora), płatność w fazie C.
-  $('#kzOvRepair').classList.toggle('hidden', !lost); $('#kzOvRepair').textContent = 'Przywróć serię ' + kzDni(p.seria_utracona) + ' – 9,99 zł · wkrótce';
+  $('#kzOvStrata').classList.toggle('hidden', !lost);
+  $('#kzOvStrata').textContent = lost ? 'Tracisz serię ' + kzDni(p.seria_utracona) : '';
+  $('#kzOvRepair').classList.toggle('hidden', !lost); $('#kzOvRepair').textContent = 'Przywróć serię ' + kzDni(p.seria_utracona) + ' – 9,99 zł, mniej niż kawa · wkrótce';
   $('#kzOv .kz-ov-in').classList.toggle('bad', bad && !p.zaliczony);
   $('#kzOv').classList.remove('hidden'); document.body.classList.add('kz-on'); kzOvOpen = true;
   kzOgien(p.poziom_w_gore || boss?.pokonany ? 30 : 16); kzGraj(kzDzwiekDnia(p));

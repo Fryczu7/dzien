@@ -64,3 +64,9 @@ test('missingToday: czego brakuje', () => {
   assert.deepEqual(missingToday(day, meals, { kcal_target: 3300 }, 11), ['rehab', '1 posiłek bez kalorii']);
   assert.ok(missingToday(day, meals, { kcal_target: 3300 }, 18).includes('2700 kcal'));
 });
+
+test('missingToday: seria od 2 dni mówi, co przepadnie', () => {
+  const day = { rehab: false, morning: { leki: true }, evening: {} }, meals = [{ kcal: 600 }];
+  const m = missingToday(day, meals, { kcal_target: 3300 }, 19, { rehab: 4, kcal: 1 });
+  assert.deepEqual(m, ['rehab – inaczej przepada seria 4 dni', '2700 kcal']);
+});

@@ -130,10 +130,11 @@
     channel: () => { const k = { on: () => k, subscribe: () => k, unsubscribe: async () => 'ok' }; return k; },
     removeChannel: async () => 'ok',
     auth: {
-      getSession: async () => ({ data: { session: sesja }, error: null }),
+      // window.__ATRAPA_BEZ_SESJI = true przed atrapą: start bez zalogowania (ekran gościa); logowanie włącza sesję.
+      getSession: async () => ({ data: { session: window.__ATRAPA_BEZ_SESJI ? null : sesja }, error: null }),
       getUser: async () => ({ data: { user: sesja.user }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
-      signInWithPassword: async () => ({ data: { session: sesja }, error: null }),
+      signInWithPassword: async () => { window.__ATRAPA_BEZ_SESJI = false; return { data: { session: sesja }, error: null }; },
       signUp: async () => ({ data: {}, error: null }),
       signOut: async () => ({ error: null }),
       resetPasswordForEmail: async () => ({ data: {}, error: null }),

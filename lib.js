@@ -111,14 +111,15 @@ export const nextView = (views, v, dir) => views[Math.max(0, Math.min(views.leng
 const posilki = n => n === 1 ? 'posiłek' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'posiłki' : 'posiłków';
 
 // Lista „Brakuje: …” – tylko rzeczy, które da się dziś jeszcze zrobić albo dopowiedzieć Claude.
-export function missingToday(day, meals, cfg, hour) {
-  const out = [];
-  if (!day.rehab) out.push('rehab');
+// streaks (opcjonalnie): { rehab, kcal } – seria do wczoraj; od 2 dni mówimy, co przepadnie (zasada „pokaż stratę”).
+export function missingToday(day, meals, cfg, hour, streaks = {}) {
+  const out = [], lose = n => n >= 2 ? ' – inaczej przepada seria ' + n + ' dni' : '';
+  if (!day.rehab) out.push('rehab' + lose(streaks.rehab));
   if (!day.morning?.leki) out.push('leki rano');
   if ((hour >= 20 || hour < 4) && !day.evening?.leki_wieczor) out.push('leki wieczorem');
   const kcal = meals.reduce((a, m) => a + (m.kcal || 0), 0), target = day.kcal_target || cfg.kcal_target;
   // Kalorie dopiero od 18:00 – wcześniej „brakuje 3300 kcal” to plan dnia, nie zaległość.
-  if (target && kcal < target && (hour >= 18 || hour < 4)) out.push((target - kcal) + ' kcal');
+  if (target && kcal < target && (hour >= 18 || hour < 4)) out.push((target - kcal) + ' kcal' + lose(streaks.kcal));
   const bez = meals.filter(m => m.kcal == null).length;
   if (bez) out.push(bez + ' ' + posilki(bez) + ' bez kalorii');
   return out;

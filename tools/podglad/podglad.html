@@ -9,6 +9,10 @@
   // Service Worker apki przeładowuje stronę przy aktualizacji i zdjąłby atrapę – tu go nie rejestrujemy.
   Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { register: async () => ({}), getRegistration: async () => undefined, addEventListener() {}, controller: null, ready: new Promise(() => {}) } });
 </script>
+<script>
+  // ?gosc – nowa osoba bez konta: start gościa, po „logowaniu” ustawienia jeszcze nieustawione (onboarded = false).
+  if (location.search.includes('gosc')) { window.__ATRAPA_BEZ_SESJI = true; window.__ATRAPA_DANE = { settings: [{ onboarded: false }] }; }
+</script>
 <script src="atrapa-bazy.js"></script>
 <script>
 (async () => {
