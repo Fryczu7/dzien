@@ -80,7 +80,7 @@ insert into public.zespol_agenci (imie, rola, stan, zadanie_teraz) values
   ('Marek Pisarz', 'Pisze szkice maili w Gmailu', 'stoi', 'Czeka na pierwszy przebieg'),
   ('Benjamin Zegarmistrz', 'Mierzy Twoje moce przerobowe', 'stoi', 'Czeka na pierwszy przebieg'),
   ('Leonardo Wynalazca', 'Innowator – usprawnienia zespołu', 'stoi', 'Czeka na pierwszy przebieg'),
-  ('Florence Porządny', 'Porządek na dysku – sprząta i pilnuje', 'stoi', 'Co niedzielę 19:00')
+  ('Florence Porządna', 'Porządek na dysku – sprząta i pilnuje', 'stoi', 'Co niedzielę 19:00')
 on conflict (imie) do nothing;
 
 -- Zmiany stanu przez funkcje (konektor Supabase w rutynie pyta o zgodę przy gołym UPDATE).
